@@ -21,7 +21,7 @@ import {
 } from '@/services/iap';
 import { useAuthStore } from '@/store/authStore';
 import { DS } from '@/theme';
-import type { ProductOrSubscription } from 'expo-iap';
+import type { Product, SubscriptionProduct } from 'expo-iap';
 
 const FEATURES = [
   { icon: 'calendar',           text: 'カレンダーを無制限に振り返る' },
@@ -32,7 +32,7 @@ const FEATURES = [
 
 export default function Pro() {
   const isPro = useAuthStore(state => state.isPro);
-  const [products, setProducts] = useState<ProductOrSubscription[]>([]);
+  const [products, setProducts] = useState<(Product | SubscriptionProduct)[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {

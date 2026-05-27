@@ -3,11 +3,10 @@ import {
   endConnection,
   fetchProducts as iapFetchProducts,
   requestPurchase,
-  getAvailablePurchases,
   restorePurchases as iapRestorePurchases,
   finishTransaction,
-  type ProductOrSubscription,
-  type Purchase,
+  type Product,
+  type SubscriptionProduct,
   type PurchaseIOS,
 } from 'expo-iap';
 import {
@@ -32,28 +31,32 @@ export async function closeIAP(): Promise<void> {
   await endConnection();
 }
 
-export async function fetchProducts(): Promise<ProductOrSubscription[]> {
-  const result = await iapFetchProducts({ skus: [IAP_PRODUCTS.LIFETIME, IAP_PRODUCTS.MONTHLY], type: 'all' });
-  return result ?? [];
+export async function fetchProducts(): Promise<(Product | SubscriptionProduct)[]> {
+  const [inapp, subs] = await Promise.all([
+    iapFetchProducts({ skus: [IAP_PRODUCTS.LIFETIME], type: 'inapp' }),
+    iapFetchProducts({ skus: [IAP_PRODUCTS.MONTHLY], type: 'subs' }),
+  ]);
+  return [...(inapp ?? []), ...(subs ?? [])];
 }
 
 export async function purchasePro(productId: string): Promise<void> {
   const isMonthly = productId === IAP_PRODUCTS.MONTHLY;
 
-  const result = await requestPurchase({
-    request: { ios: { sku: productId } },
-    type: isMonthly ? 'subs' : 'in-app',
-  });
+  const result = await requestPurchase(
+    isMonthly
+      ? { request: { ios: { sku: productId } }, type: 'subs' as const }
+      : { request: { ios: { sku: productId } }, type: 'inapp' as const }
+  );
 
-  const purchase: Purchase | null = Array.isArray(result) ? (result[0] ?? null) : result;
+  const purchase = result == null ? null : (Array.isArray(result) ? (result[0] ?? null) : result);
   if (!purchase) throw new Error('Purchase returned null');
 
   await finishTransaction({ purchase, isConsumable: false });
 
+  const purchaseIOS = purchase as PurchaseIOS;
   const expiresAt = isMonthly
     ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
     : null;
-  const purchaseIOS = purchase as PurchaseIOS;
 
   await setProPurchased(
     isMonthly ? 'monthly' : 'lifetime',
@@ -67,8 +70,7 @@ export async function purchasePro(productId: string): Promise<void> {
 }
 
 export async function restorePurchases(): Promise<boolean> {
-  await iapRestorePurchases();
-  const history = await getAvailablePurchases();
+  const history = await iapRestorePurchases();
   const validPurchase = history.find(
     p => p.productId === IAP_PRODUCTS.LIFETIME || p.productId === IAP_PRODUCTS.MONTHLY
   );

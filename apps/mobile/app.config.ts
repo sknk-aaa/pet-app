@@ -2,12 +2,12 @@ import { ExpoConfig, ConfigContext } from 'expo/config';
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
-  name: 'ペット日記',
-  slug: 'pet-diary',
+  name: 'まいにちペット',
+  slug: 'mainichi-pet',
   version: '1.0.0',
   orientation: 'portrait',
   platforms: ['ios'],
-  scheme: 'petdiary',
+  scheme: 'mainichipet',
   experiments: {
     typedRoutes: true,
   },
@@ -34,7 +34,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     ],
   ],
   ios: {
-    bundleIdentifier: 'com.example.petdiary',
+    bundleIdentifier: 'com.mainichipet.app',
     supportsTablet: true,
     usesAppleSignIn: true,
     infoPlist: {

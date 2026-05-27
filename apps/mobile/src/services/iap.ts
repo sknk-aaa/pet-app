@@ -19,8 +19,8 @@ import { useAuthStore } from '@/store/authStore';
 import { nowISOString, isExpired, daysDiff } from '@/utils/date';
 
 export const IAP_PRODUCTS = {
-  LIFETIME: 'com.example.petdiary.pro_lifetime',
-  MONTHLY:  'com.example.petdiary.pro_monthly',
+  LIFETIME: 'com.mainichipet.app.pro_lifetime',
+  MONTHLY:  'com.mainichipet.app.pro_monthly',
 } as const;
 
 export async function initIAP(): Promise<void> {

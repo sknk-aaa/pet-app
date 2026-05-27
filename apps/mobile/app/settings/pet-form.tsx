@@ -18,25 +18,18 @@ import { setSetting } from '@/db/settings';
 import { pickPhoto, processIcon } from '@/services/photo';
 import { useAppStore } from '@/store/appStore';
 import {
-  SPECIES_DB_TO_DISPLAY,
-  SPECIES_DISPLAY_TO_DB,
   GENDER_DB_TO_DISPLAY,
   GENDER_DISPLAY_TO_DB,
 } from '@/utils/species';
 import { DS } from '@/theme';
-import { SPECIES_OPTIONS, GENDER_OPTIONS } from '@/dummy';
-import type { PetSpecies, PetGender } from '@/types';
-
-const EMOJI: Record<string, string> = {
-  ねこ: '🐱', いぬ: '🐶', インコ: '🦜', うさぎ: '🐰', ハムスター: '🐹', その他: '🐾',
-};
+import { GENDER_OPTIONS } from '@/dummy';
+import type { PetGender } from '@/types';
 
 export default function PetForm() {
   const { petId } = useLocalSearchParams<{ petId?: string }>();
   const isNew = !petId;
 
   const [name,     setName]     = useState('');
-  const [species,  setSpecies]  = useState<string>(SPECIES_OPTIONS[0]);
   const [gender,   setGender]   = useState<string | null>(null);
   const [birthday, setBirthday] = useState('');
   const [iconUri,  setIconUri]  = useState<string | null>(null);
@@ -49,7 +42,6 @@ export default function PetForm() {
     getPetById(petId).then(pet => {
       if (!pet) return;
       setName(pet.name);
-      setSpecies(SPECIES_DB_TO_DISPLAY[pet.species]);
       setGender(pet.gender ? GENDER_DB_TO_DISPLAY[pet.gender] ?? null : null);
       setBirthday(pet.birthday ?? '');
       setIconUri(pet.icon_uri);
@@ -68,7 +60,6 @@ export default function PetForm() {
     if (!canSave || saving) return;
     setSaving(true);
     try {
-      const speciesDb = SPECIES_DISPLAY_TO_DB[species] as PetSpecies;
       const genderDb = gender ? (GENDER_DISPLAY_TO_DB[gender] as PetGender) : null;
 
       const { setPets, pets } = useAppStore.getState();
@@ -76,7 +67,7 @@ export default function PetForm() {
       if (isNew) {
         const pet = await createPet({
           name: name.trim(),
-          species: speciesDb,
+          species: 'other',
           gender: genderDb,
           birthday: birthday.trim() || null,
           icon_uri: iconUri,
@@ -91,12 +82,12 @@ export default function PetForm() {
       } else {
         await updatePet(petId!, {
           name: name.trim(),
-          species: speciesDb,
+          species: 'other',
           gender: genderDb,
           birthday: birthday.trim() || null,
           icon_uri: iconUri,
         });
-        setPets(pets.map(p => p.id === petId ? { ...p, name: name.trim(), species: speciesDb, gender: genderDb, birthday: birthday.trim() || null, icon_uri: iconUri } : p));
+        setPets(pets.map(p => p.id === petId ? { ...p, name: name.trim(), species: 'other', gender: genderDb, birthday: birthday.trim() || null, icon_uri: iconUri } : p));
       }
       router.back();
     } catch {
@@ -155,27 +146,14 @@ export default function PetForm() {
             <Image source={{ uri: iconUri }} style={styles.iconImage} />
           ) : (
             <View style={styles.iconPlaceholder}>
-              <Text style={styles.iconEmoji}>{EMOJI[species]}</Text>
+              <Ionicons name="camera-outline" size={32} color={DS.colors.textHint} />
+              <Text style={styles.iconPlaceholderText}>写真を選ぶ</Text>
             </View>
           )}
           <View style={styles.iconBadge}>
             <Ionicons name="camera" size={14} color="#fff" />
           </View>
         </TouchableOpacity>
-
-        {/* 種類 */}
-        <View style={styles.avatarRow}>
-          {SPECIES_OPTIONS.map(s => (
-            <TouchableOpacity
-              key={s}
-              style={[styles.avatarCell, species === s && styles.avatarCellActive]}
-              onPress={() => setSpecies(s)}
-            >
-              <Text style={styles.avatarEmoji}>{EMOJI[s]}</Text>
-              <Text style={[styles.avatarLabel, species === s && styles.avatarLabelActive]}>{s}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
 
         <Text style={styles.label}>名前</Text>
         <TextInput
@@ -236,7 +214,9 @@ const styles = StyleSheet.create({
   iconPlaceholder: {
     width: 88, height: 88, borderRadius: 44,
     backgroundColor: DS.colors.border, alignItems: 'center', justifyContent: 'center',
+    gap: 4,
   },
+  iconPlaceholderText: { fontSize: 11, color: DS.colors.textHint },
   iconEmoji: { fontSize: 36 },
   iconBadge: {
     position: 'absolute', bottom: 0, right: 0,

@@ -87,17 +87,14 @@ export default function Calendar() {
 
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.heading}>カレンダー</Text>
-          <View style={styles.headerRight}>
-            <TouchableOpacity style={styles.petPill} onPress={() => router.push('/pet-select')}>
-              <PetAvatar species={displaySpecies} iconUri={selectedPet?.icon_uri} size={26} />
-              <Text style={styles.petPillName}>{selectedPet?.name ?? 'うちの子'}</Text>
-              <Ionicons name="chevron-down" size={10} color={DS.colors.textHint} />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.filterBtn} onPress={() => router.push('/anniversaries')}>
-              <Ionicons name="options-outline" size={16} color={DS.colors.textMid} />
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity style={styles.petPill} onPress={() => router.push('/pet-select')}>
+            <PetAvatar species={displaySpecies} iconUri={selectedPet?.icon_uri} size={26} />
+            <Text style={styles.petPillName}>{selectedPet?.name ?? 'うちの子'}</Text>
+            <Ionicons name="chevron-down" size={10} color={DS.colors.textHint} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.settingsBtn} onPress={() => router.push('/settings')}>
+            <Ionicons name="settings-outline" size={22} color={DS.colors.textMid} />
+          </TouchableOpacity>
         </View>
 
         {/* Month navigation — card style */}
@@ -251,8 +248,7 @@ const styles = StyleSheet.create({
   scroll: { paddingHorizontal: 14, paddingBottom: 24, gap: 10 },
 
   header:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 6, paddingBottom: 4 },
-  heading:     { fontSize: 26, fontWeight: '700', color: DS.colors.text, letterSpacing: -0.5 },
-  headerRight: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  settingsBtn: { padding: 4 },
   petPill: {
     flexDirection:     'row',
     alignItems:        'center',
@@ -267,16 +263,6 @@ const styles = StyleSheet.create({
     ...DS.shadow.card,
   },
   petPillName: { fontSize: 14, fontWeight: '600', color: DS.colors.text },
-  filterBtn: {
-    width:           36,
-    height:          36,
-    borderRadius:    18,
-    backgroundColor: DS.colors.card,
-    borderWidth:     1,
-    borderColor:     DS.colors.border,
-    alignItems:      'center',
-    justifyContent:  'center',
-  },
 
   monthNav: {
     flexDirection:     'row',

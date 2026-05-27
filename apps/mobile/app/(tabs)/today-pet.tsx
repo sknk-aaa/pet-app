@@ -56,11 +56,8 @@ export default function TodayPet() {
           <Text style={styles.heading}>今日のペット</Text>
           <Text style={styles.headerSub}>きょう選ばれた、みんなの1枚</Text>
         </View>
-        <TouchableOpacity
-          onPress={() => router.push({ pathname: '/report', params: { featuredPetId: pet?.id } })}
-          style={styles.iconBtn}
-        >
-          <Ionicons name="information-circle-outline" size={22} color={DS.colors.textMid} />
+        <TouchableOpacity onPress={() => router.push('/settings')} style={styles.iconBtn}>
+          <Ionicons name="settings-outline" size={22} color={DS.colors.textMid} />
         </TouchableOpacity>
       </View>
 

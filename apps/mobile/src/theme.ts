@@ -30,7 +30,7 @@ export const DS = {
     heavy:   'MPLUSRounded1c_800ExtraBold',
   },
   home: {
-    background: '#FFFCF7',
+    background: '#F8EDE2',
     card:       '#FFFFFF',
     pill:       '#FFF4E8',
     outline:    '#F2D1B4',

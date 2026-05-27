@@ -24,10 +24,10 @@ export const DS = {
     sm:   8,
   },
   font: {
-    regular: 'ZenMaruGothic_400Regular',
-    medium:  'ZenMaruGothic_500Medium',
-    bold:    'ZenMaruGothic_700Bold',
-    heavy:   'ZenMaruGothic_900Black',
+    regular: 'MPLUSRounded1c_400Regular',
+    medium:  'MPLUSRounded1c_500Medium',
+    bold:    'MPLUSRounded1c_700Bold',
+    heavy:   'MPLUSRounded1c_800ExtraBold',
   },
   home: {
     background: '#FFFCF7',

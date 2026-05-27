@@ -1,5 +1,12 @@
 import { useEffect } from 'react';
 import { Stack, router } from 'expo-router';
+import { useFonts } from 'expo-font';
+import {
+  ZenMaruGothic_400Regular,
+  ZenMaruGothic_500Medium,
+  ZenMaruGothic_700Bold,
+  ZenMaruGothic_900Black,
+} from '@expo-google-fonts/zen-maru-gothic';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { AppState } from 'react-native';
@@ -101,6 +108,15 @@ function AppContent() {
 }
 
 export default function RootLayout() {
+  const [fontsLoaded] = useFonts({
+    ZenMaruGothic_400Regular,
+    ZenMaruGothic_500Medium,
+    ZenMaruGothic_700Bold,
+    ZenMaruGothic_900Black,
+  });
+
+  if (!fontsLoaded) return null;
+
   return (
     <SafeAreaProvider>
       <QueryClientProvider client={queryClient}>

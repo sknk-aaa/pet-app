@@ -24,10 +24,10 @@ export const DS = {
     sm:   8,
   },
   font: {
-    regular: 'HiraginoUDRGothicStdN-W4',
-    medium:  'HiraginoUDRGothicStdN-W4',
-    bold:    'HiraginoUDRGothicStdN-W6',
-    heavy:   'HiraginoUDRGothicStdN-W6',
+    regular: 'ZenMaruGothic_400Regular',
+    medium:  'ZenMaruGothic_500Medium',
+    bold:    'ZenMaruGothic_700Bold',
+    heavy:   'ZenMaruGothic_900Black',
   },
   home: {
     background: '#FFFCF7',

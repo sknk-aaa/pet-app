@@ -81,6 +81,9 @@ importers:
       '@expo-google-fonts/m-plus-rounded-1c':
         specifier: ^0.4.3
         version: 0.4.3
+      '@expo-google-fonts/zen-maru-gothic':
+        specifier: ^0.4.1
+        version: 0.4.1
       '@expo/vector-icons':
         specifier: ~14.0.4
         version: 14.0.4
@@ -951,6 +954,9 @@ packages:
 
   '@expo-google-fonts/m-plus-rounded-1c@0.4.3':
     resolution: {integrity: sha512-ac0KX6FZqbs++JJNbF/pIn/hA/IvIYtwPiHiX71uCrkmTH4FIiAS9TsqBXimRmipgcttRj03TzeJtkhtT2LZBA==}
+
+  '@expo-google-fonts/zen-maru-gothic@0.4.1':
+    resolution: {integrity: sha512-DCDiIfyvhsq4geQRW5WBf2cxIU4qdz95RMcBMXsUgCORZUcLQEyKG/UwaRWjEBp+94GnnPEVEklhSa6DGn2raA==}
 
   '@expo/bunyan@4.0.1':
     resolution: {integrity: sha512-+Lla7nYSiHZirgK+U/uYzsLv/X+HaJienbD5AKX1UQZHYfWaP+9uuQluRB4GrEVWF0GZ7vEVp/jzaOT9k/SQlg==}
@@ -5490,6 +5496,8 @@ snapshots:
     optional: true
 
   '@expo-google-fonts/m-plus-rounded-1c@0.4.3': {}
+
+  '@expo-google-fonts/zen-maru-gothic@0.4.1': {}
 
   '@expo/bunyan@4.0.1':
     dependencies:

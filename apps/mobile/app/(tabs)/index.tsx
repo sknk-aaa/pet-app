@@ -210,9 +210,10 @@ const styles = StyleSheet.create({
     color:      DS.colors.textHint,
   },
   headerTitle: {
-    fontFamily: DS.font.bold,
-    fontSize:   30,
-    color:      DS.home.text,
+    fontFamily:  DS.font.bold,
+    fontWeight:  '600',
+    fontSize:    30,
+    color:       DS.home.text,
   },
   settingsBtn: {
     flex:        1,

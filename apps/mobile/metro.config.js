@@ -14,10 +14,15 @@ config.resolver.nodeModulesPaths = [
   path.resolve(monorepoRoot, 'node_modules/.pnpm/node_modules'),
 ];
 
-// モノレポに React 18/19 が混在するため、常にモバイル側の React 18 を使用する
-config.resolver.extraNodeModules = {
-  react: path.resolve(projectRoot, 'node_modules/react'),
-  'react-native': path.resolve(projectRoot, 'node_modules/react-native'),
+// モノレポに React 18/19 が混在するため、react/* を常にモバイル側の React 18 に固定
+config.resolver.resolveRequest = (context, moduleName, platform) => {
+  if (moduleName === 'react' || moduleName.startsWith('react/')) {
+    try {
+      const resolved = require.resolve(moduleName, { paths: [projectRoot] });
+      return { type: 'sourceFile', filePath: resolved };
+    } catch (_) {}
+  }
+  return context.resolveRequest(context, moduleName, platform);
 };
 
 module.exports = config;

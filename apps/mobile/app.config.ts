@@ -6,6 +6,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   slug: 'mainichi-pet',
   version: '1.0.0',
   orientation: 'portrait',
+  updates: {
+    url: 'https://u.expo.dev/c1a5e2b7-800b-48d0-8d8f-ead54e05a1d9',
+  },
+  runtimeVersion: {
+    policy: 'appVersion',
+  },
   platforms: ['ios'],
   scheme: 'mainichipet',
   experiments: {
@@ -41,10 +47,14 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       NSCameraUsageDescription: 'ペットの写真を撮影します',
       NSPhotoLibraryUsageDescription: 'アルバムからペットの写真を選びます',
       NSPhotoLibraryAddUsageDescription: 'カメラロールに保存します',
+      ITSAppUsesNonExemptEncryption: false,
     },
   },
   extra: {
     supabaseUrl: process.env.SUPABASE_URL,
     supabaseAnonKey: process.env.SUPABASE_ANON_KEY,
+    eas: {
+      projectId: 'c1a5e2b7-800b-48d0-8d8f-ead54e05a1d9',
+    },
   },
 });

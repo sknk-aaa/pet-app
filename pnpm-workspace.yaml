@@ -2,6 +2,6 @@ packages:
   - 'apps/*'
   - 'packages/*'
 allowBuilds:
-  dooboolab-welcome: set this to true or false
-  sharp: set this to true or false
-  supabase: set this to true or false
+  dooboolab-welcome: false
+  sharp: false
+  supabase: false

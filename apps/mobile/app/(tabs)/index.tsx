@@ -210,10 +210,9 @@ const styles = StyleSheet.create({
     color:      DS.colors.textHint,
   },
   headerTitle: {
-    fontFamily:    DS.font.bold,
-    fontSize:      28,
-    color:         DS.home.text,
-    letterSpacing: -0.5,
+    fontFamily: DS.font.bold,
+    fontSize:   28,
+    color:      DS.home.text,
   },
   settingsBtn: {
     flex:        1,
@@ -228,7 +227,7 @@ const styles = StyleSheet.create({
   // ── 写真カード ──
   // 外層: shadow / 内層: overflow:hidden でコーナークリップ
   cardOuter: {
-    borderRadius:    20,
+    borderRadius:    28,
     backgroundColor: '#FFFFFF',
     shadowColor:     '#6B3A1F',
     shadowOffset:    { width: 0, height: 6 },
@@ -237,7 +236,7 @@ const styles = StyleSheet.create({
     elevation:       5,
   },
   cardInner: {
-    borderRadius: 20,
+    borderRadius: 28,
     overflow:     'hidden',
   },
   photo: { width: '100%', height: 280 },
@@ -251,10 +250,9 @@ const styles = StyleSheet.create({
     gap:               10,
   },
   infoTitle: {
-    fontFamily:    DS.font.bold,
-    fontSize:      22,
-    color:         DS.home.text,
-    letterSpacing: -0.3,
+    fontFamily: DS.font.bold,
+    fontSize:   22,
+    color:      DS.home.text,
   },
   infoMemo: {
     fontFamily: DS.font.regular,

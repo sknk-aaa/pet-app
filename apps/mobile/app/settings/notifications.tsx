@@ -30,10 +30,10 @@ export default function Notifications() {
     if (value) {
       const permitted = await requestPermission();
       if (permitted) {
-        await scheduleOrUpdateDailyReminder(true, settings.notification_time ?? '21:00');
+        await scheduleOrUpdateDailyReminder(true, settings.notification_time ?? '20:00');
       }
     } else {
-      await scheduleOrUpdateDailyReminder(false, settings.notification_time ?? '21:00');
+      await scheduleOrUpdateDailyReminder(false, settings.notification_time ?? '20:00');
     }
   };
 
@@ -58,7 +58,7 @@ export default function Notifications() {
         <View style={styles.section}>
           <Toggle
             label="毎日の記録リマインダー"
-            sublabel={`毎日${settings.notification_time ?? '21:00'}に今日の1枚を促します`}
+            sublabel={`毎日${settings.notification_time ?? '20:00'}に今日の1枚を促します`}
             value={dailyReminder}
             onValueChange={handleDailyReminderChange}
           />

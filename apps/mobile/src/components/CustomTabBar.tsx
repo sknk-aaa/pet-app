@@ -23,7 +23,7 @@ type TabConfig = {
 const TABS: TabConfig[] = [
   { name: 'calendar',  label: 'カレンダー',   icon: 'calendar-outline',  iconActive: 'calendar'    },
   { name: 'index',     label: 'ホーム',        icon: 'paw-outline',       iconActive: 'paw'         },
-  { name: 'today-pet', label: '今日のペット',  icon: 'paw-outline',       iconActive: 'paw'         },
+  { name: 'today-pet', label: '今日のペット',  icon: 'image-outline',     iconActive: 'image'       },
 ];
 
 export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
@@ -37,7 +37,7 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
         const isHome    = idx === 1;
         const tab       = TABS[idx];
         const iconName  = isActive ? tab.iconActive : tab.icon;
-        const color     = isActive ? DS.colors.accent : DS.colors.textHint;
+        const color     = isActive ? DS.home.accent : DS.home.text;
 
         const onPress = () => {
           const event = navigation.emit({
@@ -59,8 +59,8 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
               style={styles.tab}
             >
               <View style={[styles.homeCircle, isActive && styles.homeCircleActive]}>
-                <Ionicons name={iconName} size={26} color={color} />
-                <Text style={[styles.label, { color, fontWeight: isActive ? '600' : '400' }]}>
+                <Ionicons name={iconName} size={31} color={color} />
+                <Text style={[styles.label, { color }, isActive && styles.labelActive]}>
                   {tab.label}
                 </Text>
               </View>
@@ -75,8 +75,8 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
             activeOpacity={0.7}
             style={styles.tab}
           >
-            <Ionicons name={iconName} size={23} color={color} />
-            <Text style={[styles.label, { color, fontWeight: isActive ? '600' : '400' }]}>
+            <Ionicons name={iconName} size={29} color={color} />
+            <Text style={[styles.label, { color }, isActive && styles.labelActive]}>
               {tab.label}
             </Text>
           </TouchableOpacity>
@@ -89,38 +89,44 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
 const styles = StyleSheet.create({
   container: {
     flexDirection:   'row',
-    backgroundColor: 'rgba(255,255,255,0.95)',
-    borderTopWidth:  0.5,
-    borderTopColor:  DS.colors.border,
-    height:          TAB_HEIGHT + 34,
+    backgroundColor: DS.home.card,
+    borderTopLeftRadius:  32,
+    borderTopRightRadius: 32,
+    height:          TAB_HEIGHT + 49,
     overflow:        'visible',
+    shadowColor:     '#80512F',
+    shadowOffset:    { width: 0, height: -2 },
+    shadowOpacity:   0.06,
+    shadowRadius:    14,
     ...Platform.select({ android: { elevation: 8 } }),
   },
   tab: {
     flex:           1,
     alignItems:     'center',
     justifyContent: 'center',
-    paddingBottom:  6,
-    gap:            3,
+    paddingBottom:  8,
+    gap:            6,
   },
   homeCircle: {
-    width:           56,
-    height:          56,
-    borderRadius:    28,
+    width:           78,
+    height:          78,
+    borderRadius:    39,
     backgroundColor: 'transparent',
     alignItems:      'center',
     justifyContent:  'center',
-    marginTop:       -12,
-    gap:             2,
+    marginTop:       -27,
+    gap:             4,
   },
   homeCircleActive: {
-    backgroundColor: DS.colors.accentPill,
+    backgroundColor: '#FFEBD9',
   },
   label: {
-    fontSize:   10,
+    fontFamily: DS.font.regular,
+    fontSize:   13,
     textAlign:  'center',
-    lineHeight: 13,
+    lineHeight: 18,
   },
+  labelActive: { fontFamily: DS.font.bold },
 });
 
 export { TAB_HEIGHT };

@@ -41,6 +41,24 @@ export async function deletePendingUpload(id: string): Promise<void> {
   await db.runAsync('DELETE FROM pending_uploads WHERE id = ?', [id]);
 }
 
+export async function removePendingFeaturedCandidate(entryId: string): Promise<void> {
+  const db = await getDb();
+  const uploads = await db.getAllAsync<PendingUpload>(
+    `SELECT * FROM pending_uploads WHERE type = 'featured_candidate'`
+  );
+
+  for (const upload of uploads) {
+    try {
+      const payload = JSON.parse(upload.payload) as { entry_id?: string };
+      if (payload.entry_id === entryId) {
+        await db.runAsync('DELETE FROM pending_uploads WHERE id = ?', [upload.id]);
+      }
+    } catch {
+      // Malformed queue items are left for the normal retry/error path.
+    }
+  }
+}
+
 // entry_date が昨日以前の featured_candidate キューを削除
 export async function cleanExpiredFeaturedCandidates(): Promise<void> {
   const db = await getDb();

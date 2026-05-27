@@ -11,7 +11,7 @@ import {
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
 import { DS } from '@/theme';
@@ -20,22 +20,26 @@ import { Card } from '@/components/Card';
 import { Photo } from '@/components/Photo';
 import { Toggle } from '@/components/Toggle';
 import { PetAvatar } from '@/components/PetAvatar';
-import { createEntry, getEntryByDate, updateEntry } from '@/db/entries';
-import { addPendingUpload } from '@/db/pendingUploads';
+import { createEntry, getEntryByDate, updateEntry, updateEntryFeaturedState } from '@/db/entries';
+import { addPendingUpload, removePendingFeaturedCandidate } from '@/db/pendingUploads';
 import { getStreakState } from '@/db/streak';
 import { pickPhoto, takePhoto, processPhoto, saveToMediaLibrary } from '@/services/photo';
+import { flushPendingUploads } from '@/services/uploadQueue';
+import { supabase } from '@/services/supabase';
 import { useAppStore } from '@/store/appStore';
 import { useAuthStore } from '@/store/authStore';
 import { generateUUID } from '@/utils/uuid';
 import { getTodayJST, formatDisplayDate } from '@/utils/date';
 import { ANNIVERSARY_TAG_DISPLAY_TO_DB, SPECIES_DB_TO_DISPLAY } from '@/utils/species';
-import type { AnniversaryTagType } from '@/types';
+import type { AnniversaryTagType, FeaturedStatus } from '@/types';
 
 export default function PhotoForm() {
+  const { firstEntry } = useLocalSearchParams<{ firstEntry?: string }>();
+  const isFirstEntry = firstEntry === 'true';
   const today = getTodayJST();
   const queryClient = useQueryClient();
   const { pets, selectedPetId, settings } = useAppStore();
-  const isPro = useAuthStore(state => state.isPro);
+  const session = useAuthStore(state => state.session);
 
   const [existingEntryId, setExistingEntryId] = useState<string | null>(null);
   const [imageUri, setImageUri] = useState<string | null>(null);
@@ -43,7 +47,12 @@ export default function PhotoForm() {
   const [memo,     setMemo]     = useState('');
   const [tag,      setTag]      = useState<string | null>(null);
   const [featured, setFeatured] = useState(false);
+  const [featuredSubmitted, setFeaturedSubmitted] = useState(false);
+  const [featuredCandidateId, setFeaturedCandidateId] = useState<string | null>(null);
+  const [featuredStatus, setFeaturedStatus] = useState<FeaturedStatus | null>(null);
+  const [awaitingFeaturedLogin, setAwaitingFeaturedLogin] = useState(false);
   const [saving,   setSaving]   = useState(false);
+  const [withdrawing, setWithdrawing] = useState(false);
 
   useEffect(() => {
     getEntryByDate(today).then(entry => {
@@ -53,6 +62,9 @@ export default function PhotoForm() {
       setTitle(entry.title);
       setMemo(entry.memo ?? '');
       setFeatured(entry.featured_submitted === 1);
+      setFeaturedSubmitted(entry.featured_submitted === 1);
+      setFeaturedCandidateId(entry.featured_candidate_id);
+      setFeaturedStatus(entry.featured_status_cache);
       if (entry.anniversary_tag_type) {
         const display = Object.entries(ANNIVERSARY_TAG_DISPLAY_TO_DB)
           .find(([, v]) => v === entry.anniversary_tag_type)?.[0] ?? null;
@@ -60,6 +72,13 @@ export default function PhotoForm() {
       }
     });
   }, [today]);
+
+  useEffect(() => {
+    if (session && awaitingFeaturedLogin) {
+      setFeatured(true);
+      setAwaitingFeaturedLogin(false);
+    }
+  }, [session, awaitingFeaturedLogin]);
 
   const handlePickPhoto = () => {
     if (Platform.OS === 'ios') {
@@ -117,7 +136,7 @@ export default function PhotoForm() {
         );
       }
 
-      if (featured && isPro && submittedEntry && !submittedEntry.featured_submitted) {
+      if (featured && session && submittedEntry && !submittedEntry.featured_submitted) {
         const streakState       = await getStreakState();
         const firstPet          = activePets[0];
         const petNamesDisplay   = activePets.map(p => p.name).join('と');
@@ -129,15 +148,28 @@ export default function PhotoForm() {
           featured_weight_streak: streakState.featured_weight_streak,
           image_uri: finalImageUri, thumbnail_uri: thumbnailUri,
         });
+        await updateEntryFeaturedState(submittedEntry.id, 1, null, 'pending');
+        flushPendingUploads().catch(() => {});
       }
 
       queryClient.invalidateQueries({ queryKey: ['entry', 'today'] });
       queryClient.invalidateQueries({ queryKey: ['entry', 'memory'] });
       queryClient.invalidateQueries({ queryKey: ['entries', 'month'] });
       queryClient.invalidateQueries({ queryKey: ['streak'] });
-      router.back();
-    } catch {
-      Alert.alert('エラー', '保存に失敗しました。もう一度お試しください。');
+      if (isFirstEntry) {
+        router.replace('/(tabs)');
+      } else {
+        router.back();
+      }
+    } catch (error) {
+      console.error('[photo-form] save failed', error);
+      const detail = error instanceof Error ? error.message : String(error);
+      Alert.alert(
+        'エラー',
+        __DEV__
+          ? `保存に失敗しました。\n\n${detail}`
+          : '保存に失敗しました。もう一度お試しください。'
+      );
     } finally {
       setSaving(false);
     }
@@ -145,20 +177,84 @@ export default function PhotoForm() {
 
   const activePet      = selectedPetId ? pets.find(p => p.id === selectedPetId) : pets[0];
   const displaySpecies = activePet ? SPECIES_DB_TO_DISPLAY[activePet.species] : 'ねこ';
+  const participationStatus = featuredCandidateId
+    ? featuredStatus === 'approved' || featuredStatus === 'scheduled'
+      ? '掲載候補として確認済みです'
+      : '確認を待っています'
+    : '送信を待っています';
+  const handleClose = () => {
+    if (isFirstEntry) {
+      router.replace('/(tabs)');
+    } else {
+      router.back();
+    }
+  };
+
+  const handleWithdraw = () => {
+    if (!existingEntryId || withdrawing || featuredStatus === 'featured') return;
+    Alert.alert('参加を取り下げる', '今日のペットへの参加を取り下げますか？', [
+      { text: 'キャンセル', style: 'cancel' },
+      {
+        text: '取り下げる',
+        style: 'destructive',
+        onPress: async () => {
+          setWithdrawing(true);
+          try {
+            if (featuredCandidateId) {
+              const { data, error } = await supabase.functions.invoke('withdraw-candidate', {
+                body: { candidate_id: featuredCandidateId },
+              });
+              if (error) throw error;
+              const previousStatus =
+                (data as { previous_status?: FeaturedStatus } | null)?.previous_status ?? featuredStatus;
+              const nextStatus =
+                previousStatus === 'approved' || previousStatus === 'scheduled'
+                  ? 'withdrawn'
+                  : null;
+              await updateEntryFeaturedState(
+                existingEntryId,
+                0,
+                nextStatus ? featuredCandidateId : null,
+                nextStatus
+              );
+              setFeaturedCandidateId(nextStatus ? featuredCandidateId : null);
+              setFeaturedStatus(nextStatus);
+            } else {
+              await removePendingFeaturedCandidate(existingEntryId);
+              await updateEntryFeaturedState(existingEntryId, 0, null, null);
+              setFeaturedStatus(null);
+            }
+            setFeatured(false);
+            setFeaturedSubmitted(false);
+            queryClient.invalidateQueries({ queryKey: ['entry', 'today'] });
+            Alert.alert('取り下げました', '今日のペットへの参加を取り下げました。');
+          } catch {
+            Alert.alert('エラー', '参加の取り下げに失敗しました。もう一度お試しください。');
+          } finally {
+            setWithdrawing(false);
+          }
+        },
+      },
+    ]);
+  };
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
       {/* Nav bar */}
       <View style={styles.nav}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.navSide}>
-          <Ionicons name="chevron-back" size={24} color={DS.colors.accent} />
-        </TouchableOpacity>
+        {isFirstEntry ? (
+          <View style={styles.navSide} />
+        ) : (
+          <TouchableOpacity onPress={handleClose} style={styles.navSide}>
+            <Ionicons name="chevron-back" size={24} color={DS.colors.accent} />
+          </TouchableOpacity>
+        )}
         <View style={styles.navCenter}>
-          <Text style={styles.navTitle}>今日の1枚を残す</Text>
+          <Text style={styles.navTitle}>{isFirstEntry ? '最初の1枚を残そう' : '今日の1枚を残す'}</Text>
           <Text style={styles.navDate}>{formatDisplayDate(today)}</Text>
         </View>
-        <TouchableOpacity onPress={() => router.back()} style={[styles.navSide, styles.navSideRight]}>
-          <Text style={styles.cancelText}>キャンセル</Text>
+        <TouchableOpacity onPress={handleClose} style={[styles.navSide, styles.navSideRight]}>
+          <Text style={styles.cancelText}>{isFirstEntry ? 'スキップ' : 'キャンセル'}</Text>
         </TouchableOpacity>
       </View>
 
@@ -263,21 +359,43 @@ export default function PhotoForm() {
               <Text style={styles.toggleSub}>ONにすると、確認後に掲載される可能性があります</Text>
               <Text style={styles.toggleSub}>メモは公開されません</Text>
             </View>
-            <Toggle
-              label=""
-              value={featured}
-              onValueChange={v => {
-                if (v && !isPro) {
-                  Alert.alert('Pro機能', '今日のペットへの参加はProプランのみご利用いただけます。', [
-                    { text: 'キャンセル', style: 'cancel' },
-                    { text: 'Proを見る', onPress: () => router.push('/pro') },
-                  ]);
-                  return;
-                }
-                setFeatured(v);
-              }}
-            />
+            {!featuredSubmitted && featuredStatus !== 'withdrawn' && (
+              <Toggle
+                label=""
+                value={featured}
+                onValueChange={v => {
+                  if (v && !session) {
+                    setAwaitingFeaturedLogin(true);
+                    Alert.alert('ログインが必要です', '今日のペットに参加するにはログインしてください。', [
+                      { text: 'キャンセル', style: 'cancel' },
+                      { text: 'ログイン', onPress: () => router.push('/login') },
+                    ]);
+                    return;
+                  }
+                  setFeatured(v);
+                }}
+              />
+            )}
           </View>
+          {!featuredSubmitted && featuredStatus === 'withdrawn' && (
+            <Text style={styles.submissionStatus}>参加を取り下げました</Text>
+          )}
+          {featuredSubmitted && (
+            <View style={styles.submissionState}>
+              <Text style={styles.submissionStatus}>{participationStatus}</Text>
+              {featuredStatus !== 'featured' && (
+                <TouchableOpacity
+                  style={styles.withdrawBtn}
+                  onPress={handleWithdraw}
+                  disabled={withdrawing}
+                >
+                  <Text style={styles.withdrawBtnText}>
+                    {withdrawing ? '取り下げ中…' : '参加を取り下げる'}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          )}
         </Card>
 
         {/* Save button */}
@@ -431,6 +549,17 @@ const styles = StyleSheet.create({
   toggleInfo: { flex: 1, paddingRight: 12, gap: 4 },
   toggleTitle: { fontSize: 15, fontWeight: '600', color: DS.colors.text },
   toggleSub:   { fontSize: 12, color: DS.colors.textHint, lineHeight: 19 },
+  submissionState: { marginTop: 14, gap: 10 },
+  submissionStatus: { fontSize: 12, color: DS.colors.accent },
+  withdrawBtn: {
+    alignSelf:       'flex-start',
+    borderWidth:     1,
+    borderColor:     DS.colors.border,
+    borderRadius:    DS.radius.pill,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+  },
+  withdrawBtnText: { fontSize: 13, fontWeight: '600', color: DS.colors.textMid },
 
   saveBtn: {
     flexDirection:     'row',

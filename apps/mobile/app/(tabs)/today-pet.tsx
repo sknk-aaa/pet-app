@@ -48,17 +48,11 @@ export default function TodayPet() {
     : 0;
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
-      {/* Header */}
+    <SafeAreaView style={styles.safe} edges={[]}>
       <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <Text style={styles.headerDate}>{formatDisplayDate(today)}</Text>
-          <Text style={styles.heading}>今日のペット</Text>
-          <Text style={styles.headerSub}>きょう選ばれた、みんなの1枚</Text>
-        </View>
-        <TouchableOpacity onPress={() => router.push('/settings')} style={styles.iconBtn}>
-          <Ionicons name="settings-outline" size={22} color={DS.colors.textMid} />
-        </TouchableOpacity>
+        <Text style={styles.headerDate}>{formatDisplayDate(today)}</Text>
+        <Text style={styles.heading}>今日のペット</Text>
+        <Text style={styles.headerSub}>きょう選ばれた、みんなの1枚</Text>
       </View>
 
       {/* 毎日更新バッジ */}
@@ -147,18 +141,13 @@ export default function TodayPet() {
 const styles = StyleSheet.create({
   safe:   { flex: 1, backgroundColor: DS.colors.bg },
   header: {
-    flexDirection:     'row',
-    alignItems:        'flex-start',
-    justifyContent:    'space-between',
     paddingHorizontal: 20,
     paddingTop:        6,
     paddingBottom:     2,
   },
-  headerLeft: { flex: 1 },
   headerDate: { fontSize: 12, color: DS.colors.textHint },
   heading:    { fontSize: 26, fontWeight: '700', color: DS.colors.text, letterSpacing: -0.5, marginTop: 4, marginBottom: 2 },
   headerSub:  { fontSize: 13, color: DS.colors.textMid },
-  iconBtn:    { padding: 4, marginTop: 6 },
   badgeRow:   { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 10 },
   updateBadge: {
     flexDirection:     'row',

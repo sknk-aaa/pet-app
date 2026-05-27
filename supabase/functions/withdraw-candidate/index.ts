@@ -60,7 +60,7 @@ serve(async (req) => {
     return new Response(JSON.stringify({ error: rpcErr.message }), { status: 500, headers: corsHeaders })
   }
 
-  return new Response(JSON.stringify({ ok: true }), {
+  return new Response(JSON.stringify({ ok: true, previous_status: candidate.status }), {
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   })
 })

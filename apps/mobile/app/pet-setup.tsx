@@ -48,9 +48,16 @@ export default function PetSetup() {
       setPets([pet]);
       setSelectedPetId(pet.id);
       await setSetting('selected_pet_id', pet.id);
-      router.replace('/(tabs)');
-    } catch {
-      Alert.alert('エラー', '登録に失敗しました。もう一度お試しください。');
+      router.replace({ pathname: '/photo-form', params: { firstEntry: 'true' } });
+    } catch (error) {
+      console.error('[pet-setup] save failed', error);
+      const detail = error instanceof Error ? error.message : String(error);
+      Alert.alert(
+        'エラー',
+        __DEV__
+          ? `登録に失敗しました。\n\n${detail}`
+          : '登録に失敗しました。もう一度お試しください。'
+      );
     } finally {
       setSaving(false);
     }

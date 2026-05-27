@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useLayoutEffect } from 'react';
 import {
   View,
   Text,
@@ -6,9 +6,10 @@ import {
   TouchableOpacity,
   StyleSheet,
   useWindowDimensions,
+  Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
+import { router, useNavigation } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { DS } from '@/theme';
 import { Card } from '@/components/Card';
@@ -31,16 +32,25 @@ import type { CalendarEntryInfo } from '@/types';
 
 const WEEKDAYS = ['日', '月', '火', '水', '木', '金', '土'];
 const CELL_HEIGHT = 38;
+const GRID_GAP = 2;
+const SCREEN_HORIZONTAL_PADDING = 14;
+const GRID_CARD_PADDING = 12;
+const MONTHS = Array.from({ length: 12 }, (_, index) => index + 1);
 
 export default function Calendar() {
+  const navigation = useNavigation();
   const { width } = useWindowDimensions();
-  const cellWidth = Math.floor((width - 32 - 12 * 2) / 7);
+  const gridWidth = width - SCREEN_HORIZONTAL_PADDING * 2 - GRID_CARD_PADDING * 2;
+  const cellWidth = (gridWidth - GRID_GAP * 6) / 7;
 
   const today = getTodayJST();
   const [todayYear, todayMonth] = today.split('-').map(Number);
   const [year, setYear]         = useState(todayYear);
   const [month, setMonth]       = useState(todayMonth);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [monthPickerVisible, setMonthPickerVisible] = useState(false);
+  const [draftYear, setDraftYear] = useState(todayYear);
+  const [draftMonth, setDraftMonth] = useState(todayMonth);
 
   const selectedPet = useSelectedPet();
   const { data: streakData } = useStreak();
@@ -67,6 +77,10 @@ export default function Calendar() {
     `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
   const photoCount = entries.length;
+  const selectableYears = useMemo(
+    () => Array.from({ length: 22 }, (_, index) => todayYear + 1 - index),
+    [todayYear],
+  );
 
   const prevMonth = () => {
     if (month === 1) { setYear(y => y - 1); setMonth(12); }
@@ -78,42 +92,57 @@ export default function Calendar() {
     else setMonth(m => m + 1);
     setSelectedDate(null);
   };
+  const openMonthPicker = () => {
+    setDraftYear(year);
+    setDraftMonth(month);
+    setMonthPickerVisible(true);
+  };
+  const applyMonthPicker = () => {
+    setYear(draftYear);
+    setMonth(draftMonth);
+    setSelectedDate(null);
+    setMonthPickerVisible(false);
+  };
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerLeft: () => (
+        <TouchableOpacity style={styles.monthPickerButton} onPress={openMonthPicker}>
+          <Text style={styles.monthHeading}>{formatMonthLabel(year, month)}</Text>
+          <Ionicons name="chevron-down" size={15} color={DS.colors.textMid} />
+        </TouchableOpacity>
+      ),
+      headerRight: () => (
+        <TouchableOpacity style={styles.petPill} onPress={() => router.push('/pet-select')}>
+          <PetAvatar species={displaySpecies} iconUri={selectedPet?.icon_uri} size={26} />
+          <Text style={styles.petPillName}>{selectedPet?.name ?? 'うちの子'}</Text>
+          <Ionicons name="chevron-down" size={10} color={DS.colors.textHint} />
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation, year, month, displaySpecies, selectedPet?.icon_uri, selectedPet?.name]);
 
   const selectedEntry = selectedDate ? entryMap.get(selectedDate) : null;
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
+    <SafeAreaView style={styles.safe} edges={[]}>
       <ScrollView contentContainerStyle={styles.scroll}>
-
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity style={styles.petPill} onPress={() => router.push('/pet-select')}>
-            <PetAvatar species={displaySpecies} iconUri={selectedPet?.icon_uri} size={26} />
-            <Text style={styles.petPillName}>{selectedPet?.name ?? 'うちの子'}</Text>
-            <Ionicons name="chevron-down" size={10} color={DS.colors.textHint} />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.settingsBtn} onPress={() => router.push('/settings')}>
-            <Ionicons name="settings-outline" size={22} color={DS.colors.textMid} />
-          </TouchableOpacity>
-        </View>
-
-        {/* Month navigation — card style */}
-        <View style={[styles.monthNav, DS.shadow.card]}>
+        {/* Month navigation */}
+        <View style={styles.monthNav}>
           <TouchableOpacity onPress={prevMonth} style={styles.navBtn}>
             <Ionicons name="chevron-back" size={18} color={DS.colors.accent} />
+            <Text style={styles.navText}>前月</Text>
           </TouchableOpacity>
-          <Text style={styles.monthText}>{formatMonthLabel(year, month)}</Text>
-          <View style={styles.navRight}>
-            <TouchableOpacity onPress={nextMonth} style={styles.navBtn}>
-              <Ionicons name="chevron-forward" size={18} color={DS.colors.accent} />
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => { setYear(todayYear); setMonth(todayMonth); setSelectedDate(null); }}
-              style={styles.todayBtn}
-            >
-              <Text style={styles.todayBtnText}>今日</Text>
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity
+            onPress={() => { setYear(todayYear); setMonth(todayMonth); setSelectedDate(null); }}
+            style={styles.todayBtn}
+          >
+            <Text style={styles.todayBtnText}>今日</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={nextMonth} style={styles.navBtn}>
+            <Text style={styles.navText}>翌月</Text>
+            <Ionicons name="chevron-forward" size={18} color={DS.colors.accent} />
+          </TouchableOpacity>
         </View>
 
         {/* Stats bar — peach background */}
@@ -173,15 +202,24 @@ export default function Calendar() {
                   }}
                   activeOpacity={0.7}
                 >
-                  <Text style={[styles.dayNum, { color: isToday ? DS.colors.accent : numColor }, isToday && styles.dayNumToday]}>
-                    {day}
-                  </Text>
+                  <View style={[
+                    styles.dayBadge,
+                    isSelected && styles.dayBadgeSelected,
+                    isToday && !isSelected && styles.dayBadgeToday,
+                  ]}>
+                    <Text style={[
+                      styles.dayNum,
+                      { color: isToday ? DS.colors.accent : numColor },
+                      isToday && styles.dayNumToday,
+                      isSelected && styles.dayNumSelected,
+                    ]}>
+                      {day}
+                    </Text>
+                  </View>
                   {hasPic ? (
                     <View style={[
                       styles.thumb,
                       { width: cellWidth - 4, height: CELL_HEIGHT },
-                      isSelected && styles.thumbSelected,
-                      isToday && !isSelected && styles.thumbToday,
                     ]}>
                       <Photo style={StyleSheet.absoluteFill} uri={entry.thumbnail_uri} />
                       {isAnni && (
@@ -198,7 +236,6 @@ export default function Calendar() {
                   ) : (
                     <View style={[styles.thumbEmpty, { width: cellWidth - 4, height: CELL_HEIGHT }]} />
                   )}
-                  {isSelected && <View style={styles.selectedDot} />}
                 </TouchableOpacity>
               );
             })}
@@ -239,6 +276,61 @@ export default function Calendar() {
 
         <View style={{ height: 4 }} />
       </ScrollView>
+
+      <Modal
+        animationType="slide"
+        transparent
+        visible={monthPickerVisible}
+        onRequestClose={() => setMonthPickerVisible(false)}
+      >
+        <View style={styles.modalBackdrop}>
+          <TouchableOpacity
+            accessibilityLabel="年月選択を閉じる"
+            activeOpacity={1}
+            style={StyleSheet.absoluteFill}
+            onPress={() => setMonthPickerVisible(false)}
+          />
+          <View style={styles.monthSheet}>
+            <View style={styles.sheetHeader}>
+              <Text style={styles.sheetTitle}>年月を選択</Text>
+              <TouchableOpacity onPress={() => setMonthPickerVisible(false)} style={styles.closeButton}>
+                <Ionicons name="close" size={21} color={DS.colors.textMid} />
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.optionLabel}>年</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.yearOptions}>
+              {selectableYears.map(optionYear => (
+                <TouchableOpacity
+                  key={optionYear}
+                  style={[styles.yearOption, optionYear === draftYear && styles.optionSelected]}
+                  onPress={() => setDraftYear(optionYear)}
+                >
+                  <Text style={[styles.optionText, optionYear === draftYear && styles.optionTextSelected]}>
+                    {optionYear}年
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+            <Text style={styles.optionLabel}>月</Text>
+            <View style={styles.monthOptions}>
+              {MONTHS.map(optionMonth => (
+                <TouchableOpacity
+                  key={optionMonth}
+                  style={[styles.monthOption, optionMonth === draftMonth && styles.optionSelected]}
+                  onPress={() => setDraftMonth(optionMonth)}
+                >
+                  <Text style={[styles.optionText, optionMonth === draftMonth && styles.optionTextSelected]}>
+                    {optionMonth}月
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            <TouchableOpacity style={styles.applyButton} onPress={applyMonthPicker}>
+              <Text style={styles.applyButtonText}>表示する</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -247,8 +339,13 @@ const styles = StyleSheet.create({
   safe:   { flex: 1, backgroundColor: DS.colors.bg },
   scroll: { paddingHorizontal: 14, paddingBottom: 24, gap: 10 },
 
-  header:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 6, paddingBottom: 4 },
-  settingsBtn: { padding: 4 },
+  monthPickerButton: {
+    flexDirection: 'row',
+    alignItems:    'center',
+    gap:           6,
+    paddingVertical: 8,
+  },
+  monthHeading: { fontSize: 21, fontWeight: '700', color: DS.colors.text, letterSpacing: -0.4 },
   petPill: {
     flexDirection:     'row',
     alignItems:        'center',
@@ -268,15 +365,12 @@ const styles = StyleSheet.create({
     flexDirection:     'row',
     alignItems:        'center',
     justifyContent:    'space-between',
-    backgroundColor:   DS.colors.card,
-    borderRadius:      16,
-    paddingVertical:   10,
-    paddingHorizontal: 14,
+    paddingVertical:   2,
+    paddingHorizontal: 4,
   },
-  navBtn:       { paddingVertical: 4, paddingHorizontal: 8 },
-  monthText:    { fontSize: 16, fontWeight: '600', color: DS.colors.text },
-  navRight:     { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  todayBtn:     { paddingHorizontal: 8, paddingVertical: 4 },
+  navBtn:       { flexDirection: 'row', alignItems: 'center', gap: 2, paddingVertical: 6, paddingHorizontal: 8 },
+  navText:      { fontSize: 13, fontWeight: '500', color: DS.colors.accent },
+  todayBtn:     { backgroundColor: DS.colors.accentLight, borderRadius: DS.radius.pill, paddingHorizontal: 16, paddingVertical: 7 },
   todayBtnText: { fontSize: 13, fontWeight: '600', color: DS.colors.accent },
 
   statsBar: {
@@ -297,17 +391,25 @@ const styles = StyleSheet.create({
   statNumSage:   { fontSize: 17, fontWeight: '700', color: DS.colors.sage },
 
   gridCard: {},
-  weekRow:  { flexDirection: 'row', marginBottom: 4 },
+  weekRow:  { flexDirection: 'row', columnGap: GRID_GAP, marginBottom: 4 },
   weekday:  { fontSize: 11, fontWeight: '600', color: DS.colors.textMid, textAlign: 'center', paddingVertical: 4 },
   weekdaySun: { color: DS.colors.red },
   weekdaySat: { color: DS.colors.sage },
-  grid:       { flexDirection: 'row', flexWrap: 'wrap', gap: 2 },
+  grid:       { flexDirection: 'row', flexWrap: 'wrap', columnGap: GRID_GAP, rowGap: GRID_GAP },
   cell:       { alignItems: 'center', gap: 1 },
   dayNum:     { fontSize: 10, lineHeight: 14 },
   dayNumToday: { fontWeight: '700' },
+  dayNumSelected: { color: DS.colors.white, fontWeight: '700' },
+  dayBadge: {
+    width:          22,
+    height:         20,
+    borderRadius:   10,
+    alignItems:     'center',
+    justifyContent: 'center',
+  },
+  dayBadgeSelected: { backgroundColor: DS.colors.accent },
+  dayBadgeToday:    { backgroundColor: DS.colors.accentLight },
   thumb: { borderRadius: 8, overflow: 'hidden' },
-  thumbSelected: { borderWidth: 2, borderColor: DS.colors.accent },
-  thumbToday:    { borderWidth: 1.5, borderColor: DS.colors.accentSoft },
   thumbEmpty: {
     borderRadius:    8,
     backgroundColor: DS.colors.cardCream,
@@ -317,7 +419,6 @@ const styles = StyleSheet.create({
   },
   anniBadge:   { position: 'absolute', top: 1, right: 1 },
   pawBadge:    { position: 'absolute', bottom: 1, right: 1 },
-  selectedDot: { width: 4, height: 4, borderRadius: 2, backgroundColor: DS.colors.accent, marginTop: 1 },
 
   anniLinkInner: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   anniEmoji:     { fontSize: 18 },
@@ -327,4 +428,54 @@ const styles = StyleSheet.create({
   previewInner: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   previewPhoto: { width: 72, height: 72, borderRadius: DS.radius.md, flexShrink: 0 },
   previewInfo:  { flex: 1, gap: 6 },
+
+  modalBackdrop: {
+    flex:            1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(59,35,20,0.24)',
+  },
+  monthSheet: {
+    backgroundColor:   DS.colors.bg,
+    borderTopLeftRadius:  24,
+    borderTopRightRadius: 24,
+    paddingHorizontal: 20,
+    paddingTop:        16,
+    paddingBottom:     32,
+    gap:               12,
+  },
+  sheetHeader: {
+    flexDirection:  'row',
+    alignItems:     'center',
+    justifyContent: 'space-between',
+    marginBottom:   2,
+  },
+  sheetTitle:   { fontSize: 18, fontWeight: '700', color: DS.colors.text },
+  closeButton:  { padding: 4 },
+  optionLabel:  { fontSize: 12, fontWeight: '600', color: DS.colors.textHint },
+  yearOptions:  { gap: 8, paddingBottom: 2 },
+  yearOption: {
+    paddingVertical:   8,
+    paddingHorizontal: 14,
+    borderRadius:      DS.radius.pill,
+    backgroundColor:   DS.colors.cardCream,
+  },
+  monthOptions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  monthOption: {
+    width:          '22%',
+    alignItems:     'center',
+    paddingVertical: 9,
+    borderRadius:   DS.radius.pill,
+    backgroundColor: DS.colors.cardCream,
+  },
+  optionSelected:     { backgroundColor: DS.colors.accent },
+  optionText:         { fontSize: 14, fontWeight: '500', color: DS.colors.textMid },
+  optionTextSelected: { color: DS.colors.white, fontWeight: '700' },
+  applyButton: {
+    backgroundColor: DS.colors.accent,
+    borderRadius:    DS.radius.pill,
+    alignItems:      'center',
+    paddingVertical: 13,
+    marginTop:       6,
+  },
+  applyButtonText: { color: DS.colors.white, fontSize: 15, fontWeight: '700' },
 });

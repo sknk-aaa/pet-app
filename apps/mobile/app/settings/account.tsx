@@ -37,7 +37,7 @@ export default function Account() {
   const handleDeleteAccount = () => {
     Alert.alert(
       'アカウントを削除',
-      'すべてのデータが削除されます。この操作は取り消せません。',
+      'サーバー上のアカウントと投稿データが削除されます。端末内の写真記録は残ります。この操作は取り消せません。',
       [
         { text: 'キャンセル', style: 'cancel' },
         {
@@ -45,7 +45,7 @@ export default function Account() {
           style: 'destructive',
           onPress: async () => {
             try {
-              const { error } = await supabase.rpc('delete_user_account');
+              const { error } = await supabase.functions.invoke('delete-my-account');
               if (error) throw error;
               await signOut();
             } catch {

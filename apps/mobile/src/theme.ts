@@ -1,5 +1,3 @@
-import { Platform } from 'react-native';
-
 export const DS = {
   colors: {
     bg:           '#FAF7F2',
@@ -25,8 +23,33 @@ export const DS = {
     md:   12,
     sm:   8,
   },
-  // Noto Sans JP は expo-font で読み込む想定。未ロード時は system フォントにフォールバック
-  font: Platform.select({ ios: 'System', default: 'System' }),
+  font: {
+    regular: 'MPLUSRounded1c_400Regular',
+    medium:  'MPLUSRounded1c_500Medium',
+    bold:    'MPLUSRounded1c_700Bold',
+    heavy:   'MPLUSRounded1c_800ExtraBold',
+  },
+  home: {
+    background: '#FFFCF7',
+    card:       '#FFFFFF',
+    pill:       '#FFF4E8',
+    outline:    '#F2D1B4',
+    accent:     '#F17B35',
+    text:       '#452818',
+    textSoft:   '#80604A',
+    radius: {
+      photo: 22,
+      panel: 24,
+      pill:  999,
+    },
+    shadow: {
+      shadowColor: '#80512F',
+      shadowOffset: { width: 0, height: 5 },
+      shadowOpacity: 0.11,
+      shadowRadius: 15,
+      elevation: 4,
+    },
+  },
   shadow: {
     card: {
       shadowColor: '#50280A',

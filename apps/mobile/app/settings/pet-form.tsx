@@ -90,8 +90,10 @@ export default function PetForm() {
         setPets(pets.map(p => p.id === petId ? { ...p, name: name.trim(), species: 'other', gender: genderDb, birthday: birthday.trim() || null, icon_uri: iconUri } : p));
       }
       router.back();
-    } catch {
-      Alert.alert('エラー', '保存に失敗しました');
+    } catch (error) {
+      console.error('[pet-form] save failed', error);
+      const detail = error instanceof Error ? error.message : String(error);
+      Alert.alert('エラー', __DEV__ ? `保存に失敗しました。\n\n${detail}` : '保存に失敗しました');
     } finally {
       setSaving(false);
     }

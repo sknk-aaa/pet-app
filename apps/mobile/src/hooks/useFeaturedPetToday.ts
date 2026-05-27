@@ -6,7 +6,7 @@ import type { FeaturedPetToday } from '@/types';
 async function fetchFeaturedPetToday(): Promise<FeaturedPetToday | null> {
   const today = getTodayJST();
   const { data, error } = await supabase
-    .from('featured_pets_today')
+    .from('public_featured_pet_today')
     .select('*')
     .eq('featured_date', today)
     .maybeSingle();

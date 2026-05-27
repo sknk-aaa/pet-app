@@ -18,6 +18,7 @@ import { useSelectedPet } from '@/hooks/usePets';
 import { useAppStore } from '@/store/appStore';
 import { useAuthStore } from '@/store/authStore';
 import { setSetting } from '@/db/settings';
+import { requestPermission, scheduleOrUpdateDailyReminder } from '@/services/notifications';
 import { SPECIES_DB_TO_DISPLAY } from '@/utils/species';
 
 function LockRow({ label }: { label: string }) {
@@ -37,13 +38,21 @@ export default function Settings() {
   const displaySpecies = selectedPet ? SPECIES_DB_TO_DISPLAY[selectedPet.species] : 'ねこ';
 
   const toggleCameraRoll = async (v: boolean) => {
-    await setSetting('save_to_camera_roll', v ? '1' : '0');
+    await setSetting('save_to_camera_roll', v ? 'true' : 'false');
     updateSettings({ save_to_camera_roll: v });
   };
 
   const toggleReminder = async (v: boolean) => {
-    await setSetting('notification_enabled', v ? '1' : '0');
+    await setSetting('notification_enabled', v ? 'true' : 'false');
     updateSettings({ notification_enabled: v });
+    if (v) {
+      const permitted = await requestPermission();
+      if (permitted) {
+        await scheduleOrUpdateDailyReminder(true, settings.notification_time ?? '20:00');
+      }
+    } else {
+      await scheduleOrUpdateDailyReminder(false, settings.notification_time ?? '20:00');
+    }
   };
 
   return (

@@ -13,6 +13,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   plugins: [
     'expo-router',
+    'expo-font',
     [
       'expo-camera',
       { cameraPermission: 'ペットの写真を撮影します' },

@@ -13,6 +13,10 @@ import { updatePet } from '@/db/pets';
 import { useAuthStore } from '@/store/authStore';
 import { useAppStore } from '@/store/appStore';
 
+function enabledSetting(value: string | undefined): boolean {
+  return value !== 'false' && value !== '0';
+}
+
 export function useBootstrap(): { isReady: boolean; needsOnboarding: boolean } {
   const [isReady, setIsReady] = useState(false);
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
@@ -72,10 +76,10 @@ export function useBootstrap(): { isReady: boolean; needsOnboarding: boolean } {
       setPets(pets);
       if (selectedPetId) setSelectedPetId(selectedPetId);
       updateSettings({
-        notification_enabled: settingsMap['notification_enabled'] === 'true',
-        notification_time: settingsMap['notification_time'] ?? '21:00',
-        notification_featured_enabled: settingsMap['notification_featured_enabled'] !== 'false',
-        save_to_camera_roll: settingsMap['save_to_camera_roll'] === 'true',
+        notification_enabled: enabledSetting(settingsMap['notification_enabled']),
+        notification_time: settingsMap['notification_time'] ?? '20:00',
+        notification_featured_enabled: enabledSetting(settingsMap['notification_featured_enabled']),
+        save_to_camera_roll: enabledSetting(settingsMap['save_to_camera_roll']),
         device_id: settingsMap['device_id'] ?? deviceId,
       });
 
@@ -96,7 +100,8 @@ export function useBootstrap(): { isReady: boolean; needsOnboarding: boolean } {
       }
     }
 
-    bootstrap().catch(() => {
+    bootstrap().catch(error => {
+      console.error('[bootstrap] failed', error);
       if (!cancelled) setIsReady(true);
     });
 

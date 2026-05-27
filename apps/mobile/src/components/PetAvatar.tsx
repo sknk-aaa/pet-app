@@ -1,0 +1,47 @@
+import React from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+import { DS } from '@/theme';
+
+type Props = {
+  size?: number;
+  species?: string;
+};
+
+const SPECIES_EMOJI: Record<string, string> = {
+  ねこ:       '🐱',
+  いぬ:       '🐶',
+  インコ:     '🦜',
+  うさぎ:     '🐰',
+  ハムスター: '🐹',
+  その他:     '🐾',
+};
+
+export function PetAvatar({ size = 44, species = 'ねこ' }: Props) {
+  const emoji = SPECIES_EMOJI[species] ?? '🐾';
+  const fontSize = size * 0.48;
+
+  return (
+    <View
+      style={[
+        styles.circle,
+        {
+          width:  size,
+          height: size,
+          borderRadius: size / 2,
+        },
+      ]}
+    >
+      <Text style={{ fontSize }}>{emoji}</Text>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  circle: {
+    backgroundColor: DS.colors.accentLight,
+    borderWidth:     1.5,
+    borderColor:     DS.colors.border,
+    alignItems:      'center',
+    justifyContent:  'center',
+  },
+});

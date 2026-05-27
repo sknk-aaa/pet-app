@@ -210,9 +210,8 @@ const styles = StyleSheet.create({
     color:      DS.colors.textHint,
   },
   headerTitle: {
-    fontFamily:  DS.font.bold,
-    fontWeight:  '600',
-    fontSize:    30,
+    fontFamily:  DS.font.medium,
+    fontSize:    23,
     color:       DS.home.text,
   },
   settingsBtn: {

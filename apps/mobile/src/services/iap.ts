@@ -41,7 +41,7 @@ export async function purchasePro(productId: string): Promise<void> {
   const isMonthly = productId === IAP_PRODUCTS.MONTHLY;
 
   const result = await requestPurchase({
-    request: { apple: { sku: productId } },
+    request: { ios: { sku: productId } },
     type: isMonthly ? 'subs' : 'in-app',
   });
 

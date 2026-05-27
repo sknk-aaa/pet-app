@@ -1,0 +1,10 @@
+node_modules/
+.expo/
+dist/
+*.tsbuildinfo
+.env
+.env.local
+.env*.local
+apps/admin/.env.local
+apps/mobile/.env
+*.node

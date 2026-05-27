@@ -10,7 +10,7 @@ type Props = {
 export function StreakBadge({ count, note }: Props) {
   return (
     <View style={styles.row}>
-      <View style={[styles.pill, DS.shadow.card]}>
+      <View style={styles.pill}>
         <Text style={styles.fire}>🔥</Text>
         <Text style={styles.label}>連続</Text>
         <Text style={styles.count}>{count}日</Text>
@@ -27,26 +27,32 @@ const styles = StyleSheet.create({
     gap:           8,
   },
   pill: {
-    flexDirection:    'row',
-    alignItems:       'center',
-    gap:              6,
-    backgroundColor:  DS.colors.card,
-    borderRadius:     DS.radius.pill,
-    paddingVertical:  7,
-    paddingHorizontal: 16,
+    flexDirection:     'row',
+    alignItems:        'center',
+    justifyContent:    'center',
+    gap:               6,
+    height:            38,
+    minWidth:          148,
+    backgroundColor:   DS.home.pill,
+    borderRadius:      DS.radius.pill,
+    borderWidth:       1,
+    borderColor:       DS.home.outline,
+    paddingHorizontal: 18,
   },
-  fire: { fontSize: 16 },
+  fire:  { fontSize: 18, lineHeight: 22 },
   label: {
-    color:      DS.colors.textMid,
-    fontSize:   13,
+    fontFamily: DS.font.medium,
+    color:      DS.home.text,
+    fontSize:   16,
   },
   count: {
-    color:      DS.colors.accent,
-    fontSize:   19,
-    fontWeight: '700',
+    fontFamily: DS.font.bold,
+    color:      DS.home.accent,
+    fontSize:   20,
   },
   note: {
-    color:    DS.colors.textHint,
-    fontSize: 12,
+    fontFamily: DS.font.regular,
+    color:      DS.home.textSoft,
+    fontSize:   14,
   },
 });

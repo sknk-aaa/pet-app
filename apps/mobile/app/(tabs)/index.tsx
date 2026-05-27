@@ -14,14 +14,20 @@ import { DS } from '@/theme';
 import { Card } from '@/components/Card';
 import { Photo } from '@/components/Photo';
 import { StreakBadge } from '@/components/StreakBadge';
-import { Chip } from '@/components/Chip';
-import { useAppStore } from '@/store/appStore';
 import { useTodayEntry, useMemoryEntry } from '@/hooks/useEntries';
 import { useStreak } from '@/hooks/useStreak';
 import { useSelectedPet } from '@/hooks/usePets';
 import { formatDisplayDate, getTodayJST } from '@/utils/date';
 import { ANNIVERSARY_TAG_DB_TO_DISPLAY } from '@/utils/species';
 import type { EntryWithPets, Entry } from '@/types';
+
+function formatHomeDate(date: string): string {
+  const [, month, day] = date.split('-').map(Number);
+  const weekday = ['日', '月', '火', '水', '木', '金', '土'][
+    new Date(Number(date.slice(0, 4)), month - 1, day).getDay()
+  ];
+  return `${month}月${day}日 ${weekday}曜日`;
+}
 
 export default function Home() {
   const { data: todayEntry, isLoading } = useTodayEntry();
@@ -30,78 +36,75 @@ export default function Home() {
   const today = getTodayJST();
 
   const displayName = selectedPet?.name ?? 'うちの子';
+  const streakCount = streak?.display_streak ?? 0;
   const isRecorded  = !!todayEntry;
   const pageTitle   = isRecorded ? '今日の1枚' : '今日の1枚を残そう';
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <Text style={styles.headerDate}>{formatDisplayDate(today)}</Text>
+      <ScrollView contentContainerStyle={styles.scroll}>
+        <View style={styles.header}>
+          <Text style={styles.headerDate}>{formatHomeDate(today)}</Text>
           <Text style={[styles.headerTitle, isRecorded && styles.headerTitleRecorded]}>{pageTitle}</Text>
+          <TouchableOpacity onPress={() => router.push('/settings')} style={styles.settingsBtn}>
+            <Ionicons name="settings-outline" size={22} color={DS.home.text} />
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity onPress={() => router.push('/settings')} style={styles.iconBtn}>
-          <Ionicons name="settings-outline" size={22} color={DS.colors.textMid} />
-        </TouchableOpacity>
-      </View>
 
-      {/* Streak */}
-      <View style={styles.streakRow}>
-        <StreakBadge count={streak?.display_streak ?? 0} note={isRecorded ? undefined : '昨日まで記録中'} />
-      </View>
+        {streakCount > 0 && (
+          <View style={styles.streakRow}>
+            <StreakBadge count={streakCount} note={isRecorded ? undefined : '昨日まで記録中'} />
+          </View>
+        )}
 
-      {isLoading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator color={DS.colors.accent} />
-        </View>
-      ) : (
-        <ScrollView contentContainerStyle={styles.scroll}>
-          {todayEntry ? (
-            <RecordedView entry={todayEntry} today={today} />
+        {isLoading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator color={DS.colors.accent} />
+          </View>
+        ) : todayEntry ? (
+            <RecordedView entry={todayEntry} />
           ) : (
             <UnrecordedView petName={displayName} />
-          )}
-        </ScrollView>
-      )}
+        )}
+      </ScrollView>
     </SafeAreaView>
   );
 }
 
-function RecordedView({ entry, today }: { entry: EntryWithPets; today: string }) {
-  const { data: memory } = useMemoryEntry();
+function RecordedView({ entry }: { entry: EntryWithPets }) {
   const tagDisplay = entry.anniversary_tag_type
     ? ANNIVERSARY_TAG_DB_TO_DISPLAY[entry.anniversary_tag_type]
     : null;
 
   return (
     <>
-      {/* Today's photo card */}
-      <Card style={styles.photoCard} p={0}>
-        <Photo style={styles.recordedPhoto} uri={entry.image_uri} />
+      <View style={styles.photoCard}>
+        <Photo radius={0} style={styles.recordedPhoto} uri={entry.image_uri} />
         <View style={styles.photoInfo}>
           <Text style={styles.photoTitle}>{entry.title}</Text>
           {entry.memo ? (
             <Text style={styles.photoMemo}>{entry.memo}</Text>
           ) : null}
-          {tagDisplay && (
-            <View style={styles.chipsRow}>
-              <Chip label={tagDisplay} selected={false} small />
-            </View>
-          )}
+          <View style={styles.chipsRow}>
+            {entry.pets.map(pet => (
+              <HomeChip key={pet.id} icon="paw" label={pet.name} />
+            ))}
+            {tagDisplay && (
+              <HomeChip icon="pricetag-outline" label={tagDisplay} />
+            )}
+          </View>
           {entry.featured_submitted === 1 && (
             <View style={styles.featuredOutline}>
-              <Ionicons name="paw" size={16} color={DS.colors.accent} />
+              <Ionicons name="paw" size={16} color={DS.home.accent} />
               <Text style={styles.featuredOutlineText}>今日のペット 参加中</Text>
             </View>
           )}
         </View>
-      </Card>
+      </View>
 
-      {/* Action row */}
       <View style={styles.actionRow}>
         <TouchableOpacity style={styles.editBtn} onPress={() => router.push('/photo-form')}>
-          <Ionicons name="create-outline" size={14} color={DS.colors.accent} />
+          <Ionicons name="create" size={18} color={DS.home.accent} />
           <Text style={styles.editBtnText}>編集</Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -109,12 +112,19 @@ function RecordedView({ entry, today }: { entry: EntryWithPets; today: string })
           onPress={() => router.push('/(tabs)/calendar')}
         >
           <Text style={styles.calendarLinkText}>カレンダーで見返す</Text>
-          <Ionicons name="chevron-forward" size={14} color={DS.colors.accent} />
+          <Ionicons name="chevron-forward" size={19} color={DS.home.accent} />
         </TouchableOpacity>
       </View>
-
-      {memory && <MemoryCard entry={memory} />}
     </>
+  );
+}
+
+function HomeChip({ icon, label }: { icon: keyof typeof Ionicons.glyphMap; label: string }) {
+  return (
+    <View style={styles.homeChip}>
+      <Ionicons name={icon} size={15} color={DS.home.text} />
+      <Text style={styles.homeChipText}>{label}</Text>
+    </View>
   );
 }
 
@@ -167,65 +177,98 @@ function MemoryCard({ entry }: { entry: Entry }) {
 }
 
 const styles = StyleSheet.create({
-  safe:   { flex: 1, backgroundColor: DS.colors.bg },
+  safe:   { flex: 1, backgroundColor: DS.home.background },
   header: {
-    flexDirection:     'row',
-    alignItems:        'flex-start',
-    justifyContent:    'space-between',
-    paddingHorizontal: 20,
-    paddingTop:        6,
+    height:        57,
+    position:      'relative',
+    justifyContent: 'flex-end',
+    alignItems:    'center',
   },
-  headerLeft:           { flex: 1 },
-  headerDate:           { fontSize: 12, color: DS.colors.textHint },
-  headerTitle:          { fontSize: 24, fontWeight: '700', color: DS.colors.text, letterSpacing: -0.5, marginTop: 4 },
-  headerTitleRecorded:  { fontSize: 22 },
-  iconBtn:              { padding: 4, marginTop: 4 },
-  streakRow:            { paddingHorizontal: 20, paddingVertical: 12 },
-  loadingContainer:     { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  scroll:               { paddingHorizontal: 16, paddingBottom: 24, gap: 10 },
+  settingsBtn: {
+    position: 'absolute',
+    right:    1,
+    bottom:   3,
+    padding:  6,
+  },
+  headerDate: {
+    position:   'absolute',
+    left:       0,
+    top:        10,
+    fontFamily: DS.font.regular, 
+    fontSize:   13,
+    color:      DS.home.text,
+  },
+  headerTitle:          { fontFamily: DS.font.bold, fontSize: 30, color: DS.home.text, letterSpacing: -0.5 },
+  headerTitleRecorded:  { fontSize: 30 },
+  streakRow:            { alignItems: 'center', paddingTop: 7, paddingBottom: 10 },
+  loadingContainer:     { minHeight: 220, justifyContent: 'center', alignItems: 'center' },
+  scroll:               { paddingHorizontal: 16, paddingBottom: 10 },
 
   // Recorded
-  photoCard:    { overflow: 'hidden' },
-  recordedPhoto: { width: '100%', height: 240, borderRadius: 0 },
-  photoInfo:    { padding: 16, gap: 10 },
-  photoTitle:   { fontSize: 20, fontWeight: '700', color: DS.colors.text, letterSpacing: -0.3 },
-  photoMemo:    { fontSize: 13, color: DS.colors.textMid, lineHeight: 22 },
-  chipsRow:     { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  photoCard: {
+    borderRadius:    20,
+    overflow:        'hidden',
+    backgroundColor: DS.home.card,
+    ...DS.home.shadow,
+  },
+  recordedPhoto: { width: '100%', height: 280 },
+  photoInfo: {
+    backgroundColor:   DS.home.card,
+    paddingTop:        16,
+    paddingHorizontal: 18,
+    paddingBottom:     16,
+    gap:               8,
+  },
+  photoTitle:   { fontFamily: DS.font.bold, fontSize: 23, color: DS.home.text, letterSpacing: -0.2 },
+  photoMemo:    { fontFamily: DS.font.regular, fontSize: 14, color: DS.home.text, lineHeight: 22 },
+  chipsRow:     { flexDirection: 'row', flexWrap: 'wrap', gap: 7 },
+  homeChip: {
+    flexDirection:     'row',
+    alignItems:        'center',
+    gap:               7,
+    backgroundColor:   DS.home.pill,
+    borderRadius:      DS.home.radius.pill,
+    paddingVertical:   6,
+    paddingHorizontal: 14,
+  },
+  homeChipText: { fontFamily: DS.font.medium, fontSize: 14, color: DS.home.text },
   featuredOutline: {
     flexDirection:     'row',
     alignItems:        'center',
+    justifyContent:    'center',
     gap:               8,
-    borderWidth:       1.5,
-    borderColor:       DS.colors.border,
-    borderRadius:      DS.radius.pill,
-    paddingVertical:   8,
-    paddingHorizontal: 18,
-    alignSelf:         'flex-start',
+    borderWidth:       1,
+    borderColor:       DS.home.accent,
+    borderRadius:      DS.home.radius.pill,
+    paddingVertical:   10,
+    width:             '100%',
+    marginTop:         2,
   },
-  featuredOutlineText: { fontSize: 13, fontWeight: '600', color: DS.colors.accent },
+  featuredOutlineText: { fontFamily: DS.font.medium, fontSize: 14, color: DS.home.accent },
   actionRow: {
     flexDirection:     'row',
     alignItems:        'center',
     justifyContent:    'space-between',
-    paddingHorizontal: 4,
-    paddingVertical:   4,
+    paddingHorizontal: 12,
+    paddingTop:        17,
+    paddingBottom:     8,
   },
   editBtn: {
     flexDirection:     'row',
     alignItems:        'center',
-    gap:               6,
-    borderWidth:       1.5,
-    borderColor:       DS.colors.border,
-    borderRadius:      DS.radius.pill,
-    paddingVertical:   8,
-    paddingHorizontal: 18,
+    gap:               9,
+    borderWidth:       1,
+    borderColor:       DS.home.accent,
+    borderRadius:      DS.home.radius.pill,
+    paddingVertical:   10,
+    paddingHorizontal: 22,
   },
-  editBtnText:      { fontSize: 13, fontWeight: '500', color: DS.colors.accent },
-  calendarLink:     { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  calendarLinkText: { fontSize: 13, fontWeight: '500', color: DS.colors.accent },
+  editBtnText:      { fontFamily: DS.font.bold, fontSize: 15, color: DS.home.accent },
+  calendarLink:     { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 10 },
+  calendarLinkText: { fontFamily: DS.font.bold, fontSize: 15, color: DS.home.accent },
 
   // Unrecorded
-  emptyCard: { alignItems: 'center', gap: 10, paddingVertical: 24, paddingHorizontal: 20 },
+  emptyCard: { alignItems: 'center', gap: 12, paddingVertical: 28, paddingHorizontal: 22 },
   cameraCircle: {
     width:           56,
     height:          56,
@@ -234,8 +277,8 @@ const styles = StyleSheet.create({
     alignItems:      'center',
     justifyContent:  'center',
   },
-  emptyTitle:   { fontSize: 16, fontWeight: '600', color: DS.colors.text, textAlign: 'center' },
-  emptySub:     { fontSize: 13, color: DS.colors.textHint, textAlign: 'center', lineHeight: 21 },
+  emptyTitle:   { fontFamily: DS.font.bold, fontSize: 23, color: DS.colors.text, textAlign: 'center', marginTop: 4 },
+  emptySub:     { fontFamily: DS.font.regular, fontSize: 15, color: DS.colors.textMid, textAlign: 'center', lineHeight: 25 },
   ctaButton: {
     flexDirection:     'row',
     alignItems:        'center',
@@ -243,12 +286,12 @@ const styles = StyleSheet.create({
     width:             '100%',
     backgroundColor:   DS.colors.accent,
     borderRadius:      DS.radius.pill,
-    paddingVertical:   14,
+    paddingVertical:   16,
     justifyContent:    'center',
     marginTop:         6,
     ...DS.shadow.float,
   },
-  ctaButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  ctaButtonText: { fontFamily: DS.font.bold, color: '#fff', fontSize: 18 },
 
   // Memory card
   memoryCard:   { overflow: 'hidden' },
@@ -261,7 +304,7 @@ const styles = StyleSheet.create({
     paddingBottom:     10,
   },
   memoryHeaderLeft:  { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  memoryHeaderTitle: { fontSize: 14, fontWeight: '600', color: DS.colors.text },
+  memoryHeaderTitle: { fontFamily: DS.font.bold, fontSize: 18, color: DS.colors.text },
   memoryYearBadge: {
     backgroundColor:   DS.colors.cardCream,
     borderRadius:      DS.radius.pill,
@@ -270,9 +313,9 @@ const styles = StyleSheet.create({
     borderWidth:       1,
     borderColor:       DS.colors.border,
   },
-  memoryYearText: { fontSize: 11, color: DS.colors.textHint },
+  memoryYearText: { fontFamily: DS.font.medium, fontSize: 13, color: DS.colors.textMid },
   memoryPhoto:    { width: '100%', height: 200, borderRadius: 0 },
   memoryFooter:   { paddingVertical: 14, paddingHorizontal: 16, alignItems: 'center', gap: 4 },
-  memoryTitle:    { fontSize: 17, fontWeight: '600', color: DS.colors.text },
-  memoryDate:     { fontSize: 12, color: DS.colors.textHint },
+  memoryTitle:    { fontFamily: DS.font.bold, fontSize: 21, color: DS.colors.text },
+  memoryDate:     { fontFamily: DS.font.regular, fontSize: 14, color: DS.colors.textHint },
 });

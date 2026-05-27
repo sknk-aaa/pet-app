@@ -29,7 +29,7 @@ function formatHomeDate(date: string): string {
   return `${month}月${day}日 ${weekday}曜日`;
 }
 
-export default function Home() {
+function HomeOriginal() {
   const { data: todayEntry, isLoading } = useTodayEntry();
   const { data: streak } = useStreak();
   const selectedPet = useSelectedPet();
@@ -389,3 +389,6 @@ const styles = StyleSheet.create({
   memTitle: { fontFamily: DS.font.bold, fontSize: 20, color: DS.colors.text },
   memDate:  { fontFamily: DS.font.regular, fontSize: 13, color: DS.colors.textHint },
 });
+
+import HomeRecordedTrace from '../home-trace';
+export default function Home() { return <HomeRecordedTrace />; }

@@ -211,7 +211,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontFamily: DS.font.bold,
-    fontSize:   28,
+    fontSize:   34,
     color:      DS.home.text,
   },
   settingsBtn: {

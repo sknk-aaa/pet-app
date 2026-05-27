@@ -43,20 +43,21 @@ export default function Home() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
 
-        {/* ヘッダー: [日付 左] [今日の1枚 中央] [歯車 右] */}
+        {/* ── ヘッダー ── */}
         <View style={styles.header}>
           <Text style={styles.headerDate}>{formatHomeDate(today)}</Text>
           <Text style={styles.headerTitle}>今日の1枚</Text>
-          <TouchableOpacity
-            style={styles.settingsBtn}
-            onPress={() => router.push('/settings')}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          >
-            <Ionicons name="settings-outline" size={22} color={DS.home.text} />
-          </TouchableOpacity>
+          <View style={styles.headerRight}>
+            <TouchableOpacity
+              onPress={() => router.push('/settings')}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Ionicons name="settings-outline" size={22} color={DS.home.text} />
+            </TouchableOpacity>
+          </View>
         </View>
 
-        {/* ストリークバッジ 中央 */}
+        {/* ── ストリークバッジ ── */}
         {streakCount > 0 && (
           <View style={styles.streakRow}>
             <StreakBadge count={streakCount} note={isRecorded ? undefined : '昨日まで記録中'} />
@@ -65,7 +66,7 @@ export default function Home() {
 
         {isLoading ? (
           <View style={styles.loader}>
-            <ActivityIndicator color={DS.colors.accent} />
+            <ActivityIndicator color={DS.home.accent} />
           </View>
         ) : todayEntry ? (
           <RecordedView entry={todayEntry} />
@@ -85,36 +86,28 @@ function RecordedView({ entry }: { entry: EntryWithPets }) {
 
   return (
     <>
-      {/* 写真+情報 一体カード (shadow外層 + overflow内層) */}
+      {/* カード */}
       <View style={styles.cardOuter}>
         <View style={styles.cardInner}>
-
-          {/* 写真 */}
           <Photo radius={0} style={styles.photo} uri={entry.image_uri} />
-
-          {/* 情報エリア */}
-          <View style={styles.info}>
+          <View style={styles.cardBody}>
             <Text style={styles.infoTitle}>{entry.title}</Text>
-
             {entry.memo ? (
               <Text style={styles.infoMemo}>{entry.memo}</Text>
             ) : null}
-
             <View style={styles.chipsRow}>
               {entry.pets.map(pet => (
                 <Chip key={pet.id} icon="paw" label={pet.name} />
               ))}
               {tagDisplay && <Chip icon="pricetag-outline" label={tagDisplay} />}
             </View>
-
             {entry.featured_submitted === 1 && (
               <View style={styles.featuredBtn}>
-                <Ionicons name="paw" size={15} color={DS.home.accent} />
+                <Ionicons name="paw" size={18} color={DS.home.accent} />
                 <Text style={styles.featuredText}>今日のペット 参加中</Text>
               </View>
             )}
           </View>
-
         </View>
       </View>
 
@@ -125,16 +118,14 @@ function RecordedView({ entry }: { entry: EntryWithPets }) {
           onPress={() => router.push('/photo-form')}
           activeOpacity={0.75}
         >
-          <Ionicons name="create-outline" size={16} color={DS.home.accent} />
+          <Ionicons name="create-outline" size={13} color={DS.home.accent} />
           <Text style={styles.editText}>編集</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={styles.calLink}
           onPress={() => router.push('/(tabs)/calendar')}
           activeOpacity={0.75}
         >
-          <Text style={styles.calLinkText}>カレンダーで見返す</Text>
-          <Ionicons name="chevron-forward" size={16} color={DS.home.accent} />
+          <Text style={styles.calLinkText}>カレンダーで見返す ›</Text>
         </TouchableOpacity>
       </View>
     </>
@@ -156,7 +147,7 @@ function UnrecordedView({ petName }: { petName: string }) {
     <>
       <Card style={styles.emptyCard}>
         <View style={styles.cameraCircle}>
-          <Ionicons name="camera-outline" size={28} color={DS.colors.accent} />
+          <Ionicons name="camera-outline" size={28} color={DS.home.accent} />
         </View>
         <Text style={styles.emptyTitle}>今日はまだ記録がありません</Text>
         <Text style={styles.emptySub}>{petName}の今日の渾身の1枚を残しましょう</Text>
@@ -193,47 +184,50 @@ function MemoryCard({ entry }: { entry: Entry }) {
 
 const styles = StyleSheet.create({
   safe:   { flex: 1, backgroundColor: DS.home.background },
-  scroll: { paddingHorizontal: 16, paddingBottom: 24 },
+  scroll: { paddingBottom: 24 },
 
   // ── ヘッダー ──
-  // [日付 flex:1 左] [タイトル 中央] [歯車 flex:1 右]
   header: {
-    flexDirection:  'row',
-    alignItems:     'center',
-    paddingTop:     10,
-    paddingBottom:  6,
+    flexDirection:   'row',
+    alignItems:      'center',
+    paddingHorizontal: 20,
+    marginBottom:    8,
+    paddingTop:      8,
   },
   headerDate: {
     flex:       1,
     fontFamily: DS.font.regular,
     fontSize:   13,
-    color:      DS.colors.textHint,
+    color:      DS.home.textSoft,
   },
   headerTitle: {
-    fontFamily: DS.font.bold,
-    fontSize:   28,
-    color:      DS.home.text,
+    flex:          1,
+    fontFamily:    DS.font.bold,
+    fontSize:      27,
+    color:         DS.home.text,
+    textAlign:     'center',
+    letterSpacing: -0.5,
   },
-  settingsBtn: {
-    flex:        1,
-    alignItems:  'flex-end',
-    padding:     4,
+  headerRight: {
+    flex:       1,
+    alignItems: 'flex-end',
   },
 
   // ── ストリーク ──
-  streakRow: { alignItems: 'center', paddingTop: 6, paddingBottom: 14 },
+  streakRow: { alignItems: 'center', marginBottom: 14 },
   loader:    { minHeight: 200, justifyContent: 'center', alignItems: 'center' },
 
   // ── 写真カード ──
-  // 外層: shadow / 内層: overflow:hidden でコーナークリップ
   cardOuter: {
-    borderRadius:    20,
-    backgroundColor: '#FFFFFF',
-    shadowColor:     '#6B3A1F',
-    shadowOffset:    { width: 0, height: 4 },
-    shadowOpacity:   0.09,
-    shadowRadius:    14,
-    elevation:       4,
+    marginHorizontal: 16,
+    marginBottom:     14,
+    borderRadius:     20,
+    backgroundColor:  '#ffffff',
+    shadowColor:      '#321905',
+    shadowOffset:     { width: 0, height: 2 },
+    shadowOpacity:    0.10,
+    shadowRadius:     18,
+    elevation:        4,
   },
   cardInner: {
     borderRadius: 20,
@@ -241,59 +235,61 @@ const styles = StyleSheet.create({
   },
   photo: { width: '100%', height: 300 },
 
-  // 情報エリア
-  info: {
-    backgroundColor:   '#FFFFFF',
-    paddingTop:        16,
-    paddingHorizontal: 18,
+  // カード本体
+  cardBody: {
+    paddingTop:        14,
+    paddingHorizontal: 16,
     paddingBottom:     16,
-    gap:               10,
   },
   infoTitle: {
-    fontFamily: DS.font.bold,
-    fontSize:   24,
-    color:      DS.home.text,
+    fontFamily:    DS.font.bold,
+    fontSize:      22,
+    color:         DS.home.text,
+    marginBottom:  5,
+    lineHeight:    29,
+    letterSpacing: -0.3,
   },
   infoMemo: {
-    fontFamily: DS.font.regular,
-    fontSize:   14,
-    color:      DS.home.textSoft,
-    lineHeight: 22,
+    fontFamily:   DS.font.regular,
+    fontSize:     14,
+    color:        DS.home.textSoft,
+    lineHeight:   25,
+    marginBottom: 13,
   },
 
   // チップ
-  chipsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  chipsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 13 },
   chip: {
-    flexDirection:     'row',
-    alignItems:        'center',
-    gap:               7,
-    backgroundColor:   DS.home.pill,
-    borderRadius:      100,
-    borderWidth:       1,
-    borderColor:       DS.home.outline,
-    paddingVertical:   7,
-    paddingHorizontal: 14,
+    height:        32,
+    borderRadius:  16,
+    borderWidth:   1.5,
+    borderColor:   DS.home.outline,
+    flexDirection: 'row',
+    alignItems:    'center',
+    gap:           5,
+    paddingLeft:   10,
+    paddingRight:  14,
   },
   chipText: {
-    fontFamily: DS.font.medium,
-    fontSize:   14,
+    fontFamily: DS.font.regular,
+    fontSize:   13,
     color:      DS.home.text,
   },
 
   // 今日のペット参加中
   featuredBtn: {
-    flexDirection:     'row',
-    alignItems:        'center',
-    justifyContent:    'center',
-    gap:               8,
-    borderWidth:       1,
-    borderColor:       DS.home.accent,
-    borderRadius:      100,
-    paddingVertical:   10,
+    height:         44,
+    borderRadius:   22,
+    borderWidth:    1.5,
+    borderColor:    DS.home.accent,
+    flexDirection:  'row',
+    alignItems:     'center',
+    justifyContent: 'center',
+    gap:            8,
   },
   featuredText: {
     fontFamily: DS.font.medium,
-    fontSize:   14,
+    fontSize:   15,
     color:      DS.home.accent,
   },
 
@@ -302,64 +298,63 @@ const styles = StyleSheet.create({
     flexDirection:     'row',
     alignItems:        'center',
     justifyContent:    'space-between',
-    paddingTop:        16,
-    paddingBottom:     8,
-    paddingHorizontal: 4,
+    paddingHorizontal: 20,
+    paddingVertical:   4,
   },
   editBtn: {
-    flexDirection:     'row',
-    alignItems:        'center',
-    gap:               8,
-    borderWidth:       1,
-    borderColor:       DS.home.accent,
-    borderRadius:      100,
-    paddingVertical:   10,
-    paddingHorizontal: 22,
+    height:        38,
+    borderRadius:  19,
+    borderWidth:   1.5,
+    borderColor:   DS.home.accent,
+    flexDirection: 'row',
+    alignItems:    'center',
+    gap:           6,
+    paddingLeft:   14,
+    paddingRight:  16,
   },
   editText: {
-    fontFamily: DS.font.bold,
-    fontSize:   15,
+    fontFamily: DS.font.medium,
+    fontSize:   14,
     color:      DS.home.accent,
   },
-  calLink: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   calLinkText: {
-    fontFamily: DS.font.bold,
-    fontSize:   15,
+    fontFamily: DS.font.medium,
+    fontSize:   14,
     color:      DS.home.accent,
   },
 
   // ── 未記録 ──
-  emptyCard: { alignItems: 'center', gap: 12, paddingVertical: 32, paddingHorizontal: 22 },
+  emptyCard: { alignItems: 'center', gap: 12, paddingVertical: 32, paddingHorizontal: 22, marginHorizontal: 16 },
   cameraCircle: {
     width:           56,
     height:          56,
     borderRadius:    28,
-    backgroundColor: DS.colors.accentLight,
+    backgroundColor: DS.home.pill,
     alignItems:      'center',
     justifyContent:  'center',
   },
-  emptyTitle: { fontFamily: DS.font.bold, fontSize: 22, color: DS.colors.text, textAlign: 'center', marginTop: 4 },
-  emptySub:   { fontFamily: DS.font.regular, fontSize: 14, color: DS.colors.textMid, textAlign: 'center', lineHeight: 23 },
+  emptyTitle: { fontFamily: DS.font.bold, fontSize: 20, color: DS.home.text, textAlign: 'center', marginTop: 4 },
+  emptySub:   { fontFamily: DS.font.regular, fontSize: 14, color: DS.home.textSoft, textAlign: 'center', lineHeight: 23 },
   cta: {
     flexDirection:   'row',
     alignItems:      'center',
     gap:             8,
     width:           '100%',
-    backgroundColor: DS.colors.accent,
+    backgroundColor: DS.home.accent,
     borderRadius:    DS.radius.pill,
     paddingVertical: 15,
     justifyContent:  'center',
     marginTop:       8,
-    shadowColor:     '#D0601A',
+    shadowColor:     '#321905',
     shadowOffset:    { width: 0, height: 4 },
-    shadowOpacity:   0.28,
+    shadowOpacity:   0.20,
     shadowRadius:    12,
     elevation:       6,
   },
   ctaText: { fontFamily: DS.font.bold, color: '#fff', fontSize: 17 },
 
   // ── 思い出カード ──
-  memCard: { overflow: 'hidden', marginTop: 16 },
+  memCard: { overflow: 'hidden', marginTop: 16, marginHorizontal: 16 },
   memHead: {
     flexDirection:     'row',
     alignItems:        'center',
@@ -389,4 +384,3 @@ const styles = StyleSheet.create({
   memTitle: { fontFamily: DS.font.bold, fontSize: 20, color: DS.colors.text },
   memDate:  { fontFamily: DS.font.regular, fontSize: 13, color: DS.colors.textHint },
 });
-

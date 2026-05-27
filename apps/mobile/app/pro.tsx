@@ -21,7 +21,7 @@ import {
 } from '@/services/iap';
 import { useAuthStore } from '@/store/authStore';
 import { DS } from '@/theme';
-import type { Product } from 'expo-iap';
+import type { ProductOrSubscription } from 'expo-iap';
 
 const FEATURES = [
   { icon: 'calendar',           text: 'カレンダーを無制限に振り返る' },
@@ -32,7 +32,7 @@ const FEATURES = [
 
 export default function Pro() {
   const isPro = useAuthStore(state => state.isPro);
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<ProductOrSubscription[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -40,8 +40,8 @@ export default function Pro() {
     return () => { closeIAP().catch(() => {}); };
   }, []);
 
-  const monthlyProduct = products.find(p => p.productId === IAP_PRODUCTS.MONTHLY);
-  const lifetimeProduct = products.find(p => p.productId === IAP_PRODUCTS.LIFETIME);
+  const monthlyProduct = products.find(p => p.id === IAP_PRODUCTS.MONTHLY);
+  const lifetimeProduct = products.find(p => p.id === IAP_PRODUCTS.LIFETIME);
 
   const handlePurchase = async (productId: string) => {
     if (loading) return;
@@ -125,7 +125,7 @@ export default function Pro() {
                 <>
                   <Ionicons name="sparkles-outline" size={18} color="#fff" />
                   <Text style={styles.buttonText}>
-                    {monthlyProduct ? `月額 ${monthlyProduct.localizedPrice} で始める` : '月額プランで始める'}
+                    {monthlyProduct ? `月額 ${monthlyProduct.displayPrice} で始める` : '月額プランで始める'}
                   </Text>
                 </>
               )}
@@ -138,7 +138,7 @@ export default function Pro() {
                 onPress={() => handlePurchase(IAP_PRODUCTS.LIFETIME)}
               >
                 <Text style={styles.lifetimeBtnText}>
-                  買い切り {lifetimeProduct.localizedPrice}
+                  買い切り {lifetimeProduct.displayPrice}
                 </Text>
               </TouchableOpacity>
             )}

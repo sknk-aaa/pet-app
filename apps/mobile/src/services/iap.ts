@@ -1,13 +1,14 @@
 import {
   initConnection,
   endConnection,
-  getProducts,
+  fetchProducts as iapFetchProducts,
   requestPurchase,
-  requestSubscription,
-  getPurchaseHistory,
+  getAvailablePurchases,
+  restorePurchases as iapRestorePurchases,
   finishTransaction,
-  type Product,
+  type ProductOrSubscription,
   type Purchase,
+  type PurchaseIOS,
 } from 'expo-iap';
 import {
   getProState,
@@ -31,32 +32,33 @@ export async function closeIAP(): Promise<void> {
   await endConnection();
 }
 
-export async function fetchProducts(): Promise<Product[]> {
-  return getProducts([IAP_PRODUCTS.LIFETIME, IAP_PRODUCTS.MONTHLY]);
+export async function fetchProducts(): Promise<ProductOrSubscription[]> {
+  const result = await iapFetchProducts({ skus: [IAP_PRODUCTS.LIFETIME, IAP_PRODUCTS.MONTHLY], type: 'all' });
+  return result ?? [];
 }
 
 export async function purchasePro(productId: string): Promise<void> {
-  let purchase: Purchase;
-
-  if (productId === IAP_PRODUCTS.MONTHLY) {
-    const result = await requestSubscription(productId);
-    if (!result) throw new Error('Subscription purchase returned null');
-    purchase = result;
-  } else {
-    purchase = await requestPurchase(productId);
-  }
-
-  await finishTransaction(purchase, false);
-
   const isMonthly = productId === IAP_PRODUCTS.MONTHLY;
+
+  const result = await requestPurchase({
+    request: { apple: { sku: productId } },
+    type: isMonthly ? 'subs' : 'in-app',
+  });
+
+  const purchase: Purchase | null = Array.isArray(result) ? (result[0] ?? null) : result;
+  if (!purchase) throw new Error('Purchase returned null');
+
+  await finishTransaction({ purchase, isConsumable: false });
+
   const expiresAt = isMonthly
     ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
     : null;
+  const purchaseIOS = purchase as PurchaseIOS;
 
   await setProPurchased(
     isMonthly ? 'monthly' : 'lifetime',
     productId,
-    purchase.originalTransactionIdentifierIOS ?? purchase.transactionId ?? '',
+    purchaseIOS.originalTransactionIdentifierIOS ?? purchaseIOS.transactionId ?? '',
     expiresAt,
     null
   );
@@ -65,21 +67,23 @@ export async function purchasePro(productId: string): Promise<void> {
 }
 
 export async function restorePurchases(): Promise<boolean> {
-  const history = await getPurchaseHistory();
+  await iapRestorePurchases();
+  const history = await getAvailablePurchases();
   const validPurchase = history.find(
     p => p.productId === IAP_PRODUCTS.LIFETIME || p.productId === IAP_PRODUCTS.MONTHLY
   );
   if (!validPurchase) return false;
 
   const isMonthly = validPurchase.productId === IAP_PRODUCTS.MONTHLY;
+  const validPurchaseIOS = validPurchase as PurchaseIOS;
   await setProPurchased(
     isMonthly ? 'monthly' : 'lifetime',
     validPurchase.productId,
-    validPurchase.originalTransactionIdentifierIOS ?? validPurchase.transactionId ?? '',
+    validPurchaseIOS.originalTransactionIdentifierIOS ?? validPurchaseIOS.transactionId ?? '',
     null,
     null
   );
-  await finishTransaction(validPurchase, false);
+  await finishTransaction({ purchase: validPurchase, isConsumable: false });
   useAuthStore.getState().setIsPro(true);
   return true;
 }

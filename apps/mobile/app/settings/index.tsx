@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import Svg, { Path, Rect, Circle } from 'react-native-svg';
+import { Ionicons } from '@expo/vector-icons';
 import { DS } from '@/theme';
 import { Card } from '@/components/Card';
 import { SettingRow } from '@/components/SettingRow';
@@ -20,46 +20,20 @@ import { useAuthStore } from '@/store/authStore';
 import { setSetting } from '@/db/settings';
 import { SPECIES_DB_TO_DISPLAY } from '@/utils/species';
 
-function BackIcon() {
-  return (
-    <Svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke={DS.colors.accent} strokeWidth={2.2} strokeLinecap="round">
-      <Path d="M15 19L8 12L15 5" />
-    </Svg>
-  );
-}
-
-function LockIcon() {
-  return (
-    <Svg width={12} height={12} viewBox="0 0 16 18">
-      <Rect x={1} y={8} width={14} height={10} rx={2.5} fill={DS.colors.textHint} />
-      <Path d="M4 8V6a4 4 0 018 0v2" stroke={DS.colors.textHint} strokeWidth={2} fill="none" strokeLinecap="round" />
-    </Svg>
-  );
-}
-
-function ChevronIcon() {
-  return (
-    <Svg width={16} height={16} viewBox="0 0 16 16" fill="none" stroke={DS.colors.textHint} strokeWidth={1.8} strokeLinecap="round">
-      <Path d="M6 4L10 8L6 12" />
-    </Svg>
-  );
-}
-
 function LockRow({ label }: { label: string }) {
   return (
     <View style={styles.lockRow}>
-      <LockIcon />
+      <Ionicons name="lock-closed-outline" size={12} color={DS.colors.textHint} />
       <Text style={styles.lockText}>{label}</Text>
     </View>
   );
 }
 
 export default function Settings() {
-  const selectedPet = useSelectedPet();
+  const selectedPet    = useSelectedPet();
   const { settings, updateSettings } = useAppStore();
-  const user = useAuthStore(state => state.user);
-  const isLoggedIn = !!user;
-
+  const user           = useAuthStore(state => state.user);
+  const isLoggedIn     = !!user;
   const displaySpecies = selectedPet ? SPECIES_DB_TO_DISPLAY[selectedPet.species] : 'ねこ';
 
   const toggleCameraRoll = async (v: boolean) => {
@@ -76,7 +50,7 @@ export default function Settings() {
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
       <View style={styles.nav}>
         <TouchableOpacity onPress={() => router.back()} style={styles.navBack}>
-          <BackIcon />
+          <Ionicons name="chevron-back" size={24} color={DS.colors.accent} />
         </TouchableOpacity>
         <Text style={styles.navTitle}>設定</Text>
         <View style={{ width: 40 }} />
@@ -95,7 +69,7 @@ export default function Settings() {
                 <Text style={styles.planBadgeText}>無料プラン</Text>
               </View>
             </View>
-            <ChevronIcon />
+            <Ionicons name="chevron-forward" size={16} color={DS.colors.textHint} />
           </TouchableOpacity>
         </Card>
 
@@ -213,31 +187,31 @@ export default function Settings() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: DS.colors.bg },
   nav: {
-    flexDirection:    'row',
-    alignItems:       'center',
-    justifyContent:   'space-between',
+    flexDirection:     'row',
+    alignItems:        'center',
+    justifyContent:    'space-between',
     paddingHorizontal: 16,
     paddingVertical:   12,
   },
   navBack:  { padding: 4 },
   navTitle: { fontSize: 17, fontWeight: '600', color: DS.colors.text },
 
-  scroll: { paddingHorizontal: 16, paddingBottom: 32, gap: 0 },
+  scroll: { paddingHorizontal: 16, paddingBottom: 32 },
 
-  petCard: { marginBottom: 20 },
+  petCard: { marginBottom: 20, marginTop: 4 },
   petRow:  { flexDirection: 'row', alignItems: 'center', gap: 12 },
   petInfo: { flex: 1, gap: 4 },
   petName: { fontSize: 18, fontWeight: '700', color: DS.colors.text },
   petMeta: { fontSize: 13, color: DS.colors.textMid },
   planBadge: {
-    alignSelf:        'flex-start',
-    backgroundColor:  DS.colors.peach,
-    borderRadius:     DS.radius.pill,
-    paddingVertical:  3,
+    alignSelf:         'flex-start',
+    backgroundColor:   DS.colors.peach,
+    borderRadius:      DS.radius.pill,
+    paddingVertical:   3,
     paddingHorizontal: 10,
-    borderWidth:      1,
-    borderColor:      DS.colors.border,
-    marginTop: 2,
+    borderWidth:       1,
+    borderColor:       DS.colors.border,
+    marginTop:         2,
   },
   planBadgeText: { fontSize: 11, color: DS.colors.textMid },
 
@@ -245,19 +219,19 @@ const styles = StyleSheet.create({
     fontSize:     13,
     fontWeight:   '500',
     color:        DS.colors.textMid,
-    paddingLeft:   4,
+    paddingLeft:  4,
     paddingBottom: 8,
-    marginTop:     4,
+    marginTop:    4,
   },
   sectionCard:    { paddingHorizontal: 16, marginBottom: 6 },
   sectionDivider: { height: 0.5, backgroundColor: DS.colors.border },
   sectionHelper: {
-    fontSize:  12,
-    color:     DS.colors.textHint,
-    marginLeft: 4,
-    marginTop:  4,
+    fontSize:     12,
+    color:        DS.colors.textHint,
+    marginLeft:   4,
+    marginTop:    4,
     marginBottom: 16,
-    lineHeight: 18,
+    lineHeight:   18,
   },
 
   toggleRow: {
@@ -272,17 +246,18 @@ const styles = StyleSheet.create({
   lockText: { fontSize: 12, color: DS.colors.textHint },
 
   proCard: {
-    flexDirection:    'row',
-    alignItems:       'center',
-    justifyContent:   'space-between',
-    backgroundColor:  DS.colors.peach,
-    borderRadius:     DS.radius.card,
-    padding:          16,
-    borderWidth:      1,
-    borderColor:      'rgba(232,130,74,0.2)',
-    marginBottom:     20,
-    marginTop:        4,
-    gap:              12,
+    flexDirection:     'row',
+    alignItems:        'center',
+    justifyContent:    'space-between',
+    backgroundColor:   DS.colors.peach,
+    borderRadius:      DS.radius.card,
+    padding:           16,
+    borderWidth:       1,
+    borderColor:       'rgba(232,130,74,0.2)',
+    marginBottom:      20,
+    marginTop:         4,
+    gap:               12,
+    ...DS.shadow.card,
   },
   proLeft:  { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
   proEmoji: { fontSize: 28, lineHeight: 32 },
@@ -290,15 +265,15 @@ const styles = StyleSheet.create({
   proTitle: { fontSize: 15, fontWeight: '700', color: DS.colors.text },
   proSub:   { fontSize: 11, color: DS.colors.textMid },
   proBtn: {
-    borderWidth:      1.5,
-    borderColor:      DS.colors.accent,
-    borderRadius:     DS.radius.pill,
-    paddingVertical:  8,
+    borderWidth:       1.5,
+    borderColor:       DS.colors.accent,
+    borderRadius:      DS.radius.pill,
+    paddingVertical:   8,
     paddingHorizontal: 14,
-    flexShrink:       0,
+    flexShrink:        0,
   },
   proBtnText: { fontSize: 13, fontWeight: '600', color: DS.colors.accent },
 
-  versionRow: { paddingVertical: 14 },
+  versionRow:   { paddingVertical: 14 },
   versionLabel: { fontSize: 16, color: DS.colors.textMid },
 });

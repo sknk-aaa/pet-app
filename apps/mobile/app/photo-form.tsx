@@ -13,18 +13,16 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
-import Svg, { Path, Circle, Ellipse } from 'react-native-svg';
+import { Ionicons } from '@expo/vector-icons';
 import { DS } from '@/theme';
 import { TAG_OPTIONS } from '@/dummy';
 import { Card } from '@/components/Card';
 import { Photo } from '@/components/Photo';
-import { Chip } from '@/components/Chip';
 import { Toggle } from '@/components/Toggle';
 import { PetAvatar } from '@/components/PetAvatar';
 import { createEntry, getEntryByDate, updateEntry } from '@/db/entries';
 import { addPendingUpload } from '@/db/pendingUploads';
 import { getStreakState } from '@/db/streak';
-import { getSetting } from '@/db/settings';
 import { pickPhoto, takePhoto, processPhoto, saveToMediaLibrary } from '@/services/photo';
 import { useAppStore } from '@/store/appStore';
 import { useAuthStore } from '@/store/authStore';
@@ -32,52 +30,6 @@ import { generateUUID } from '@/utils/uuid';
 import { getTodayJST, formatDisplayDate } from '@/utils/date';
 import { ANNIVERSARY_TAG_DISPLAY_TO_DB, SPECIES_DB_TO_DISPLAY } from '@/utils/species';
 import type { AnniversaryTagType } from '@/types';
-
-function BackIcon() {
-  return (
-    <Svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke={DS.colors.accent} strokeWidth={2.2} strokeLinecap="round">
-      <Path d="M15 19L8 12L15 5" />
-    </Svg>
-  );
-}
-
-function CameraIcon({ color = '#fff', size = 18 }: { color?: string; size?: number }) {
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
-      <Path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" />
-      <Circle cx={12} cy={13} r={4} />
-    </Svg>
-  );
-}
-
-function PawIcon() {
-  return (
-    <Svg width={13} height={13} viewBox="0 0 24 24">
-      <Ellipse cx={12} cy={16.5} rx={5.5} ry={3.8} fill={DS.colors.accent} />
-      <Ellipse cx={7} cy={10.5} rx={2} ry={2.6} fill={DS.colors.accent} />
-      <Ellipse cx={17} cy={10.5} rx={2} ry={2.6} fill={DS.colors.accent} />
-      <Ellipse cx={4} cy={7} rx={1.6} ry={2} fill={DS.colors.accent} />
-      <Ellipse cx={20} cy={7} rx={1.6} ry={2} fill={DS.colors.accent} />
-    </Svg>
-  );
-}
-
-function CheckIcon() {
-  return (
-    <Svg width={10} height={10} viewBox="0 0 14 14" fill="none" stroke="#fff" strokeWidth={2} strokeLinecap="round">
-      <Path d="M2 7l4 4 6-6" />
-    </Svg>
-  );
-}
-
-function LockIcon() {
-  return (
-    <Svg width={11} height={11} viewBox="0 0 16 18">
-      <Path x={1} y={8} width={14} height={10} rx={2.5} fill={DS.colors.textHint} />
-      <Path d="M4 8V6a4 4 0 018 0v2" stroke={DS.colors.textHint} strokeWidth={2} fill="none" strokeLinecap="round" />
-    </Svg>
-  );
-}
 
 export default function PhotoForm() {
   const today = getTodayJST();
@@ -143,9 +95,9 @@ export default function PhotoForm() {
         await saveToMediaLibrary(finalImageUri).catch(() => {});
       }
 
-      const tagType     = tag ? ANNIVERSARY_TAG_DISPLAY_TO_DB[tag] as AnniversaryTagType : null;
-      const activePets  = selectedPetId ? pets.filter(p => p.id === selectedPetId) : pets.slice(0, 1);
-      const petIds      = activePets.map(p => p.id);
+      const tagType    = tag ? ANNIVERSARY_TAG_DISPLAY_TO_DB[tag] as AnniversaryTagType : null;
+      const activePets = selectedPetId ? pets.filter(p => p.id === selectedPetId) : pets.slice(0, 1);
+      const petIds     = activePets.map(p => p.id);
 
       let submittedEntry;
       if (existingEntryId) {
@@ -166,10 +118,10 @@ export default function PhotoForm() {
       }
 
       if (featured && isPro && submittedEntry && !submittedEntry.featured_submitted) {
-        const streakState  = await getStreakState();
-        const firstPet     = activePets[0];
-        const petNamesDisplay    = activePets.map(p => p.name).join('と');
-        const petSpeciesPrimary  = firstPet ? SPECIES_DB_TO_DISPLAY[firstPet.species] : '';
+        const streakState       = await getStreakState();
+        const firstPet          = activePets[0];
+        const petNamesDisplay   = activePets.map(p => p.name).join('と');
+        const petSpeciesPrimary = firstPet ? SPECIES_DB_TO_DISPLAY[firstPet.species] : '';
         await addPendingUpload('featured_candidate', {
           entry_id: submittedEntry.id, entry_date: today,
           title: title.trim(), pet_names_display: petNamesDisplay,
@@ -191,7 +143,7 @@ export default function PhotoForm() {
     }
   };
 
-  const activePet = selectedPetId ? pets.find(p => p.id === selectedPetId) : pets[0];
+  const activePet      = selectedPetId ? pets.find(p => p.id === selectedPetId) : pets[0];
   const displaySpecies = activePet ? SPECIES_DB_TO_DISPLAY[activePet.species] : 'ねこ';
 
   return (
@@ -199,13 +151,13 @@ export default function PhotoForm() {
       {/* Nav bar */}
       <View style={styles.nav}>
         <TouchableOpacity onPress={() => router.back()} style={styles.navSide}>
-          <BackIcon />
+          <Ionicons name="chevron-back" size={24} color={DS.colors.accent} />
         </TouchableOpacity>
         <View style={styles.navCenter}>
           <Text style={styles.navTitle}>今日の1枚を残す</Text>
           <Text style={styles.navDate}>{formatDisplayDate(today)}</Text>
         </View>
-        <TouchableOpacity onPress={() => router.back()} style={styles.navSide}>
+        <TouchableOpacity onPress={() => router.back()} style={[styles.navSide, styles.navSideRight]}>
           <Text style={styles.cancelText}>キャンセル</Text>
         </TouchableOpacity>
       </View>
@@ -217,14 +169,14 @@ export default function PhotoForm() {
             <Photo style={styles.photo} uri={imageUri} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.changePhotoBtn} onPress={handlePickPhoto}>
-            <CameraIcon color={DS.colors.text} size={14} />
+            <Ionicons name="camera-outline" size={14} color={DS.colors.text} />
             <Text style={styles.changePhotoBtnText}>写真を変更</Text>
           </TouchableOpacity>
         </View>
 
         {/* Helper text */}
         <View style={styles.helperRow}>
-          <PawIcon />
+          <Ionicons name="paw" size={13} color={DS.colors.accent} />
           <Text style={styles.helperText}>今日の渾身の1枚を選びましょう</Text>
         </View>
 
@@ -253,7 +205,7 @@ export default function PhotoForm() {
               maxLength={200}
             />
             <View style={styles.memoHint}>
-              <LockIcon />
+              <Ionicons name="lock-closed-outline" size={11} color={DS.colors.textHint} />
               <Text style={styles.memoHintText}>メモは自分だけに表示されます</Text>
             </View>
           </View>
@@ -261,7 +213,6 @@ export default function PhotoForm() {
 
         {/* Pet + Tags card */}
         <Card style={styles.formCard}>
-          {/* Pet selection */}
           <View style={styles.fieldGroup}>
             <Text style={styles.fieldLabel}>写っているペット</Text>
             <View style={styles.petChipsRow}>
@@ -269,7 +220,9 @@ export default function PhotoForm() {
                 <View style={styles.petSelected}>
                   <PetAvatar species={displaySpecies} iconUri={activePet.icon_uri} size={26} />
                   <Text style={styles.petSelectedName}>{activePet.name}</Text>
-                  <View style={styles.checkCircle}><CheckIcon /></View>
+                  <View style={styles.checkCircle}>
+                    <Ionicons name="checkmark" size={10} color="#fff" />
+                  </View>
                 </View>
               )}
               <TouchableOpacity style={styles.addPetBtn}>
@@ -278,7 +231,6 @@ export default function PhotoForm() {
             </View>
           </View>
 
-          {/* Anniversary tags */}
           <View style={styles.fieldGroup}>
             <Text style={styles.fieldLabel}>記念日タグ</Text>
             <View style={styles.tagChipsRow}>
@@ -289,14 +241,16 @@ export default function PhotoForm() {
                   onPress={() => setTag(tag === t ? null : t)}
                 >
                   {tag === t && (
-                    <View style={styles.tagCheckCircle}><CheckIcon /></View>
+                    <View style={styles.tagCheckCircle}>
+                      <Ionicons name="checkmark" size={9} color="#fff" />
+                    </View>
                   )}
                   <Text style={[styles.tagChipText, tag === t && styles.tagChipTextSelected]}>{t}</Text>
                 </TouchableOpacity>
               ))}
-              <TouchableOpacity style={styles.tagChipDash}>
+              <View style={styles.tagChipDash}>
                 <Text style={styles.tagChipDashText}>＋ その他</Text>
-              </TouchableOpacity>
+              </View>
             </View>
           </View>
         </Card>
@@ -307,7 +261,7 @@ export default function PhotoForm() {
             <View style={styles.toggleInfo}>
               <Text style={styles.toggleTitle}>今日のペットに参加</Text>
               <Text style={styles.toggleSub}>ONにすると、確認後に掲載される可能性があります</Text>
-              <Text style={styles.toggleSub2}>メモは公開されません</Text>
+              <Text style={styles.toggleSub}>メモは公開されません</Text>
             </View>
             <Toggle
               label=""
@@ -333,7 +287,7 @@ export default function PhotoForm() {
           disabled={!canSave || saving}
           activeOpacity={0.85}
         >
-          <CameraIcon color="#fff" size={18} />
+          <Ionicons name="camera-outline" size={18} color="#fff" />
           <Text style={styles.saveBtnText}>{saving ? '保存中…' : '保存する'}</Text>
         </TouchableOpacity>
       </ScrollView>
@@ -345,18 +299,19 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: DS.colors.bg },
 
   nav: {
-    flexDirection:    'row',
-    alignItems:       'center',
-    justifyContent:   'space-between',
+    flexDirection:     'row',
+    alignItems:        'center',
+    justifyContent:    'space-between',
     paddingHorizontal: 16,
     paddingTop:        4,
     paddingBottom:     10,
   },
-  navSide:    { minWidth: 60 },
-  navCenter:  { alignItems: 'center', gap: 2 },
-  navTitle:   { fontSize: 17, fontWeight: '600', color: DS.colors.text },
-  navDate:    { fontSize: 11, color: DS.colors.textHint },
-  cancelText: { fontSize: 14, fontWeight: '500', color: DS.colors.accent, textAlign: 'right' },
+  navSide:      { minWidth: 60 },
+  navSideRight: { alignItems: 'flex-end' },
+  navCenter:    { alignItems: 'center', gap: 2 },
+  navTitle:     { fontSize: 17, fontWeight: '600', color: DS.colors.text },
+  navDate:      { fontSize: 11, color: DS.colors.textHint },
+  cancelText:   { fontSize: 14, fontWeight: '500', color: DS.colors.accent },
 
   scroll: { paddingBottom: 32, gap: 10 },
 
@@ -368,15 +323,15 @@ const styles = StyleSheet.create({
   },
   photo: { width: '100%', height: 220, borderRadius: 0 },
   changePhotoBtn: {
-    position:         'absolute',
-    bottom:           12,
-    right:            12,
-    flexDirection:    'row',
-    alignItems:       'center',
-    gap:              6,
-    backgroundColor:  'rgba(255,255,255,0.88)',
-    borderRadius:     DS.radius.pill,
-    paddingVertical:  8,
+    position:          'absolute',
+    bottom:            12,
+    right:             12,
+    flexDirection:     'row',
+    alignItems:        'center',
+    gap:               6,
+    backgroundColor:   'rgba(255,255,255,0.88)',
+    borderRadius:      DS.radius.pill,
+    paddingVertical:   8,
     paddingHorizontal: 14,
   },
   changePhotoBtnText: { fontSize: 13, fontWeight: '500', color: DS.colors.text },
@@ -394,105 +349,101 @@ const styles = StyleSheet.create({
   fieldGroup: { gap: 6 },
   fieldLabel: { fontSize: 13, fontWeight: '600', color: DS.colors.textMid },
   input: {
-    backgroundColor:  DS.colors.cardCream,
-    borderRadius:     10,
-    borderWidth:      1,
-    borderColor:      DS.colors.border,
+    backgroundColor:   DS.colors.cardCream,
+    borderRadius:      10,
+    borderWidth:       1,
+    borderColor:       DS.colors.border,
     paddingHorizontal: 14,
-    paddingVertical:  11,
-    fontSize:         15,
-    color:            DS.colors.text,
+    paddingVertical:   11,
+    fontSize:          15,
+    color:             DS.colors.text,
   },
-  inputMulti: { minHeight: 72, textAlignVertical: 'top' },
-  memoHint:   { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  inputMulti:   { minHeight: 72, textAlignVertical: 'top' },
+  memoHint:     { flexDirection: 'row', alignItems: 'center', gap: 5 },
   memoHintText: { fontSize: 11, color: DS.colors.textHint },
 
   petChipsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   petSelected: {
-    flexDirection:    'row',
-    alignItems:       'center',
-    gap:              6,
-    backgroundColor:  DS.colors.accentPill,
-    borderRadius:     DS.radius.pill,
-    paddingVertical:  6,
-    paddingLeft:      6,
-    paddingRight:     10,
-    borderWidth:      1.5,
-    borderColor:      DS.colors.accent,
+    flexDirection:     'row',
+    alignItems:        'center',
+    gap:               6,
+    backgroundColor:   DS.colors.accentPill,
+    borderRadius:      DS.radius.pill,
+    paddingVertical:   6,
+    paddingLeft:       6,
+    paddingRight:      10,
+    borderWidth:       1.5,
+    borderColor:       DS.colors.accent,
   },
   petSelectedName: { fontSize: 14, fontWeight: '600', color: DS.colors.text },
   checkCircle: {
-    width:            18,
-    height:           18,
-    borderRadius:     9,
-    backgroundColor:  DS.colors.accent,
-    alignItems:       'center',
-    justifyContent:   'center',
+    width:           18,
+    height:          18,
+    borderRadius:    9,
+    backgroundColor: DS.colors.accent,
+    alignItems:      'center',
+    justifyContent:  'center',
   },
   addPetBtn: {
-    borderWidth:      1.5,
-    borderColor:      DS.colors.border,
-    borderRadius:     DS.radius.pill,
-    paddingVertical:  6,
+    borderWidth:       1.5,
+    borderColor:       DS.colors.border,
+    borderRadius:      DS.radius.pill,
+    paddingVertical:   6,
     paddingHorizontal: 14,
-    borderStyle:      'dashed',
+    borderStyle:       'dashed',
   },
   addPetBtnText: { fontSize: 13, color: DS.colors.textHint },
 
   tagChipsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   tagChip: {
-    flexDirection:    'row',
-    alignItems:       'center',
-    gap:              5,
-    backgroundColor:  DS.colors.cardCream,
-    borderRadius:     DS.radius.pill,
-    paddingVertical:  7,
+    flexDirection:     'row',
+    alignItems:        'center',
+    gap:               5,
+    backgroundColor:   DS.colors.cardCream,
+    borderRadius:      DS.radius.pill,
+    paddingVertical:   7,
     paddingHorizontal: 14,
-    borderWidth:      1.5,
-    borderColor:      DS.colors.border,
+    borderWidth:       1.5,
+    borderColor:       DS.colors.border,
   },
-  tagChipSelected: {
-    backgroundColor: DS.colors.accentPill,
-    borderColor:     DS.colors.accent,
-  },
+  tagChipSelected:      { backgroundColor: DS.colors.accentPill, borderColor: DS.colors.accent },
   tagCheckCircle: {
-    width:            16,
-    height:           16,
-    borderRadius:     8,
-    backgroundColor:  DS.colors.accent,
-    alignItems:       'center',
-    justifyContent:   'center',
+    width:           16,
+    height:          16,
+    borderRadius:    8,
+    backgroundColor: DS.colors.accent,
+    alignItems:      'center',
+    justifyContent:  'center',
   },
   tagChipText:         { fontSize: 13, color: DS.colors.textMid },
   tagChipTextSelected: { fontSize: 13, fontWeight: '600', color: DS.colors.accent },
   tagChipDash: {
-    borderWidth:      1.5,
-    borderColor:      DS.colors.border,
-    borderRadius:     DS.radius.pill,
-    paddingVertical:  7,
+    borderWidth:       1.5,
+    borderColor:       DS.colors.border,
+    borderRadius:      DS.radius.pill,
+    paddingVertical:   7,
     paddingHorizontal: 14,
-    borderStyle:      'dashed',
+    borderStyle:       'dashed',
   },
   tagChipDashText: { fontSize: 13, color: DS.colors.textHint },
 
-  toggleRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
+  toggleRow:  { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
   toggleInfo: { flex: 1, paddingRight: 12, gap: 4 },
   toggleTitle: { fontSize: 15, fontWeight: '600', color: DS.colors.text },
   toggleSub:   { fontSize: 12, color: DS.colors.textHint, lineHeight: 19 },
-  toggleSub2:  { fontSize: 12, color: DS.colors.textHint },
 
   saveBtn: {
-    flexDirection:    'row',
-    alignItems:       'center',
-    justifyContent:   'center',
-    gap:              8,
-    marginHorizontal: 16,
-    backgroundColor:  DS.colors.accent,
-    borderRadius:     DS.radius.pill,
-    paddingVertical:  16,
-    marginBottom:     8,
+    flexDirection:     'row',
+    alignItems:        'center',
+    justifyContent:    'center',
+    gap:               8,
+    marginHorizontal:  16,
+    backgroundColor:   DS.colors.accent,
+    borderRadius:      DS.radius.pill,
+    paddingVertical:   16,
+    marginBottom:      8,
     ...DS.shadow.float,
   },
   saveBtnDisabled: { opacity: 0.5 },
-  saveBtnText: { color: '#fff', fontSize: 17, fontWeight: '700' },
+  saveBtnText:     { color: '#fff', fontSize: 17, fontWeight: '700' },
 });

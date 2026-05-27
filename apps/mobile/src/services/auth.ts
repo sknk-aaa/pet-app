@@ -3,15 +3,11 @@ import {
   GoogleSignin,
   statusCodes,
 } from '@react-native-google-signin/google-signin';
+import Constants from 'expo-constants';
 import { supabase } from '@/services/supabase';
 import { clearPushToken } from '@/services/notifications';
 import { useAuthStore } from '@/store/authStore';
 import type { Session } from '@supabase/supabase-js';
-
-GoogleSignin.configure({
-  scopes: ['email', 'profile'],
-  // webClientId は app.config.ts の extra から取得することを推奨
-});
 
 export async function signInWithApple(): Promise<void> {
   const credential = await AppleAuthentication.signInAsync({
@@ -32,6 +28,11 @@ export async function signInWithApple(): Promise<void> {
 }
 
 export async function signInWithGoogle(): Promise<void> {
+  const iosClientId = Constants.expoConfig?.extra?.googleIosClientId as string | undefined;
+  GoogleSignin.configure({
+    scopes: ['email', 'profile'],
+    ...(iosClientId ? { iosClientId } : {}),
+  });
   await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
   const userInfo = await GoogleSignin.signIn();
   const tokens = await GoogleSignin.getTokens();

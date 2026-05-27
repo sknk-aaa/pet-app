@@ -47,6 +47,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   extra: {
     supabaseUrl: process.env.SUPABASE_URL,
     supabaseAnonKey: process.env.SUPABASE_ANON_KEY,
+    googleIosClientId: process.env.GOOGLE_IOS_CLIENT_ID,
     eas: {
       projectId: 'c1a5e2b7-800b-48d0-8d8f-ead54e05a1d9',
     },

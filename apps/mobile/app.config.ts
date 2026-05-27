@@ -6,12 +6,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   slug: 'mainichi-pet',
   version: '1.0.0',
   orientation: 'portrait',
-  updates: {
-    url: 'https://u.expo.dev/c1a5e2b7-800b-48d0-8d8f-ead54e05a1d9',
-  },
-  runtimeVersion: {
-    policy: 'appVersion',
-  },
   platforms: ['ios'],
   scheme: 'mainichipet',
   experiments: {

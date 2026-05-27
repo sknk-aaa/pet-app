@@ -9,11 +9,14 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Svg, { Line, Ellipse, Path, Circle, Rect } from 'react-native-svg';
 import { DS } from '@/theme';
+import { Card } from '@/components/Card';
+import { Chip } from '@/components/Chip';
 import { Photo } from '@/components/Photo';
 import { PetAvatar } from '@/components/PetAvatar';
 import { useMonthEntries } from '@/hooks/useEntries';
+import { useStreak } from '@/hooks/useStreak';
 import { useSelectedPet } from '@/hooks/usePets';
 import { useAppStore } from '@/store/appStore';
 import {
@@ -23,23 +26,54 @@ import {
   formatMonthLabel,
   formatDisplayDate,
 } from '@/utils/date';
-import { SPECIES_DB_TO_DISPLAY } from '@/utils/species';
+import { SPECIES_DB_TO_DISPLAY, ANNIVERSARY_TAG_DB_TO_DISPLAY } from '@/utils/species';
 import type { CalendarEntryInfo } from '@/types';
 
 const WEEKDAYS = ['日', '月', '火', '水', '木', '金', '土'];
+const CELL_HEIGHT = 38;
+
+function FilterIcon() {
+  return (
+    <Svg width={16} height={14} viewBox="0 0 18 14" fill="none" stroke={DS.colors.textMid} strokeWidth={1.8} strokeLinecap="round">
+      <Line x1={0} y1={2} x2={18} y2={2} />
+      <Line x1={3} y1={7} x2={15} y2={7} />
+      <Line x1={6} y1={12} x2={12} y2={12} />
+    </Svg>
+  );
+}
+
+function StarIcon() {
+  return (
+    <Svg width={9} height={9} viewBox="0 0 20 20" fill="#E8C040">
+      <Path d="M10 1l2.39 7.26H20l-6.18 4.49 2.36 7.26L10 15.52l-6.18 4.49 2.36-7.26L0 8.26h7.61z" />
+    </Svg>
+  );
+}
+
+function PawIcon({ size = 9, color = 'rgba(255,255,255,0.9)' }: { size?: number; color?: string }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24">
+      <Ellipse cx={12} cy={16.5} rx={5.5} ry={3.8} fill={color} />
+      <Ellipse cx={7} cy={10.5} rx={2} ry={2.6} fill={color} />
+      <Ellipse cx={17} cy={10.5} rx={2} ry={2.6} fill={color} />
+      <Ellipse cx={4} cy={7} rx={1.6} ry={2} fill={color} />
+      <Ellipse cx={20} cy={7} rx={1.6} ry={2} fill={color} />
+    </Svg>
+  );
+}
 
 export default function Calendar() {
   const { width } = useWindowDimensions();
-  const CELL = (width - 32) / 7;
+  const cellWidth = Math.floor((width - 32 - 12 * 2) / 7);
 
   const today = getTodayJST();
   const [todayYear, todayMonth] = today.split('-').map(Number);
-  const [year, setYear] = useState(todayYear);
-  const [month, setMonth] = useState(todayMonth);
+  const [year, setYear]     = useState(todayYear);
+  const [month, setMonth]   = useState(todayMonth);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
-  const selectedPet = useSelectedPet();
-  const petFilter = useAppStore(state => state.petFilter);
+  const selectedPet   = useSelectedPet();
+  const { data: streakData } = useStreak();
   const displaySpecies = selectedPet ? SPECIES_DB_TO_DISPLAY[selectedPet.species] : 'ねこ';
 
   const { data: entries = [] } = useMonthEntries(year, month);
@@ -50,7 +84,7 @@ export default function Calendar() {
     return m;
   }, [entries]);
 
-  const startDay = getMonthStartDay(year, month);
+  const startDay  = getMonthStartDay(year, month);
   const totalDays = getMonthTotalDays(year, month);
 
   const cells: (number | null)[] = [
@@ -62,11 +96,8 @@ export default function Calendar() {
   const dateStr = (day: number) =>
     `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
-  const photoCount = entries.length;
   const todayDay = (year === todayYear && month === todayMonth) ? Number(today.split('-')[2]) : 0;
-  const totalDaysElapsed = todayDay || totalDays;
-  const recordRate = totalDaysElapsed > 0 ? Math.round((photoCount / totalDaysElapsed) * 100) : 0;
-  const anniversaryCount = entries.filter(e => e.anniversary_tag_type).length;
+  const photoCount = entries.length;
 
   const prevMonth = () => {
     if (month === 1) { setYear(y => y - 1); setMonth(12); }
@@ -84,159 +115,273 @@ export default function Calendar() {
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScrollView contentContainerStyle={styles.scroll}>
+
+        {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity style={styles.petPill} onPress={() => router.push('/pet-select')}>
-            <PetAvatar species={displaySpecies} iconUri={selectedPet?.icon_uri} size={24} />
-            <Text style={styles.petName}>{selectedPet?.name ?? 'うちの子'}</Text>
-            <Ionicons name="chevron-down" size={14} color={DS.colors.textMid} />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.iconBtn} onPress={() => router.push('/anniversaries')}>
-            <Ionicons name="options-outline" size={22} color={DS.colors.textMid} />
-          </TouchableOpacity>
+          <Text style={styles.heading}>カレンダー</Text>
+          <View style={styles.headerRight}>
+            {/* Pet filter pill */}
+            <TouchableOpacity style={styles.petPill} onPress={() => router.push('/pet-select')}>
+              <PetAvatar species={displaySpecies} iconUri={selectedPet?.icon_uri} size={26} />
+              <Text style={styles.petPillName}>{selectedPet?.name ?? 'うちの子'}</Text>
+              <Text style={styles.petPillCaret}>▾</Text>
+            </TouchableOpacity>
+            {/* Filter button */}
+            <TouchableOpacity style={styles.filterBtn} onPress={() => router.push('/anniversaries')}>
+              <FilterIcon />
+            </TouchableOpacity>
+          </View>
         </View>
 
-        <View style={styles.monthRow}>
-          <TouchableOpacity onPress={prevMonth}>
-            <Ionicons name="chevron-back" size={22} color={DS.colors.textMid} />
+        {/* Month navigation — card style */}
+        <View style={[styles.monthNav, DS.shadow.card]}>
+          <TouchableOpacity onPress={prevMonth} style={styles.navBtn}>
+            <Text style={styles.navArrow}>‹</Text>
           </TouchableOpacity>
           <Text style={styles.monthText}>{formatMonthLabel(year, month)}</Text>
-          <TouchableOpacity onPress={nextMonth}>
-            <Ionicons name="chevron-forward" size={22} color={DS.colors.textMid} />
-          </TouchableOpacity>
+          <View style={styles.navRight}>
+            <TouchableOpacity onPress={nextMonth} style={styles.navBtn}>
+              <Text style={styles.navArrow}>›</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => { setYear(todayYear); setMonth(todayMonth); setSelectedDate(null); }}
+              style={styles.todayBtn}
+            >
+              <Text style={styles.todayBtnText}>今日</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
-        <View style={styles.weekRow}>
-          {WEEKDAYS.map(d => (
-            <Text key={d} style={[styles.weekday, { width: CELL }]}>{d}</Text>
-          ))}
-        </View>
-
-        <View style={styles.grid}>
-          {cells.map((day, i) => {
-            if (day === null) return <View key={i} style={{ width: CELL, height: CELL }} />;
-            const ds = dateStr(day);
-            const entry = entryMap.get(ds);
-            const hasPhoto = !!entry;
-            const isAnniv = !!entry?.anniversary_tag_type;
-            const isFeatured = entry?.featured_status_cache === 'featured' || entry?.featured_status_cache === 'scheduled';
-            const isToday = ds === today;
-            const isSelected = ds === selectedDate;
-            return (
-              <TouchableOpacity
-                key={i}
-                style={[styles.cell, { width: CELL, height: CELL }]}
-                onPress={() => {
-                  setSelectedDate(ds);
-                  if (hasPhoto) router.push({ pathname: '/day-detail', params: { date: ds } });
-                }}
-              >
-                {hasPhoto ? (
-                  <Photo
-                    style={[
-                      styles.cellPhoto,
-                      { width: CELL - 4, height: CELL - 4 },
-                      isSelected ? styles.cellSelected : undefined,
-                    ]}
-                    uri={entry.thumbnail_uri}
-                  />
-                ) : (
-                  <View style={[styles.cellEmpty, { width: CELL - 4, height: CELL - 4 }]} />
-                )}
-                <Text style={[styles.dayNum, isToday && styles.dayNumToday]}>{day}</Text>
-                {isAnniv    && <View style={[styles.dot, { backgroundColor: DS.colors.sage }]} />}
-                {isFeatured && <View style={[styles.dot, { backgroundColor: DS.colors.accent }]} />}
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-
+        {/* Stats bar — peach background */}
         <View style={styles.statsBar}>
-          <View style={styles.statItem}>
-            <Text style={styles.statNum}>{photoCount}</Text>
-            <Text style={styles.statLabel}>記録</Text>
+          <View style={styles.statGroup}>
+            <Text style={styles.fireEmoji}>🔥</Text>
+            <Text style={styles.statLabel}>連続</Text>
+            <Text style={styles.statNumAccent}>{streakData?.display_streak ?? 0}日</Text>
           </View>
           <View style={styles.statDivider} />
-          <View style={styles.statItem}>
-            <Text style={styles.statNum}>{anniversaryCount}</Text>
-            <Text style={styles.statLabel}>記念日</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statItem}>
-            <Text style={styles.statNum}>{recordRate}%</Text>
-            <Text style={styles.statLabel}>記録率</Text>
+          <View style={styles.statGroup}>
+            <Text style={styles.statLabel}>今月</Text>
+            <Text style={styles.statNumSage}>{photoCount}枚</Text>
           </View>
         </View>
 
-        <TouchableOpacity style={styles.anniversaryBtn} onPress={() => router.push('/anniversaries')}>
-          <Ionicons name="gift-outline" size={16} color={DS.colors.accent} />
-          <Text style={styles.anniversaryBtnText}>記念日を見る</Text>
-          <Ionicons name="chevron-forward" size={16} color={DS.colors.accent} />
-        </TouchableOpacity>
+        {/* Calendar grid */}
+        <Card style={styles.gridCard} p={12}>
+          {/* Day headers */}
+          <View style={styles.weekRow}>
+            {WEEKDAYS.map((d, i) => (
+              <Text
+                key={d}
+                style={[
+                  styles.weekday,
+                  { width: cellWidth },
+                  i === 0 && styles.weekdaySun,
+                  i === 6 && styles.weekdaySat,
+                ]}
+              >
+                {d}
+              </Text>
+            ))}
+          </View>
 
-        {selectedEntry && (
-          <TouchableOpacity
-            style={styles.preview}
-            onPress={() => router.push({ pathname: '/day-detail', params: { date: selectedDate! } })}
-          >
-            <Photo style={styles.previewPhoto} uri={selectedEntry.thumbnail_uri} />
-            <View style={styles.previewInfo}>
-              <Text style={styles.previewDate}>{formatDisplayDate(selectedDate!)}</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={18} color={DS.colors.textHint} />
+          {/* Grid */}
+          <View style={styles.grid}>
+            {cells.map((day, idx) => {
+              if (!day) return <View key={idx} style={{ width: cellWidth }} />;
+              const col      = idx % 7;
+              const ds       = dateStr(day);
+              const entry    = entryMap.get(ds);
+              const hasPic   = !!entry;
+              const isAnni   = !!entry?.anniversary_tag_type;
+              const isPetDay = entry?.featured_status_cache === 'featured';
+              const isToday  = ds === today;
+              const isSelected = ds === selectedDate;
+              const numColor = col === 0 ? DS.colors.red : col === 6 ? DS.colors.sage : DS.colors.text;
+
+              return (
+                <TouchableOpacity
+                  key={idx}
+                  style={[styles.cell, { width: cellWidth }]}
+                  onPress={() => {
+                    setSelectedDate(ds);
+                    if (hasPic) router.push({ pathname: '/day-detail', params: { date: ds } });
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.dayNum, { color: isToday ? DS.colors.accent : numColor }, isToday && styles.dayNumToday]}>
+                    {day}
+                  </Text>
+                  {hasPic ? (
+                    <View style={[
+                      styles.thumb,
+                      { width: cellWidth - 4, height: CELL_HEIGHT },
+                      isSelected && styles.thumbSelected,
+                      isToday && !isSelected && styles.thumbToday,
+                    ]}>
+                      <Photo style={StyleSheet.absoluteFill} uri={entry.thumbnail_uri} />
+                      {isAnni && (
+                        <View style={styles.anniBadge}><StarIcon /></View>
+                      )}
+                      {isPetDay && (
+                        <View style={styles.pawBadge}><PawIcon /></View>
+                      )}
+                    </View>
+                  ) : (
+                    <View style={[styles.thumbEmpty, { width: cellWidth - 4, height: CELL_HEIGHT }]} />
+                  )}
+                  {isSelected && <View style={styles.selectedDot} />}
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </Card>
+
+        {/* Anniversary link */}
+        <Card style={styles.anniLink} p={12}>
+          <TouchableOpacity style={styles.anniLinkInner} onPress={() => router.push('/anniversaries')}>
+            <Text style={styles.anniEmoji}>🎖</Text>
+            <Text style={styles.anniLinkText}>記念日を見る</Text>
+            <Text style={styles.chevron}>›</Text>
           </TouchableOpacity>
+        </Card>
+
+        {/* Selected day preview */}
+        {selectedEntry && (
+          <Card style={styles.preview} p={14}>
+            <Text style={styles.previewDate}>{formatDisplayDate(selectedDate!)}</Text>
+            <TouchableOpacity
+              style={styles.previewInner}
+              onPress={() => router.push({ pathname: '/day-detail', params: { date: selectedDate! } })}
+            >
+              <Photo style={styles.previewPhoto} uri={selectedEntry.thumbnail_uri} />
+              <View style={styles.previewInfo}>
+                <View style={styles.chipsRow}>
+                  {selectedEntry.anniversary_tag_type && (
+                    <Chip
+                      label={ANNIVERSARY_TAG_DB_TO_DISPLAY[selectedEntry.anniversary_tag_type] ?? selectedEntry.anniversary_tag_type}
+                      selected={false}
+                      small
+                    />
+                  )}
+                </View>
+              </View>
+              <Text style={styles.chevron}>›</Text>
+            </TouchableOpacity>
+          </Card>
         )}
+
+        <View style={{ height: 4 }} />
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: DS.colors.bg },
-  scroll: { paddingHorizontal: 16, paddingBottom: 24 },
-  header: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, gap: 8 },
+  safe:   { flex: 1, backgroundColor: DS.colors.bg },
+  scroll: { paddingHorizontal: 14, paddingBottom: 24, gap: 10 },
+
+  header:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 6, paddingBottom: 4 },
+  heading:     { fontSize: 26, fontWeight: '700', color: DS.colors.text, letterSpacing: -0.5 },
+  headerRight: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   petPill: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: DS.colors.card,
-    borderRadius: DS.radius.pill, paddingHorizontal: 12, paddingVertical: 6,
-    gap: 6, flex: 1, ...DS.shadow.card,
+    flexDirection:    'row',
+    alignItems:       'center',
+    gap:              6,
+    backgroundColor:  DS.colors.card,
+    borderRadius:     DS.radius.pill,
+    paddingVertical:  6,
+    paddingLeft:      6,
+    paddingRight:     12,
+    borderWidth:      1,
+    borderColor:      DS.colors.border,
+    ...DS.shadow.card,
   },
-  petName: { fontSize: 15, fontWeight: '600', color: DS.colors.text, flex: 1 },
-  iconBtn: { padding: 4 },
-  monthRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
-  monthText: { fontSize: 18, fontWeight: '700', color: DS.colors.text },
-  weekRow: { flexDirection: 'row', marginBottom: 4 },
-  weekday: { fontSize: 11, color: DS.colors.textHint, textAlign: 'center' },
-  grid: { flexDirection: 'row', flexWrap: 'wrap' },
-  cell: { alignItems: 'center', justifyContent: 'center', padding: 2 },
-  cellPhoto: { borderRadius: 6, position: 'absolute' },
-  cellSelected: { borderWidth: 2, borderColor: DS.colors.accent },
-  cellEmpty: { borderRadius: 6, backgroundColor: DS.colors.border, opacity: 0.4, position: 'absolute' },
-  dayNum: {
-    fontSize: 10, color: DS.colors.white, fontWeight: '600',
-    textShadowColor: 'rgba(0,0,0,0.4)', textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2, zIndex: 1,
+  petPillName: { fontSize: 14, fontWeight: '600', color: DS.colors.text },
+  petPillCaret: { fontSize: 10, color: DS.colors.textHint },
+  filterBtn: {
+    width:            36,
+    height:           36,
+    borderRadius:     18,
+    backgroundColor:  DS.colors.card,
+    borderWidth:      1,
+    borderColor:      DS.colors.border,
+    alignItems:       'center',
+    justifyContent:   'center',
   },
-  dayNumToday: { color: DS.colors.accent },
-  dot: { width: 5, height: 5, borderRadius: 3, position: 'absolute', bottom: 3, zIndex: 2 },
+
+  monthNav: {
+    flexDirection:    'row',
+    alignItems:       'center',
+    justifyContent:   'space-between',
+    backgroundColor:  DS.colors.card,
+    borderRadius:     16,
+    paddingVertical:  10,
+    paddingHorizontal: 14,
+  },
+  navBtn:     { paddingVertical: 4, paddingHorizontal: 8 },
+  navArrow:   { fontSize: 22, color: DS.colors.accent, fontWeight: '600', lineHeight: 24 },
+  monthText:  { fontSize: 16, fontWeight: '600', color: DS.colors.text },
+  navRight:   { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  todayBtn:   { paddingHorizontal: 8, paddingVertical: 4 },
+  todayBtnText: { fontSize: 13, fontWeight: '600', color: DS.colors.accent },
+
   statsBar: {
-    flexDirection: 'row', backgroundColor: DS.colors.card, borderRadius: DS.radius.md,
-    marginVertical: 16, paddingVertical: 14, ...DS.shadow.card,
+    flexDirection:    'row',
+    alignItems:       'center',
+    justifyContent:   'center',
+    backgroundColor:  DS.colors.peach,
+    borderRadius:     14,
+    paddingVertical:  9,
+    paddingHorizontal: 20,
+    ...DS.shadow.card,
   },
-  statItem: { flex: 1, alignItems: 'center', gap: 2 },
-  statNum: { fontSize: 20, fontWeight: '700', color: DS.colors.accent },
-  statLabel: { fontSize: 12, color: DS.colors.textHint },
-  statDivider: { width: 0.5, backgroundColor: DS.colors.border },
-  anniversaryBtn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
-    backgroundColor: DS.colors.accentLight, borderRadius: DS.radius.pill,
-    paddingVertical: 12, marginBottom: 16,
+  statGroup:   { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  statDivider: { width: 1, height: 20, backgroundColor: DS.colors.border, marginHorizontal: 18 },
+  fireEmoji:   { fontSize: 15 },
+  statLabel:   { fontSize: 13, color: DS.colors.textMid },
+  statNumAccent: { fontSize: 17, fontWeight: '700', color: DS.colors.accent },
+  statNumSage:   { fontSize: 17, fontWeight: '700', color: DS.colors.sage },
+
+  gridCard:  {},
+  weekRow:   { flexDirection: 'row', marginBottom: 4 },
+  weekday:   { fontSize: 11, fontWeight: '600', color: DS.colors.textMid, textAlign: 'center', paddingVertical: 4 },
+  weekdaySun: { color: DS.colors.red },
+  weekdaySat: { color: DS.colors.sage },
+  grid:       { flexDirection: 'row', flexWrap: 'wrap', gap: 2 },
+  cell:       { alignItems: 'center', gap: 1 },
+  dayNum:     { fontSize: 10, lineHeight: 14 },
+  dayNumToday:  { fontWeight: '700' },
+  thumb: {
+    borderRadius:  8,
+    overflow:      'hidden',
   },
-  anniversaryBtnText: { fontSize: 14, color: DS.colors.accent, fontWeight: '600' },
-  preview: {
-    flexDirection: 'row', alignItems: 'center', gap: 12,
-    backgroundColor: DS.colors.card, borderRadius: DS.radius.card, padding: 14, ...DS.shadow.card,
+  thumbSelected: { borderWidth: 2, borderColor: DS.colors.accent },
+  thumbToday:    { borderWidth: 1.5, borderColor: DS.colors.accentSoft },
+  thumbEmpty: {
+    borderRadius:  8,
+    backgroundColor: DS.colors.cardCream,
+    borderWidth:   1,
+    borderColor:   DS.colors.border,
+    borderStyle:   'dashed',
   },
-  previewPhoto: { width: 64, aspectRatio: 1, borderRadius: DS.radius.sm, flexShrink: 0 },
-  previewInfo: { flex: 1 },
-  previewDate: { fontSize: 12, color: DS.colors.textHint, marginBottom: 4 },
-  previewTitle: { fontSize: 15, fontWeight: '600', color: DS.colors.text },
+  anniBadge: { position: 'absolute', top: 1, right: 1 },
+  pawBadge:  { position: 'absolute', bottom: 1, right: 1 },
+  selectedDot: {
+    width: 4, height: 4, borderRadius: 2,
+    backgroundColor: DS.colors.accent, marginTop: 1,
+  },
+
+  anniLink:      {},
+  anniLinkInner: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  anniEmoji:     { fontSize: 18 },
+  anniLinkText:  { flex: 1, fontSize: 14, fontWeight: '600', color: DS.colors.text },
+  chevron:       { fontSize: 16, color: DS.colors.textHint },
+
+  preview:      {},
+  previewDate:  { fontSize: 12, color: DS.colors.textHint, marginBottom: 10 },
+  previewInner: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
+  previewPhoto: { width: 72, height: 72, borderRadius: DS.radius.md, flexShrink: 0 },
+  previewInfo: { flex: 1, gap: 6 },
+  chipsRow:     { flexDirection: 'row', gap: 6, flexWrap: 'wrap' },
 });

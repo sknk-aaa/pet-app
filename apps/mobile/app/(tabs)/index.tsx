@@ -9,43 +9,95 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Svg, { Path, Ellipse, Line, Rect, Circle } from 'react-native-svg';
 import { DS } from '@/theme';
 import { Card } from '@/components/Card';
 import { Photo } from '@/components/Photo';
 import { StreakBadge } from '@/components/StreakBadge';
 import { Chip } from '@/components/Chip';
-import { PetAvatar } from '@/components/PetAvatar';
 import { useAppStore } from '@/store/appStore';
 import { useTodayEntry, useMemoryEntry } from '@/hooks/useEntries';
 import { useStreak } from '@/hooks/useStreak';
 import { useSelectedPet } from '@/hooks/usePets';
 import { formatDisplayDate, getTodayJST } from '@/utils/date';
-import { SPECIES_DB_TO_DISPLAY, ANNIVERSARY_TAG_DB_TO_DISPLAY } from '@/utils/species';
+import { ANNIVERSARY_TAG_DB_TO_DISPLAY } from '@/utils/species';
 import type { EntryWithPets, Entry } from '@/types';
 
+function GearIcon() {
+  return (
+    <Svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke={DS.colors.textMid} strokeWidth={1.8} strokeLinecap="round">
+      <Circle cx={12} cy={12} r={3} />
+      <Path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z" />
+    </Svg>
+  );
+}
+
+function CameraIcon({ color = '#fff', size = 18 }: { color?: string; size?: number }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+      <Path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" />
+      <Circle cx={12} cy={13} r={4} />
+    </Svg>
+  );
+}
+
+function EditIcon() {
+  return (
+    <Svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke={DS.colors.accent} strokeWidth={1.8} strokeLinecap="round">
+      <Path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+      <Path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+    </Svg>
+  );
+}
+
+function PawIcon({ size = 16, color = DS.colors.accent }: { size?: number; color?: string }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24">
+      <Ellipse cx={12} cy={16.5} rx={5.5} ry={3.8} fill={color} />
+      <Ellipse cx={7} cy={10.5} rx={2} ry={2.6} fill={color} />
+      <Ellipse cx={17} cy={10.5} rx={2} ry={2.6} fill={color} />
+      <Ellipse cx={4} cy={7} rx={1.6} ry={2} fill={color} />
+      <Ellipse cx={20} cy={7} rx={1.6} ry={2} fill={color} />
+    </Svg>
+  );
+}
+
+function PhotoIcon() {
+  return (
+    <Svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke={DS.colors.textMid} strokeWidth={1.8} strokeLinecap="round">
+      <Rect x={3} y={3} width={18} height={18} rx={3} />
+      <Circle cx={8.5} cy={8.5} r={1.5} fill={DS.colors.textMid} />
+      <Path d="M21 15l-5-5L5 21" />
+    </Svg>
+  );
+}
+
 export default function Home() {
-  const selectedPet = useSelectedPet();
-  const petFilter = useAppStore(state => state.petFilter);
   const { data: todayEntry, isLoading } = useTodayEntry();
   const { data: streak } = useStreak();
+  const selectedPet = useSelectedPet();
   const today = getTodayJST();
 
   const displayName = selectedPet?.name ?? 'うちの子';
-  const displaySpecies = selectedPet ? SPECIES_DB_TO_DISPLAY[selectedPet.species] : 'ねこ';
+  const isRecorded = !!todayEntry;
+  const pageTitle = isRecorded ? '今日の1枚' : '今日の1枚を残そう';
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
+      {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.petPill} onPress={() => router.push('/pet-select')}>
-          <PetAvatar species={displaySpecies} iconUri={selectedPet?.icon_uri} size={24} />
-          <Text style={styles.petName}>{displayName}</Text>
-          <Ionicons name="chevron-down" size={14} color={DS.colors.textMid} />
+        <View style={styles.headerLeft}>
+          <Text style={styles.headerDate}>{formatDisplayDate(today)}</Text>
+          <Text style={styles.headerTitle}>{pageTitle}</Text>
+        </View>
+        <TouchableOpacity onPress={() => router.push('/settings')} style={styles.iconBtn}>
+          <GearIcon />
         </TouchableOpacity>
-        <StreakBadge count={streak?.display_streak ?? 0} />
-        <TouchableOpacity onPress={() => router.push('/settings/')} style={styles.iconBtn}>
-          <Ionicons name="settings-outline" size={22} color={DS.colors.textMid} />
-        </TouchableOpacity>
+      </View>
+
+      {/* Streak */}
+      <View style={styles.streakRow}>
+        <StreakBadge count={streak?.display_streak ?? 0} note={isRecorded ? undefined : '昨日まで記録中'} />
       </View>
 
       {isLoading ? (
@@ -55,9 +107,9 @@ export default function Home() {
       ) : (
         <ScrollView contentContainerStyle={styles.scroll}>
           {todayEntry ? (
-            <RecordedView entry={todayEntry} today={today} petName={displayName} />
+            <RecordedView entry={todayEntry} today={today} />
           ) : (
-            <UnrecordedView petName={displayName} today={today} />
+            <UnrecordedView petName={displayName} />
           )}
         </ScrollView>
       )}
@@ -65,7 +117,7 @@ export default function Home() {
   );
 }
 
-function RecordedView({ entry, today, petName }: { entry: EntryWithPets; today: string; petName: string }) {
+function RecordedView({ entry, today }: { entry: EntryWithPets; today: string }) {
   const { data: memory } = useMemoryEntry();
   const tagDisplay = entry.anniversary_tag_type
     ? ANNIVERSARY_TAG_DB_TO_DISPLAY[entry.anniversary_tag_type]
@@ -73,42 +125,56 @@ function RecordedView({ entry, today, petName }: { entry: EntryWithPets; today: 
 
   return (
     <>
-      <Card style={styles.entryCard}>
-        <View style={styles.entryDateRow}>
-          <Text style={styles.entryDate}>{formatDisplayDate(today)}</Text>
-          <TouchableOpacity onPress={() => router.push('/photo-form')}>
-            <Ionicons name="create-outline" size={20} color={DS.colors.textHint} />
-          </TouchableOpacity>
-        </View>
-        <Photo style={styles.photo} uri={entry.image_uri} />
-        <Text style={styles.entryTitle}>{entry.title}</Text>
-        {entry.memo ? <Text style={styles.entryMemo}>{entry.memo}</Text> : null}
-        <View style={styles.entryFooter}>
-          {tagDisplay && <Chip label={tagDisplay} selected={false} small />}
+      {/* Today's photo card */}
+      <Card style={styles.photoCard} p={0}>
+        <Photo style={styles.recordedPhoto} uri={entry.image_uri} />
+        <View style={styles.photoInfo}>
+          <Text style={styles.photoTitle}>{entry.title}</Text>
+          {entry.memo ? (
+            <Text style={styles.photoMemo}>{entry.memo}</Text>
+          ) : null}
+          <View style={styles.chipsRow}>
+            {tagDisplay && <Chip label={tagDisplay} selected={false} small />}
+          </View>
           {entry.featured_submitted === 1 && (
-            <View style={styles.featuredBadge}>
-              <Ionicons name="star" size={11} color={DS.colors.accent} />
-              <Text style={styles.featuredText}>今日のペットに参加中</Text>
+            <View style={styles.featuredOutline}>
+              <PawIcon size={16} color={DS.colors.accent} />
+              <Text style={styles.featuredOutlineText}>今日のペット 参加中</Text>
             </View>
           )}
         </View>
       </Card>
+
+      {/* Action row */}
+      <View style={styles.actionRow}>
+        <TouchableOpacity style={styles.editBtn} onPress={() => router.push('/photo-form')}>
+          <EditIcon />
+          <Text style={styles.editBtnText}>編集</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.calendarLink} onPress={() => router.push('/(tabs)/calendar')}>
+          <Text style={styles.calendarLinkText}>カレンダーで見返す</Text>
+          <Text style={styles.calendarLinkChevron}>›</Text>
+        </TouchableOpacity>
+      </View>
 
       {memory && <MemoryCard entry={memory} />}
     </>
   );
 }
 
-function UnrecordedView({ petName, today }: { petName: string; today: string }) {
+function UnrecordedView({ petName }: { petName: string }) {
   const { data: memory } = useMemoryEntry();
   return (
     <>
-      <Card cream style={styles.ctaCard}>
-        <Text style={styles.ctaEmoji}>📷</Text>
-        <Text style={styles.ctaTitle}>今日の1枚を残そう</Text>
-        <Text style={styles.ctaSub}>{petName}の今日を記録しましょう</Text>
+      {/* Empty state card */}
+      <Card style={styles.emptyCard}>
+        <View style={styles.cameraCircle}>
+          <CameraIcon color={DS.colors.accent} size={28} />
+        </View>
+        <Text style={styles.emptyTitle}>今日はまだ記録がありません</Text>
+        <Text style={styles.emptySub}>{petName}の今日の渾身の1枚を残しましょう</Text>
         <TouchableOpacity style={styles.ctaButton} onPress={() => router.push('/photo-form')}>
-          <Ionicons name="camera-outline" size={18} color="#fff" />
+          <CameraIcon color="#fff" size={18} />
           <Text style={styles.ctaButtonText}>今日の1枚を残す</Text>
         </TouchableOpacity>
       </Card>
@@ -120,63 +186,138 @@ function UnrecordedView({ petName, today }: { petName: string; today: string }) 
 
 function MemoryCard({ entry }: { entry: Entry }) {
   return (
-    <>
-      <Text style={styles.sectionTitle}>この日の思い出</Text>
-      <TouchableOpacity onPress={() => router.push({ pathname: '/day-detail', params: { date: entry.date } })}>
-        <Card style={styles.memoryCard}>
-          <Photo style={styles.memoryPhoto} uri={entry.thumbnail_uri} />
-          <View style={styles.memoryInfo}>
-            <Text style={styles.memoryDate}>{formatDisplayDate(entry.date)}</Text>
-            <Text style={styles.memoryTitle}>{entry.title}</Text>
-          </View>
-        </Card>
-      </TouchableOpacity>
-    </>
+    <Card style={styles.memoryCard} p={0}>
+      {/* Card header */}
+      <View style={styles.memoryHeader}>
+        <View style={styles.memoryHeaderLeft}>
+          <PhotoIcon />
+          <Text style={styles.memoryHeaderTitle}>思い出の1枚</Text>
+        </View>
+        <View style={styles.memoryYearBadge}>
+          <Text style={styles.memoryYearText}>去年の今日</Text>
+        </View>
+      </View>
+
+      {/* Full-width photo */}
+      <Photo style={styles.memoryPhoto} uri={entry.thumbnail_uri} />
+
+      {/* Footer info */}
+      <View style={styles.memoryFooter}>
+        <Text style={styles.memoryTitle}>{entry.title}</Text>
+        <Text style={styles.memoryDate}>{formatDisplayDate(entry.date)}</Text>
+      </View>
+    </Card>
   );
 }
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: DS.colors.bg },
   header: {
-    flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: 16, paddingVertical: 12, gap: 8,
+    flexDirection:    'row',
+    alignItems:       'flex-start',
+    justifyContent:   'space-between',
+    paddingHorizontal: 20,
+    paddingTop:        6,
+    paddingBottom:     0,
   },
-  petPill: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: DS.colors.card,
-    borderRadius: DS.radius.pill, paddingHorizontal: 12, paddingVertical: 6,
-    gap: 6, flex: 1, ...DS.shadow.card,
-  },
-  petName: { fontSize: 15, fontWeight: '600', color: DS.colors.text, flex: 1 },
-  iconBtn: { padding: 4 },
+  headerLeft: { flex: 1 },
+  headerDate: { fontSize: 12, color: DS.colors.textHint },
+  headerTitle: { fontSize: 24, fontWeight: '700', color: DS.colors.text, letterSpacing: -0.5, marginTop: 4 },
+  iconBtn: { padding: 4, marginTop: 4 },
+  streakRow: { paddingHorizontal: 20, paddingVertical: 12 },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  scroll: { paddingHorizontal: 16, paddingBottom: 24, gap: 16 },
-  entryCard: { gap: 10 },
-  entryDateRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  entryDate: { fontSize: 13, color: DS.colors.textHint, fontWeight: '500' },
-  photo: { borderRadius: DS.radius.md, aspectRatio: 1 },
-  entryTitle: { fontSize: 17, fontWeight: '700', color: DS.colors.text },
-  entryMemo: { fontSize: 14, color: DS.colors.textMid, lineHeight: 22 },
-  entryFooter: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
-  featuredBadge: {
-    flexDirection: 'row', alignItems: 'center', gap: 4,
-    backgroundColor: DS.colors.accentLight, borderRadius: DS.radius.pill,
-    paddingHorizontal: 10, paddingVertical: 4,
+  scroll: { paddingHorizontal: 16, paddingBottom: 24, gap: 10 },
+
+  // Recorded view
+  photoCard: { overflow: 'hidden' },
+  recordedPhoto: { width: '100%', height: 240, borderRadius: 0 },
+  photoInfo: { padding: 16, gap: 10 },
+  photoTitle: { fontSize: 20, fontWeight: '700', color: DS.colors.text, letterSpacing: -0.3 },
+  photoMemo: { fontSize: 13, color: DS.colors.textMid, lineHeight: 22 },
+  chipsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  featuredOutline: {
+    flexDirection:    'row',
+    alignItems:       'center',
+    gap:              8,
+    borderWidth:      1.5,
+    borderColor:      DS.colors.border,
+    borderRadius:     DS.radius.pill,
+    paddingVertical:  8,
+    paddingHorizontal: 18,
+    alignSelf:        'flex-start',
   },
-  featuredText: { fontSize: 11, color: DS.colors.accent, fontWeight: '600' },
-  sectionTitle: { fontSize: 14, fontWeight: '600', color: DS.colors.textMid, marginTop: 4 },
-  memoryCard: { flexDirection: 'row', gap: 12, alignItems: 'center' },
-  memoryPhoto: { width: 80, aspectRatio: 1, borderRadius: DS.radius.sm, flexShrink: 0 },
-  memoryInfo: { flex: 1 },
-  memoryDate: { fontSize: 12, color: DS.colors.textHint, marginBottom: 4 },
-  memoryTitle: { fontSize: 15, fontWeight: '600', color: DS.colors.text },
-  ctaCard: { alignItems: 'center', gap: 12, paddingVertical: 32 },
-  ctaEmoji: { fontSize: 48 },
-  ctaTitle: { fontSize: 20, fontWeight: '700', color: DS.colors.text },
-  ctaSub: { fontSize: 14, color: DS.colors.textMid, textAlign: 'center' },
+  featuredOutlineText: { fontSize: 13, fontWeight: '600', color: DS.colors.accent },
+  actionRow: {
+    flexDirection:    'row',
+    alignItems:       'center',
+    justifyContent:   'space-between',
+    paddingHorizontal: 4,
+    paddingVertical:  4,
+  },
+  editBtn: {
+    flexDirection:    'row',
+    alignItems:       'center',
+    gap:              6,
+    borderWidth:      1.5,
+    borderColor:      DS.colors.border,
+    borderRadius:     DS.radius.pill,
+    paddingVertical:  8,
+    paddingHorizontal: 18,
+  },
+  editBtnText: { fontSize: 13, fontWeight: '500', color: DS.colors.accent },
+  calendarLink: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  calendarLinkText: { fontSize: 13, fontWeight: '500', color: DS.colors.accent },
+  calendarLinkChevron: { fontSize: 16, color: DS.colors.accent, marginTop: -1 },
+
+  // Unrecorded view
+  emptyCard: { alignItems: 'center', gap: 10, paddingVertical: 24, paddingHorizontal: 20 },
+  cameraCircle: {
+    width:            56,
+    height:           56,
+    borderRadius:     28,
+    backgroundColor:  DS.colors.accentLight,
+    alignItems:       'center',
+    justifyContent:   'center',
+  },
+  emptyTitle: { fontSize: 16, fontWeight: '600', color: DS.colors.text, textAlign: 'center' },
+  emptySub: { fontSize: 13, color: DS.colors.textHint, textAlign: 'center', lineHeight: 21 },
   ctaButton: {
-    flexDirection: 'row', alignItems: 'center', gap: 8,
-    backgroundColor: DS.colors.accent, borderRadius: DS.radius.pill,
-    paddingHorizontal: 28, paddingVertical: 14, marginTop: 8, ...DS.shadow.float,
+    flexDirection:    'row',
+    alignItems:       'center',
+    gap:              8,
+    width:            '100%',
+    backgroundColor:  DS.colors.accent,
+    borderRadius:     DS.radius.pill,
+    paddingVertical:  14,
+    justifyContent:   'center',
+    marginTop:        6,
+    ...DS.shadow.float,
   },
-  ctaButtonText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  ctaButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+
+  // Memory card
+  memoryCard: { overflow: 'hidden' },
+  memoryHeader: {
+    flexDirection:    'row',
+    alignItems:       'center',
+    justifyContent:   'space-between',
+    paddingHorizontal: 16,
+    paddingTop:        14,
+    paddingBottom:     10,
+  },
+  memoryHeaderLeft: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  memoryHeaderTitle: { fontSize: 14, fontWeight: '600', color: DS.colors.text },
+  memoryYearBadge: {
+    backgroundColor:  DS.colors.cardCream,
+    borderRadius:     DS.radius.pill,
+    paddingVertical:  3,
+    paddingHorizontal: 10,
+    borderWidth:      1,
+    borderColor:      DS.colors.border,
+  },
+  memoryYearText: { fontSize: 11, color: DS.colors.textHint },
+  memoryPhoto: { width: '100%', height: 200, borderRadius: 0 },
+  memoryFooter: { paddingVertical: 14, paddingHorizontal: 16, alignItems: 'center', gap: 4 },
+  memoryTitle: { fontSize: 17, fontWeight: '600', color: DS.colors.text },
+  memoryDate: { fontSize: 12, color: DS.colors.textHint },
 });

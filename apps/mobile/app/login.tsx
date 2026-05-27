@@ -7,15 +7,57 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { signInWithEmail, signInWithApple, signInWithGoogle } from '@/services/auth';
 import { DS } from '@/theme';
 
 export default function Login() {
-  const [email, setEmail] = useState('');
-  const [sent,  setSent]  = useState(false);
+  const [email,   setEmail]   = useState('');
+  const [sent,    setSent]    = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const handleEmailLogin = async () => {
+    if (!email.includes('@') || loading) return;
+    setLoading(true);
+    try {
+      await signInWithEmail(email.trim());
+      setSent(true);
+    } catch {
+      Alert.alert('エラー', 'メールの送信に失敗しました。もう一度お試しください。');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAppleLogin = async () => {
+    if (loading) return;
+    setLoading(true);
+    try {
+      await signInWithApple();
+      router.back();
+    } catch {
+      Alert.alert('エラー', 'Appleログインに失敗しました。');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    if (loading) return;
+    setLoading(true);
+    try {
+      await signInWithGoogle();
+      router.back();
+    } catch {
+      Alert.alert('エラー', 'Googleログインに失敗しました。');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
@@ -60,11 +102,22 @@ export default function Login() {
               autoCorrect={false}
             />
             <TouchableOpacity
-              style={[styles.button, !email.includes('@') && styles.buttonDisabled]}
-              disabled={!email.includes('@')}
-              onPress={() => setSent(true)}
+              style={[styles.button, (!email.includes('@') || loading) && styles.buttonDisabled]}
+              disabled={!email.includes('@') || loading}
+              onPress={handleEmailLogin}
             >
               <Text style={styles.buttonText}>リンクを送る</Text>
+            </TouchableOpacity>
+
+            {Platform.OS === 'ios' && (
+              <TouchableOpacity style={styles.socialBtn} onPress={handleAppleLogin} disabled={loading}>
+                <Ionicons name="logo-apple" size={20} color={DS.colors.text} />
+                <Text style={styles.socialBtnText}>Appleでログイン</Text>
+              </TouchableOpacity>
+            )}
+
+            <TouchableOpacity style={styles.socialBtn} onPress={handleGoogleLogin} disabled={loading}>
+              <Text style={styles.socialBtnText}>Googleでログイン</Text>
             </TouchableOpacity>
           </>
         )}
@@ -171,5 +224,21 @@ const styles = StyleSheet.create({
     fontSize:   14,
     color:      DS.colors.accent,
     fontWeight: '600',
+  },
+  socialBtn: {
+    flexDirection:   'row',
+    alignItems:      'center',
+    justifyContent:  'center',
+    gap:              8,
+    backgroundColor: DS.colors.card,
+    borderRadius:    DS.radius.pill,
+    paddingVertical: 14,
+    borderWidth:      1,
+    borderColor:      DS.colors.border,
+  },
+  socialBtnText: {
+    fontSize:   16,
+    fontWeight: '600',
+    color:      DS.colors.text,
   },
 });

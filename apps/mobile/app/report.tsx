@@ -6,17 +6,25 @@ import {
   ScrollView,
   TouchableOpacity,
   StyleSheet,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { addPendingUpload } from '@/db/pendingUploads';
+import { flushPendingUploads } from '@/services/uploadQueue';
+import { useAuthStore } from '@/store/authStore';
 import { DS } from '@/theme';
 import { REPORT_REASON_LABELS } from '@/dummy';
 
 export default function Report() {
+  const { featuredPetId } = useLocalSearchParams<{ featuredPetId?: string }>();
+  const session = useAuthStore(state => state.session);
+
   const [reason, setReason] = useState<string | null>(null);
   const [detail, setDetail] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   if (submitted) {
     return (
@@ -74,9 +82,32 @@ export default function Report() {
         />
 
         <TouchableOpacity
-          style={[styles.button, !reason && styles.buttonDisabled]}
-          disabled={!reason}
-          onPress={() => setSubmitted(true)}
+          style={[styles.button, (!reason || loading) && styles.buttonDisabled]}
+          disabled={!reason || loading}
+          onPress={async () => {
+            if (!session) {
+              Alert.alert('ログインが必要', '通報するにはログインが必要です。', [
+                { text: 'キャンセル', style: 'cancel' },
+                { text: 'ログイン', onPress: () => router.push('/login') },
+              ]);
+              return;
+            }
+            if (!featuredPetId) return;
+            setLoading(true);
+            try {
+              await addPendingUpload('report', {
+                featured_pet_id: featuredPetId,
+                reason: reason!,
+                detail,
+              });
+              flushPendingUploads().catch(() => {});
+              setSubmitted(true);
+            } catch {
+              Alert.alert('エラー', '通報に失敗しました。もう一度お試しください。');
+            } finally {
+              setLoading(false);
+            }
+          }}
         >
           <Text style={styles.buttonText}>通報する</Text>
         </TouchableOpacity>

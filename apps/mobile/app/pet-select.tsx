@@ -8,18 +8,26 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { usePets } from '@/hooks/usePets';
+import { useAppStore } from '@/store/appStore';
+import { setSetting } from '@/db/settings';
+import { SPECIES_DB_TO_DISPLAY } from '@/utils/species';
+import { speciesEmoji } from '@/utils/species';
 import { DS } from '@/theme';
-import { DUMMY_PET } from '@/dummy';
-
-const PETS = [
-  { id: '1', name: DUMMY_PET.name, species: DUMMY_PET.species, emoji: '🐱' },
-  { id: '2', name: 'もも',          species: 'いぬ',               emoji: '🐶' },
-];
+import { PetAvatar } from '@/components/PetAvatar';
 
 export default function PetSelect() {
+  const pets = usePets();
+  const { selectedPetId, setSelectedPetId } = useAppStore();
+
+  const handleSelect = async (id: string) => {
+    setSelectedPetId(id);
+    await setSetting('selected_pet_id', id);
+    router.back();
+  };
+
   return (
     <SafeAreaView style={styles.safe} edges={['bottom']}>
-      {/* ドラッグハンドル */}
       <View style={styles.handle} />
 
       <View style={styles.nav}>
@@ -30,24 +38,29 @@ export default function PetSelect() {
       </View>
 
       <View style={styles.list}>
-        {PETS.map(pet => (
-          <TouchableOpacity
-            key={pet.id}
-            style={[styles.row, pet.id === '1' && styles.rowActive]}
-            onPress={() => router.back()}
-          >
-            <View style={styles.avatar}>
-              <Text style={styles.avatarEmoji}>{pet.emoji}</Text>
-            </View>
-            <View style={styles.info}>
-              <Text style={styles.petName}>{pet.name}</Text>
-              <Text style={styles.petSpecies}>{pet.species}</Text>
-            </View>
-            {pet.id === '1' && (
-              <Ionicons name="checkmark-circle" size={22} color={DS.colors.accent} />
-            )}
-          </TouchableOpacity>
-        ))}
+        {pets.map(pet => {
+          const active = pet.id === selectedPetId;
+          return (
+            <TouchableOpacity
+              key={pet.id}
+              style={[styles.row, active && styles.rowActive]}
+              onPress={() => handleSelect(pet.id)}
+            >
+              <PetAvatar
+                species={SPECIES_DB_TO_DISPLAY[pet.species]}
+                iconUri={pet.icon_uri}
+                size={48}
+              />
+              <View style={styles.info}>
+                <Text style={styles.petName}>{pet.name}</Text>
+                <Text style={styles.petSpecies}>{SPECIES_DB_TO_DISPLAY[pet.species]}</Text>
+              </View>
+              {active && (
+                <Ionicons name="checkmark-circle" size={22} color={DS.colors.accent} />
+              )}
+            </TouchableOpacity>
+          );
+        })}
 
         <TouchableOpacity style={styles.addRow} onPress={() => router.push('/settings/pet-form')}>
           <View style={[styles.avatar, styles.addAvatar]}>
@@ -63,85 +76,36 @@ export default function PetSelect() {
 const styles = StyleSheet.create({
   safe: {
     backgroundColor: DS.colors.card,
-    borderTopLeftRadius:  24,
-    borderTopRightRadius: 24,
-    paddingBottom:        16,
+    borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingBottom: 16,
   },
   handle: {
-    width:           40,
-    height:           4,
-    borderRadius:     2,
-    backgroundColor:  DS.colors.border,
-    alignSelf:        'center',
-    marginTop:         12,
-    marginBottom:       8,
+    width: 40, height: 4, borderRadius: 2, backgroundColor: DS.colors.border,
+    alignSelf: 'center', marginTop: 12, marginBottom: 8,
   },
   nav: {
-    flexDirection:  'row',
-    alignItems:     'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical:   12,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: 20, paddingVertical: 12,
   },
-  navTitle: {
-    fontSize:   17,
-    fontWeight: '600',
-    color:      DS.colors.text,
-  },
-  list: {
-    paddingHorizontal: 20,
-    gap:               8,
-  },
+  navTitle: { fontSize: 17, fontWeight: '600', color: DS.colors.text },
+  list: { paddingHorizontal: 20, gap: 8 },
   row: {
-    flexDirection:   'row',
-    alignItems:      'center',
-    gap:             14,
-    backgroundColor: DS.colors.bg,
-    borderRadius:    DS.radius.md,
-    padding:         14,
-    borderWidth:      1.5,
-    borderColor:      DS.colors.border,
+    flexDirection: 'row', alignItems: 'center', gap: 14,
+    backgroundColor: DS.colors.bg, borderRadius: DS.radius.md,
+    padding: 14, borderWidth: 1.5, borderColor: DS.colors.border,
   },
-  rowActive: {
-    borderColor:     DS.colors.accent,
-    backgroundColor: DS.colors.accentLight,
-  },
+  rowActive: { borderColor: DS.colors.accent, backgroundColor: DS.colors.accentLight },
   avatar: {
-    width:           48,
-    height:          48,
-    borderRadius:    24,
-    backgroundColor: DS.colors.accentPill,
-    alignItems:      'center',
-    justifyContent:  'center',
+    width: 48, height: 48, borderRadius: 24,
+    backgroundColor: DS.colors.accentPill, alignItems: 'center', justifyContent: 'center',
   },
-  avatarEmoji: { fontSize: 26 },
   info: { flex: 1 },
-  petName: {
-    fontSize:   16,
-    fontWeight: '600',
-    color:      DS.colors.text,
-  },
-  petSpecies: {
-    fontSize: 13,
-    color:    DS.colors.textMid,
-  },
+  petName: { fontSize: 16, fontWeight: '600', color: DS.colors.text },
+  petSpecies: { fontSize: 13, color: DS.colors.textMid },
   addRow: {
-    flexDirection:   'row',
-    alignItems:      'center',
-    gap:             14,
-    backgroundColor: DS.colors.bg,
-    borderRadius:    DS.radius.md,
-    padding:         14,
-    borderWidth:      1,
-    borderStyle:      'dashed',
-    borderColor:      DS.colors.accent,
+    flexDirection: 'row', alignItems: 'center', gap: 14,
+    backgroundColor: DS.colors.bg, borderRadius: DS.radius.md,
+    padding: 14, borderWidth: 1, borderStyle: 'dashed', borderColor: DS.colors.accent,
   },
-  addAvatar: {
-    backgroundColor: DS.colors.accentLight,
-  },
-  addText: {
-    fontSize:   15,
-    color:      DS.colors.accent,
-    fontWeight: '600',
-  },
+  addAvatar: { backgroundColor: DS.colors.accentLight },
+  addText: { fontSize: 15, color: DS.colors.accent, fontWeight: '600' },
 });

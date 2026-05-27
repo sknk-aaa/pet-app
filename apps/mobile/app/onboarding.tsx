@@ -10,6 +10,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
+import { setSetting } from '@/db/settings';
 import { DS } from '@/theme';
 
 const SLIDES = [
@@ -38,7 +39,10 @@ export default function Onboarding() {
   const scrollRef = useRef<ScrollView>(null);
   const [activeIndex, setActiveIndex] = useState(0);
 
-  const goTo = (href: string) => router.replace(href as '/pet-setup');
+  const goTo = async (href: string) => {
+    await setSetting('onboarding_completed', 'true').catch(() => {});
+    router.replace(href as '/pet-setup');
+  };
 
   const handleScroll = (e: { nativeEvent: { contentOffset: { x: number } } }) => {
     const idx = Math.round(e.nativeEvent.contentOffset.x / width);

@@ -7,9 +7,15 @@ import {
   TouchableOpacity,
   StyleSheet,
   Platform,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
+import { createPet } from '@/db/pets';
+import { setSetting } from '@/db/settings';
+import { useAppStore } from '@/store/appStore';
+import { SPECIES_DISPLAY_TO_DB, GENDER_DISPLAY_TO_DB } from '@/utils/species';
+import { generateUUID } from '@/utils/uuid';
 import { DS } from '@/theme';
 import { SPECIES_OPTIONS, GENDER_OPTIONS } from '@/dummy';
 
@@ -24,6 +30,31 @@ export default function PetSetup() {
   const [birthday, setBirthday] = useState('');
 
   const canProceed = name.trim().length > 0 && species !== null;
+  const [saving, setSaving] = useState(false);
+
+  const handleSubmit = async () => {
+    if (!canProceed || saving || !species) return;
+    setSaving(true);
+    try {
+      const speciesDb = SPECIES_DISPLAY_TO_DB[species];
+      const genderDb = gender ? GENDER_DISPLAY_TO_DB[gender] ?? null : null;
+      const pet = await createPet({
+        name: name.trim(),
+        species: speciesDb,
+        gender: genderDb,
+        birthday: birthday.trim() || null,
+      });
+      const { setPets, setSelectedPetId } = useAppStore.getState();
+      setPets([pet]);
+      setSelectedPetId(pet.id);
+      await setSetting('selected_pet_id', pet.id);
+      router.replace('/(tabs)');
+    } catch {
+      Alert.alert('エラー', '登録に失敗しました。もう一度お試しください。');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
@@ -85,7 +116,7 @@ export default function PetSetup() {
       <View style={styles.footer}>
         <TouchableOpacity
           style={[styles.button, !canProceed && styles.buttonDisabled]}
-          onPress={() => canProceed && router.replace('/(tabs)')}
+          onPress={handleSubmit}
           disabled={!canProceed}
         >
           <Text style={styles.buttonText}>はじめる</Text>

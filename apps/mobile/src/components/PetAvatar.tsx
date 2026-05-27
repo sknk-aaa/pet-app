@@ -1,10 +1,11 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, Image, StyleSheet } from 'react-native';
 import { DS } from '@/theme';
 
 type Props = {
   size?: number;
   species?: string;
+  iconUri?: string | null;
 };
 
 const SPECIES_EMOJI: Record<string, string> = {
@@ -16,7 +17,7 @@ const SPECIES_EMOJI: Record<string, string> = {
   その他:     '🐾',
 };
 
-export function PetAvatar({ size = 44, species = 'ねこ' }: Props) {
+export function PetAvatar({ size = 44, species = 'ねこ', iconUri }: Props) {
   const emoji = SPECIES_EMOJI[species] ?? '🐾';
   const fontSize = size * 0.48;
 
@@ -31,7 +32,14 @@ export function PetAvatar({ size = 44, species = 'ねこ' }: Props) {
         },
       ]}
     >
-      <Text style={{ fontSize }}>{emoji}</Text>
+      {iconUri ? (
+        <Image
+          source={{ uri: iconUri }}
+          style={{ width: size, height: size, borderRadius: size / 2 }}
+        />
+      ) : (
+        <Text style={{ fontSize }}>{emoji}</Text>
+      )}
     </View>
   );
 }

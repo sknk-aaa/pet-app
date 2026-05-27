@@ -1,15 +1,27 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   ScrollView,
   TouchableOpacity,
   StyleSheet,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import {
+  initIAP,
+  closeIAP,
+  fetchProducts,
+  purchasePro,
+  restorePurchases,
+  IAP_PRODUCTS,
+} from '@/services/iap';
+import { useAuthStore } from '@/store/authStore';
 import { DS } from '@/theme';
+import type { Product } from 'expo-iap';
 
 const FEATURES = [
   { icon: 'calendar',           text: 'カレンダーを無制限に振り返る' },
@@ -19,6 +31,50 @@ const FEATURES = [
 ];
 
 export default function Pro() {
+  const isPro = useAuthStore(state => state.isPro);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    initIAP().then(() => fetchProducts().then(setProducts)).catch(() => {});
+    return () => { closeIAP().catch(() => {}); };
+  }, []);
+
+  const monthlyProduct = products.find(p => p.productId === IAP_PRODUCTS.MONTHLY);
+  const lifetimeProduct = products.find(p => p.productId === IAP_PRODUCTS.LIFETIME);
+
+  const handlePurchase = async (productId: string) => {
+    if (loading) return;
+    setLoading(true);
+    try {
+      await purchasePro(productId);
+      Alert.alert('購入完了', 'Pro機能が有効になりました！');
+      router.back();
+    } catch {
+      Alert.alert('エラー', '購入に失敗しました。もう一度お試しください。');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRestore = async () => {
+    if (loading) return;
+    setLoading(true);
+    try {
+      const restored = await restorePurchases();
+      if (restored) {
+        Alert.alert('復元完了', '購入が復元されました。');
+        router.back();
+      } else {
+        Alert.alert('復元失敗', '復元できる購入がありませんでした。');
+      }
+    } catch {
+      Alert.alert('エラー', '購入の復元に失敗しました。');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
       <View style={styles.handle} />
@@ -53,15 +109,45 @@ export default function Pro() {
           <Text style={styles.priceSub}>いつでもキャンセル可能</Text>
         </View>
 
-        {/* CTA */}
-        <TouchableOpacity style={styles.button} onPress={() => router.back()}>
-          <Ionicons name="sparkles-outline" size={18} color="#fff" />
-          <Text style={styles.buttonText}>Proにする</Text>
-        </TouchableOpacity>
+        {isPro ? (
+          <View style={styles.activeCard}>
+            <Ionicons name="checkmark-circle" size={24} color={DS.colors.accent} />
+            <Text style={styles.activeText}>現在Proプランをご利用中です</Text>
+          </View>
+        ) : (
+          <>
+            <TouchableOpacity
+              style={[styles.button, loading && styles.buttonDisabled]}
+              disabled={loading}
+              onPress={() => handlePurchase(IAP_PRODUCTS.MONTHLY)}
+            >
+              {loading ? <ActivityIndicator color="#fff" /> : (
+                <>
+                  <Ionicons name="sparkles-outline" size={18} color="#fff" />
+                  <Text style={styles.buttonText}>
+                    {monthlyProduct ? `月額 ${monthlyProduct.localizedPrice} で始める` : '月額プランで始める'}
+                  </Text>
+                </>
+              )}
+            </TouchableOpacity>
 
-        <TouchableOpacity style={styles.restoreBtn}>
-          <Text style={styles.restoreText}>購入を復元する</Text>
-        </TouchableOpacity>
+            {lifetimeProduct && (
+              <TouchableOpacity
+                style={styles.lifetimeBtn}
+                disabled={loading}
+                onPress={() => handlePurchase(IAP_PRODUCTS.LIFETIME)}
+              >
+                <Text style={styles.lifetimeBtnText}>
+                  買い切り {lifetimeProduct.localizedPrice}
+                </Text>
+              </TouchableOpacity>
+            )}
+
+            <TouchableOpacity style={styles.restoreBtn} onPress={handleRestore}>
+              <Text style={styles.restoreText}>購入を復元する</Text>
+            </TouchableOpacity>
+          </>
+        )}
 
         <Text style={styles.legal}>
           お支払いはApp Storeアカウントに請求されます。
@@ -183,10 +269,19 @@ const styles = StyleSheet.create({
   restoreBtn: {
     padding: 4,
   },
-  restoreText: {
-    fontSize:   14,
-    color:      DS.colors.textMid,
+  restoreText: { fontSize: 14, color: DS.colors.textMid },
+  buttonDisabled: { backgroundColor: DS.colors.accentPill, shadowOpacity: 0, elevation: 0 },
+  lifetimeBtn: {
+    paddingVertical: 12, width: '100%', alignItems: 'center',
+    borderWidth: 1.5, borderColor: DS.colors.accent, borderRadius: DS.radius.pill,
   },
+  lifetimeBtnText: { fontSize: 15, color: DS.colors.accent, fontWeight: '600' },
+  activeCard: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    backgroundColor: DS.colors.accentLight, borderRadius: DS.radius.card,
+    padding: 20, width: '100%', justifyContent: 'center',
+  },
+  activeText: { fontSize: 15, color: DS.colors.accent, fontWeight: '600' },
   legal: {
     fontSize:   11,
     color:      DS.colors.textHint,

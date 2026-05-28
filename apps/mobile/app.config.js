@@ -53,6 +53,7 @@ module.exports = ({ config }) => ({
       NSPhotoLibraryUsageDescription: 'アルバムからペットの写真を選びます',
       NSPhotoLibraryAddUsageDescription: 'カメラロールに保存します',
       ITSAppUsesNonExemptEncryption: false,
+      CFBundleDevelopmentRegion: 'ja_JP',
     },
   },
   extra: {

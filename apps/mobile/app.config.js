@@ -37,10 +37,12 @@ module.exports = ({ config }) => ({
       'expo-notifications',
       { icon: './assets/notification-icon.png', color: '#E8824A' },
     ],
-    [
-      '@react-native-google-signin/google-signin',
-      { iosUrlScheme: googleIosUrlScheme(process.env.GOOGLE_IOS_CLIENT_ID) },
-    ],
+    ...(process.env.GOOGLE_IOS_CLIENT_ID ? [
+      [
+        '@react-native-google-signin/google-signin',
+        { iosUrlScheme: googleIosUrlScheme(process.env.GOOGLE_IOS_CLIENT_ID) },
+      ],
+    ] : []),
   ],
   ios: {
     bundleIdentifier: 'com.mainichipet.app',

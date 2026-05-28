@@ -22,7 +22,6 @@ export async function signInWithApple(): Promise<void> {
   const { error } = await supabase.auth.signInWithIdToken({
     provider: 'apple',
     token: credential.identityToken,
-    nonce: credential.authorizationCode ?? undefined,
   });
   if (error) throw error;
 }
@@ -49,7 +48,7 @@ export async function signInWithGoogle(): Promise<void> {
 export async function signInWithEmail(email: string): Promise<void> {
   const { error } = await supabase.auth.signInWithOtp({
     email,
-    options: { emailRedirectTo: 'petdiary://auth/callback' },
+    options: { emailRedirectTo: 'mainichipet://auth/callback' },
   });
   if (error) throw error;
 }

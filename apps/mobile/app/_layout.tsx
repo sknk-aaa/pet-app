@@ -102,6 +102,7 @@ function AppContent() {
         <Stack.Screen name="day-detail"    />
         <Stack.Screen name="anniversaries" />
         <Stack.Screen name="settings"      />
+        <Stack.Screen name="auth/callback" options={{ headerShown: false }} />
       </Stack>
     </>
   );

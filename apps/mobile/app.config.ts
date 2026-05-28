@@ -1,5 +1,12 @@
 import { ExpoConfig, ConfigContext } from 'expo/config';
 
+function googleIosUrlScheme(clientId: string | undefined): string {
+  if (!clientId) return '';
+  // clientId: "xxx.apps.googleusercontent.com" → "com.googleusercontent.apps.xxx"
+  const id = clientId.replace('.apps.googleusercontent.com', '');
+  return `com.googleusercontent.apps.${id}`;
+}
+
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: 'まいにちペット',
@@ -32,6 +39,10 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     [
       'expo-notifications',
       { icon: './assets/notification-icon.png', color: '#E8824A' },
+    ],
+    [
+      '@react-native-google-signin/google-signin',
+      { iosUrlScheme: googleIosUrlScheme(process.env.GOOGLE_IOS_CLIENT_ID) },
     ],
   ],
   ios: {

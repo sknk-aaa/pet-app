@@ -39,7 +39,8 @@ export default function Login() {
     try {
       await signInWithApple();
       router.back();
-    } catch {
+    } catch (e) {
+      console.error('[Apple Login]', e);
       Alert.alert('エラー', 'Appleログインに失敗しました。');
     } finally {
       setLoading(false);
@@ -52,7 +53,8 @@ export default function Login() {
     try {
       await signInWithGoogle();
       router.back();
-    } catch {
+    } catch (e) {
+      console.error('[Google Login]', e);
       Alert.alert('エラー', 'Googleログインに失敗しました。');
     } finally {
       setLoading(false);

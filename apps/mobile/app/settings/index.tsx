@@ -267,12 +267,21 @@ export default function Settings() {
         <Text style={styles.sectionLabel}>アプリについて</Text>
         <Card style={styles.sectionCard} p={0}>
           <SettingRow
+            label="不具合・要望を報告"
+            onPress={() => Linking.openURL('https://tally.so/r/WOKNyL')}
+          />
+          <SettingRow
+            label="レビューして応援する"
+            onPress={() => Linking.openURL('https://apps.apple.com/app/id__APP_ID__?action=write-review')}
+          />
+          <SettingRow
             label="プライバシーポリシー"
             onPress={() => Linking.openURL('https://sknk-aaa.github.io/pet-app/privacy/')}
           />
           <SettingRow
             label="利用規約"
             onPress={() => router.push('/settings/terms')}
+            divider={false}
           />
           <View style={styles.versionRow}>
             <Text style={styles.versionLabel}>バージョン 1.0.0</Text>

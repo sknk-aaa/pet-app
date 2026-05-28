@@ -28,7 +28,8 @@ import type { CalendarEntryInfo } from '@/types';
 
 const WEEKDAYS = ['日', '月', '火', '水', '木', '金', '土'];
 const CELL_HEIGHT = 52;
-const GRID_GAP = 2;
+const GRID_GAP = 0;
+const GRID_LINE = 'rgba(210, 190, 172, 0.45)';
 const SCREEN_HORIZONTAL_PADDING = 14;
 const GRID_CARD_PADDING = 12;
 const MONTHS = Array.from({ length: 12 }, (_, index) => index + 1);
@@ -37,7 +38,7 @@ export default function Calendar() {
   const navigation = useNavigation();
   const { width } = useWindowDimensions();
   const gridWidth = width - SCREEN_HORIZONTAL_PADDING * 2 - GRID_CARD_PADDING * 2;
-  const cellWidth = (gridWidth - GRID_GAP * 6) / 7;
+  const cellWidth = Math.floor(gridWidth / 7);
 
   const today = getTodayJST();
   const [todayYear, todayMonth] = today.split('-').map(Number);
@@ -198,7 +199,7 @@ export default function Calendar() {
                   {hasPic ? (
                     <View style={[
                       styles.thumb,
-                      { width: cellWidth - 1, height: CELL_HEIGHT },
+                      { width: cellWidth, height: CELL_HEIGHT },
                     ]}>
                       <Photo style={StyleSheet.absoluteFill} uri={entry.thumbnail_uri} />
                       {isAnni && (
@@ -213,7 +214,7 @@ export default function Calendar() {
                       )}
                     </View>
                   ) : (
-                    <View style={[styles.thumbEmpty, { width: cellWidth - 1, height: CELL_HEIGHT }]} />
+                    <View style={[styles.thumbEmpty, { width: cellWidth, height: CELL_HEIGHT }]} />
                   )}
                 </TouchableOpacity>
               );
@@ -329,15 +330,41 @@ const styles = StyleSheet.create({
   },
   petPillName: { fontSize: 12, fontWeight: '600', color: DS.colors.text },
 
-  gridCard: {},
-  weekRow:  { flexDirection: 'row', columnGap: GRID_GAP, marginBottom: 4 },
-  weekday:  { fontSize: 11, fontWeight: '600', color: DS.colors.textMid, textAlign: 'center', paddingVertical: 4 },
+  gridCard: { overflow: 'hidden' },
+  weekRow: {
+    flexDirection:   'row',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderColor:     GRID_LINE,
+    marginBottom:    0,
+  },
+  weekday: {
+    fontSize:        11,
+    fontWeight:      '600',
+    color:           DS.colors.textMid,
+    textAlign:       'center',
+    paddingVertical: 5,
+    borderRightWidth: StyleSheet.hairlineWidth,
+    borderColor:     GRID_LINE,
+  },
   weekdaySun: { color: DS.colors.red },
   weekdaySat: { color: DS.colors.sage },
-  grid:       { flexDirection: 'row', flexWrap: 'wrap', columnGap: GRID_GAP, rowGap: GRID_GAP },
-  cell:       { alignItems: 'center', gap: 1 },
-  dayNum:     { fontSize: 10, lineHeight: 14 },
-  dayNumToday: { fontWeight: '700' },
+  grid: {
+    flexDirection:  'row',
+    flexWrap:       'wrap',
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderColor:    GRID_LINE,
+  },
+  cell: {
+    alignItems:       'center',
+    gap:              1,
+    paddingTop:       2,
+    paddingBottom:    3,
+    borderRightWidth: StyleSheet.hairlineWidth,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderColor:      GRID_LINE,
+  },
+  dayNum:         { fontSize: 10, lineHeight: 14 },
+  dayNumToday:    { fontWeight: '700' },
   dayNumSelected: { color: DS.colors.white, fontWeight: '700' },
   dayBadge: {
     width:          22,
@@ -348,13 +375,10 @@ const styles = StyleSheet.create({
   },
   dayBadgeSelected: { backgroundColor: DS.colors.accent },
   dayBadgeToday:    { backgroundColor: DS.colors.accentLight },
-  thumb: { borderRadius: 8, overflow: 'hidden' },
+  thumb:     { borderRadius: 4, overflow: 'hidden' },
   thumbEmpty: {
-    borderRadius:    8,
+    borderRadius:    4,
     backgroundColor: DS.colors.cardCream,
-    borderWidth:     1,
-    borderColor:     DS.colors.border,
-    borderStyle:     'dashed',
   },
   anniBadge:   { position: 'absolute', top: 1, right: 1 },
   pawBadge:    { position: 'absolute', bottom: 1, right: 1 },

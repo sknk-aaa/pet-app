@@ -84,9 +84,11 @@ export default function Settings() {
               <View style={styles.loginBadge}>
                 <Text style={styles.loginBadgeText}>ログイン中</Text>
               </View>
-              <Text style={styles.loginEmail} numberOfLines={1}>{email}</Text>
+              {provider !== 'apple' && (
+                <Text style={styles.loginEmail} numberOfLines={1}>{email}</Text>
+              )}
               <Text style={styles.loginProvider}>
-                {provider === 'apple'  ? 'Apple でログイン' :
+                {provider === 'apple'  ? 'Apple ID でログイン済み' :
                  provider === 'google' ? 'Google でログイン' : 'メールでログイン'}
               </Text>
             </View>

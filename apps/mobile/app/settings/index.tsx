@@ -19,6 +19,7 @@ import { useSelectedPet } from '@/hooks/usePets';
 import { useAppStore } from '@/store/appStore';
 import { useAuthStore } from '@/store/authStore';
 import { signOut } from '@/services/auth';
+import { supabase } from '@/services/supabase';
 import { CrownIcon } from '@/components/icons/CrownIcon';
 import { setSetting } from '@/db/settings';
 import { requestPermission, scheduleOrUpdateDailyReminder } from '@/services/notifications';
@@ -45,6 +46,43 @@ export default function Settings() {
   const toggleCameraRoll = async (v: boolean) => {
     await setSetting('save_to_camera_roll', v ? 'true' : 'false');
     updateSettings({ save_to_camera_roll: v });
+  };
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      'アカウントを削除',
+      '全ての記録・データが完全に削除されます。この操作は元に戻せません。本当に削除しますか？',
+      [
+        { text: 'キャンセル', style: 'cancel' },
+        {
+          text: '削除する',
+          style: 'destructive',
+          onPress: () => {
+            Alert.alert(
+              '最終確認',
+              '本当に削除しますか？',
+              [
+                { text: 'キャンセル', style: 'cancel' },
+                {
+                  text: '削除する',
+                  style: 'destructive',
+                  onPress: async () => {
+                    try {
+                      const { error } = await supabase.functions.invoke('delete-my-account');
+                      if (error) throw error;
+                      await signOut();
+                      router.replace('/onboarding');
+                    } catch {
+                      Alert.alert('エラー', 'アカウントの削除に失敗しました。しばらくしてから再試行してください。');
+                    }
+                  },
+                },
+              ]
+            );
+          },
+        },
+      ]
+    );
   };
 
   const toggleReminder = async (v: boolean) => {
@@ -212,8 +250,16 @@ export default function Settings() {
             label="購入を復元"
             rightElement={isLoggedIn ? undefined : <LockRow label="ログインが必要" />}
             onPress={isLoggedIn ? () => router.push('/settings/account') : () => router.push('/login')}
-            divider={false}
           />
+          {isLoggedIn && (
+            <SettingRow
+              label="アカウントを削除"
+              labelColor={DS.colors.red}
+              chevron={false}
+              onPress={handleDeleteAccount}
+              divider={false}
+            />
+          )}
         </Card>
 
         {/* アプリについて */}

@@ -10,6 +10,7 @@ module.exports = ({ config }) => ({
   slug: 'mainichi-pet',
   version: '1.0.0',
   orientation: 'portrait',
+  icon: './assets/icon.png',
   platforms: ['ios'],
   scheme: 'mainichipet',
   experiments: {

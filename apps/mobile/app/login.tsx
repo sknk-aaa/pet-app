@@ -81,8 +81,8 @@ export default function Login() {
       await signInWithGoogle();
       router.dismiss();
     } catch (e) {
-      console.error('[Google Login]', e);
-      Alert.alert('エラー', 'Googleログインに失敗しました。');
+      const msg = e instanceof Error ? e.message : String(e);
+      Alert.alert('Googleログインエラー', msg);
     } finally {
       setLoading(false);
     }

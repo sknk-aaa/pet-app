@@ -31,7 +31,10 @@ export async function signInWithApple(): Promise<void> {
 function extractNonceFromJwt(jwt: string): string | undefined {
   try {
     const payload = jwt.split('.')[1];
-    const decoded = JSON.parse(atob(payload)) as Record<string, unknown>;
+    // base64url → base64 変換（- を +、_ を / に置換しパディング補完）
+    const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+    const padded = base64.padEnd(base64.length + (4 - (base64.length % 4)) % 4, '=');
+    const decoded = JSON.parse(atob(padded)) as Record<string, unknown>;
     return typeof decoded.nonce === 'string' ? decoded.nonce : undefined;
   } catch {
     return undefined;

@@ -172,13 +172,15 @@ export default function Settings() {
         {/* アカウント */}
         <Text style={styles.sectionLabel}>アカウント</Text>
         <Card style={styles.sectionCard} p={0}>
-          <View style={styles.planRow}>
-            <Text style={styles.planLabel}>現在のプラン</Text>
-            <View style={styles.planBadge}>
-              <Text style={styles.planBadgeText}>無料プラン</Text>
-            </View>
-          </View>
-          <View style={styles.sectionDivider} />
+          <SettingRow
+            label="現在のプラン"
+            chevron={false}
+            rightElement={
+              <View style={styles.planBadge}>
+                <Text style={styles.planBadgeText}>無料プラン</Text>
+              </View>
+            }
+          />
           {isLoggedIn ? (
             <SettingRow
               label="ログアウト"
@@ -309,13 +311,6 @@ const styles = StyleSheet.create({
   petInfo: { flex: 1, gap: 4 },
   petName: { fontSize: 18, fontWeight: '700', color: DS.colors.text },
   petMeta: { fontSize: 13, color: DS.colors.textMid },
-  planRow: {
-    flexDirection:  'row',
-    alignItems:     'center',
-    justifyContent: 'space-between',
-    paddingVertical: 14,
-  },
-  planLabel: { fontSize: 16, color: DS.colors.text },
   planBadge: {
     backgroundColor:   DS.colors.peach,
     borderRadius:      DS.radius.pill,

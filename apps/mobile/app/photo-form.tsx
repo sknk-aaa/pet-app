@@ -15,7 +15,8 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
 import { DS } from '@/theme';
-import { TAG_OPTIONS } from '@/dummy';
+const PRESET_TAGS = ['誕生日'] as const;
+const OTHER_TAGS  = ['うちの子記念日', 'はじめて', 'おでかけ', 'その他'] as const;
 import { Card } from '@/components/Card';
 import { Photo } from '@/components/Photo';
 import { Toggle } from '@/components/Toggle';
@@ -371,9 +372,9 @@ export default function PhotoForm() {
                     if (Platform.OS === 'ios') {
                       ActionSheetIOS.showActionSheetWithOptions(
                         { options: ['キャンセル', ...remaining.map(p => p.name)], cancelButtonIndex: 0 },
-                        idx => {
-                          if (idx === 0) return;
-                          setSelectedPets(prev => [...prev, remaining[idx - 1]]);
+                        i => {
+                          if (i === 0) return;
+                          setSelectedPets(prev => [...prev, remaining[i - 1]]);
                         }
                       );
                     } else {
@@ -384,7 +385,8 @@ export default function PhotoForm() {
                     }
                   }}
                 >
-                  <Text style={styles.addPetBtnText}>＋ 追加</Text>
+                  <Ionicons name="add" size={15} color={DS.colors.accent} />
+                  <Text style={styles.addPetBtnText}>追加</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -393,7 +395,7 @@ export default function PhotoForm() {
           <View style={styles.fieldGroup}>
             <Text style={styles.fieldLabel}>記念日タグ</Text>
             <View style={styles.tagChipsRow}>
-              {TAG_OPTIONS.map(t => (
+              {PRESET_TAGS.map(t => (
                 <TouchableOpacity
                   key={t}
                   style={[styles.tagChip, tag === t && styles.tagChipSelected]}
@@ -407,9 +409,35 @@ export default function PhotoForm() {
                   <Text style={[styles.tagChipText, tag === t && styles.tagChipTextSelected]}>{t}</Text>
                 </TouchableOpacity>
               ))}
-              <View style={styles.tagChipDash}>
-                <Text style={styles.tagChipDashText}>＋ その他</Text>
-              </View>
+              {tag && !(PRESET_TAGS as readonly string[]).includes(tag) && (
+                <TouchableOpacity
+                  style={[styles.tagChip, styles.tagChipSelected]}
+                  onPress={() => setTag(null)}
+                >
+                  <View style={styles.tagCheckCircle}>
+                    <Ionicons name="checkmark" size={9} color="#fff" />
+                  </View>
+                  <Text style={styles.tagChipTextSelected}>{tag}</Text>
+                </TouchableOpacity>
+              )}
+              <TouchableOpacity
+                style={styles.addTagBtn}
+                onPress={() => {
+                  if (Platform.OS === 'ios') {
+                    ActionSheetIOS.showActionSheetWithOptions(
+                      { options: ['キャンセル', ...OTHER_TAGS], cancelButtonIndex: 0 },
+                      i => { if (i > 0) setTag(OTHER_TAGS[i - 1]); }
+                    );
+                  } else {
+                    Alert.alert('タグを選択', '', OTHER_TAGS.map(t => ({
+                      text: t, onPress: () => setTag(t),
+                    })));
+                  }
+                }}
+              >
+                <Ionicons name="add" size={15} color={DS.colors.textMid} />
+                <Text style={styles.addTagBtnText}>追加</Text>
+              </TouchableOpacity>
             </View>
           </View>
         </Card>
@@ -566,14 +594,17 @@ const styles = StyleSheet.create({
     justifyContent:  'center',
   },
   addPetBtn: {
-    borderWidth:       1.5,
-    borderColor:       DS.colors.border,
+    flexDirection:     'row',
+    alignItems:        'center',
+    gap:               3,
+    backgroundColor:   DS.colors.accentLight,
     borderRadius:      DS.radius.pill,
     paddingVertical:   6,
-    paddingHorizontal: 14,
-    borderStyle:       'dashed',
+    paddingHorizontal: 12,
+    borderWidth:       1,
+    borderColor:       DS.colors.accentSoft,
   },
-  addPetBtnText: { fontSize: 13, color: DS.colors.textHint },
+  addPetBtnText: { fontSize: 13, fontWeight: '600', color: DS.colors.accent },
 
   tagChipsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   tagChip: {
@@ -598,15 +629,18 @@ const styles = StyleSheet.create({
   },
   tagChipText:         { fontSize: 13, color: DS.colors.textMid },
   tagChipTextSelected: { fontSize: 13, fontWeight: '600', color: DS.colors.accent },
-  tagChipDash: {
-    borderWidth:       1.5,
-    borderColor:       DS.colors.border,
+  addTagBtn: {
+    flexDirection:     'row',
+    alignItems:        'center',
+    gap:               3,
+    backgroundColor:   DS.colors.cardCream,
     borderRadius:      DS.radius.pill,
     paddingVertical:   7,
-    paddingHorizontal: 14,
-    borderStyle:       'dashed',
+    paddingHorizontal: 12,
+    borderWidth:       1.5,
+    borderColor:       DS.colors.border,
   },
-  tagChipDashText: { fontSize: 13, color: DS.colors.textHint },
+  addTagBtnText: { fontSize: 13, color: DS.colors.textMid },
 
   toggleRow:  { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
   toggleInfo: { flex: 1, paddingRight: 12, gap: 4 },

@@ -17,7 +17,6 @@ import { Chip } from '@/components/Chip';
 import { Photo } from '@/components/Photo';
 import { PetAvatar } from '@/components/PetAvatar';
 import { useMonthEntries } from '@/hooks/useEntries';
-import { useStreak } from '@/hooks/useStreak';
 import { useSelectedPet } from '@/hooks/usePets';
 import { useAppStore } from '@/store/appStore';
 import {
@@ -31,7 +30,7 @@ import { SPECIES_DB_TO_DISPLAY, ANNIVERSARY_TAG_DB_TO_DISPLAY } from '@/utils/sp
 import type { CalendarEntryInfo } from '@/types';
 
 const WEEKDAYS = ['日', '月', '火', '水', '木', '金', '土'];
-const CELL_HEIGHT = 38;
+const CELL_HEIGHT = 52;
 const GRID_GAP = 2;
 const SCREEN_HORIZONTAL_PADDING = 14;
 const GRID_CARD_PADDING = 12;
@@ -53,7 +52,6 @@ export default function Calendar() {
   const [draftMonth, setDraftMonth] = useState(todayMonth);
 
   const selectedPet = useSelectedPet();
-  const { data: streakData } = useStreak();
   const displaySpecies = selectedPet ? SPECIES_DB_TO_DISPLAY[selectedPet.species] : 'ねこ';
 
   const { data: entries = [] } = useMonthEntries(year, month);
@@ -127,38 +125,6 @@ export default function Calendar() {
   return (
     <SafeAreaView style={styles.safe} edges={[]}>
       <ScrollView contentContainerStyle={styles.scroll}>
-        {/* Month navigation */}
-        <View style={styles.monthNav}>
-          <TouchableOpacity onPress={prevMonth} style={styles.navBtn}>
-            <Ionicons name="chevron-back" size={18} color={DS.colors.accent} />
-            <Text style={styles.navText}>前月</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => { setYear(todayYear); setMonth(todayMonth); setSelectedDate(null); }}
-            style={styles.todayBtn}
-          >
-            <Text style={styles.todayBtnText}>今日</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={nextMonth} style={styles.navBtn}>
-            <Text style={styles.navText}>翌月</Text>
-            <Ionicons name="chevron-forward" size={18} color={DS.colors.accent} />
-          </TouchableOpacity>
-        </View>
-
-        {/* Stats bar — peach background */}
-        <View style={styles.statsBar}>
-          <View style={styles.statGroup}>
-            <Text style={styles.fireEmoji}>🔥</Text>
-            <Text style={styles.statLabel}>連続</Text>
-            <Text style={styles.statNumAccent}>{streakData?.display_streak ?? 0}日</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statGroup}>
-            <Text style={styles.statLabel}>今月</Text>
-            <Text style={styles.statNumSage}>{photoCount}枚</Text>
-          </View>
-        </View>
-
         {/* Calendar grid */}
         <Card style={styles.gridCard} p={12}>
           {/* Day headers */}
@@ -219,7 +185,7 @@ export default function Calendar() {
                   {hasPic ? (
                     <View style={[
                       styles.thumb,
-                      { width: cellWidth - 4, height: CELL_HEIGHT },
+                      { width: cellWidth - 1, height: CELL_HEIGHT },
                     ]}>
                       <Photo style={StyleSheet.absoluteFill} uri={entry.thumbnail_uri} />
                       {isAnni && (
@@ -234,7 +200,7 @@ export default function Calendar() {
                       )}
                     </View>
                   ) : (
-                    <View style={[styles.thumbEmpty, { width: cellWidth - 4, height: CELL_HEIGHT }]} />
+                    <View style={[styles.thumbEmpty, { width: cellWidth - 1, height: CELL_HEIGHT }]} />
                   )}
                 </TouchableOpacity>
               );
@@ -243,13 +209,13 @@ export default function Calendar() {
         </Card>
 
         {/* Anniversary link */}
-        <Card p={12}>
-          <TouchableOpacity style={styles.anniLinkInner} onPress={() => router.push('/anniversaries')}>
-            <Text style={styles.anniEmoji}>🎖</Text>
-            <Text style={styles.anniLinkText}>記念日を見る</Text>
-            <Ionicons name="chevron-forward" size={16} color={DS.colors.textHint} />
-          </TouchableOpacity>
-        </Card>
+        <TouchableOpacity style={styles.anniCard} onPress={() => router.push('/anniversaries')} activeOpacity={0.75}>
+          <View style={styles.anniIconWrap}>
+            <Ionicons name="ribbon-outline" size={17} color={DS.colors.accent} />
+          </View>
+          <Text style={styles.anniLinkText}>記念日を見る</Text>
+          <Ionicons name="chevron-forward" size={15} color={DS.colors.textHint} />
+        </TouchableOpacity>
 
         {/* Selected day preview */}
         {selectedEntry && (
@@ -361,35 +327,6 @@ const styles = StyleSheet.create({
   },
   petPillName: { fontSize: 14, fontWeight: '600', color: DS.colors.text },
 
-  monthNav: {
-    flexDirection:     'row',
-    alignItems:        'center',
-    justifyContent:    'space-between',
-    paddingVertical:   2,
-    paddingHorizontal: 4,
-  },
-  navBtn:       { flexDirection: 'row', alignItems: 'center', gap: 2, paddingVertical: 6, paddingHorizontal: 8 },
-  navText:      { fontSize: 13, fontWeight: '500', color: DS.colors.accent },
-  todayBtn:     { backgroundColor: DS.colors.accentLight, borderRadius: DS.radius.pill, paddingHorizontal: 16, paddingVertical: 7 },
-  todayBtnText: { fontSize: 13, fontWeight: '600', color: DS.colors.accent },
-
-  statsBar: {
-    flexDirection:     'row',
-    alignItems:        'center',
-    justifyContent:    'center',
-    backgroundColor:   DS.colors.peach,
-    borderRadius:      14,
-    paddingVertical:   9,
-    paddingHorizontal: 20,
-    ...DS.shadow.card,
-  },
-  statGroup:     { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  statDivider:   { width: 1, height: 20, backgroundColor: DS.colors.border, marginHorizontal: 18 },
-  fireEmoji:     { fontSize: 15 },
-  statLabel:     { fontSize: 13, color: DS.colors.textMid },
-  statNumAccent: { fontSize: 17, fontWeight: '700', color: DS.colors.accent },
-  statNumSage:   { fontSize: 17, fontWeight: '700', color: DS.colors.sage },
-
   gridCard: {},
   weekRow:  { flexDirection: 'row', columnGap: GRID_GAP, marginBottom: 4 },
   weekday:  { fontSize: 11, fontWeight: '600', color: DS.colors.textMid, textAlign: 'center', paddingVertical: 4 },
@@ -420,9 +357,25 @@ const styles = StyleSheet.create({
   anniBadge:   { position: 'absolute', top: 1, right: 1 },
   pawBadge:    { position: 'absolute', bottom: 1, right: 1 },
 
-  anniLinkInner: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  anniEmoji:     { fontSize: 18 },
-  anniLinkText:  { flex: 1, fontSize: 14, fontWeight: '600', color: DS.colors.text },
+  anniCard: {
+    flexDirection:     'row',
+    alignItems:        'center',
+    gap:               10,
+    backgroundColor:   DS.colors.card,
+    borderRadius:      DS.radius.card,
+    paddingVertical:   13,
+    paddingHorizontal: 14,
+    ...DS.shadow.card,
+  },
+  anniIconWrap: {
+    width:           34,
+    height:          34,
+    borderRadius:    17,
+    backgroundColor: DS.colors.accentLight,
+    alignItems:      'center',
+    justifyContent:  'center',
+  },
+  anniLinkText: { flex: 1, fontSize: 14, fontWeight: '600', color: DS.colors.text },
 
   previewDate:  { fontSize: 12, color: DS.colors.textHint, marginBottom: 10 },
   previewInner: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },

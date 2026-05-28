@@ -172,15 +172,17 @@ export default function Settings() {
         {/* アカウント */}
         <Text style={styles.sectionLabel}>アカウント</Text>
         <Card style={styles.sectionCard} p={0}>
-          <SettingRow
-            label="現在のプラン"
-            chevron={false}
-            rightElement={
-              <View style={styles.planBadge}>
-                <Text style={styles.planBadgeText}>無料プラン</Text>
-              </View>
-            }
-          />
+          {isLoggedIn && (
+            <SettingRow
+              label="現在のプラン"
+              chevron={false}
+              rightElement={
+                <View style={styles.planBadge}>
+                  <Text style={styles.planBadgeText}>無料プラン</Text>
+                </View>
+              }
+            />
+          )}
           {isLoggedIn ? (
             <SettingRow
               label="ログアウト"

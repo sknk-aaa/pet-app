@@ -250,14 +250,13 @@ const styles = StyleSheet.create({
   },
   headerDate: {
     flex:       1,
-    fontFamily: DS.font.regular,
     fontSize:   13,
     color:      DS.home.text,
     paddingTop: 4,
   },
   headerTitle: {
     flex:          1,
-    fontFamily:    DS.font.bold,
+    fontWeight:    'bold',
     fontSize:      19,
     color:         DS.home.text,
     textAlign:     'center',
@@ -308,14 +307,13 @@ const styles = StyleSheet.create({
     gap:                    12,
   },
   infoTitle: {
-    fontFamily:    DS.font.bold,
+    fontWeight:    'bold',
     fontSize:      19,
     color:         DS.home.text,
     lineHeight:    27,
     letterSpacing: -0.3,
   },
   infoMemo: {
-    fontFamily: DS.font.regular,
     fontSize:   14,
     color:      DS.home.textSoft,
     lineHeight: 23,
@@ -338,9 +336,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#FDEBD4',
   },
   chipText: {
-    fontFamily: DS.font.regular,
-    fontSize:   12,
-    color:      DS.home.text,
+    fontSize: 12,
+    color:    DS.home.text,
   },
 
   // 今日のペット 参加中
@@ -358,9 +355,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   featuredText: {
-    fontFamily: DS.font.regular,
-    fontSize:   13,
-    color:      DS.home.accent,
+    fontSize: 13,
+    color:    DS.home.accent,
   },
 
   // ── アクション行 ──
@@ -383,14 +379,12 @@ const styles = StyleSheet.create({
     paddingRight:  14,
   },
   editText: {
-    fontFamily: DS.font.regular,
-    fontSize:   13,
-    color:      DS.home.accent,
+    fontSize: 13,
+    color:    DS.home.accent,
   },
   calLinkText: {
-    fontFamily: DS.font.regular,
-    fontSize:   13,
-    color:      DS.home.accent,
+    fontSize: 13,
+    color:    DS.home.accent,
   },
 
   // ── 未記録 ──
@@ -410,14 +404,13 @@ const styles = StyleSheet.create({
     justifyContent:  'center',
   },
   emptyTitle: {
-    fontFamily: DS.font.bold,
+    fontWeight: 'bold',
     fontSize:   19,
     color:      DS.home.text,
     textAlign:  'center',
     marginTop:  4,
   },
   emptySub: {
-    fontFamily: DS.font.regular,
     fontSize:   14,
     color:      DS.home.textSoft,
     textAlign:  'center',
@@ -439,7 +432,7 @@ const styles = StyleSheet.create({
     shadowRadius:    12,
     elevation:       6,
   },
-  ctaText: { fontFamily: DS.font.bold, color: '#fff', fontSize: 17 },
+  ctaText: { fontWeight: 'bold', color: '#fff', fontSize: 17 },
 
   // ── 思い出カード ──
   memHead: {
@@ -451,7 +444,7 @@ const styles = StyleSheet.create({
     paddingBottom:     10,
   },
   memHeadLeft:  { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  memHeadTitle: { fontFamily: DS.font.bold, fontSize: 15, color: DS.colors.text },
+  memHeadTitle: { fontWeight: 'bold', fontSize: 15, color: DS.colors.text },
   memBadge: {
     backgroundColor:   DS.colors.cardCream,
     borderRadius:      DS.radius.pill,
@@ -460,7 +453,7 @@ const styles = StyleSheet.create({
     borderWidth:       1,
     borderColor:       DS.colors.border,
   },
-  memBadgeText: { fontFamily: DS.font.medium, fontSize: 12, color: DS.colors.textMid },
+  memBadgeText: { fontWeight: '500', fontSize: 12, color: DS.colors.textMid },
   memPhoto:  { width: '100%', height: 200 },
   memFoot: {
     paddingVertical:   14,
@@ -468,6 +461,6 @@ const styles = StyleSheet.create({
     alignItems:        'center',
     gap:               4,
   },
-  memTitle: { fontFamily: DS.font.bold, fontSize: 19, color: DS.colors.text },
-  memDate:  { fontFamily: DS.font.regular, fontSize: 12, color: DS.colors.textHint },
+  memTitle: { fontWeight: 'bold', fontSize: 19, color: DS.colors.text },
+  memDate:  { fontSize: 12, color: DS.colors.textHint },
 });

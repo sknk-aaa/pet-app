@@ -215,15 +215,14 @@ const styles = StyleSheet.create({
 
   // ── ヘッダー ──
   headerDate: {
-    position:   'absolute',
-    fontFamily: DS.font.regular,
-    color:      DS.colors.textHint,
+    position: 'absolute',
+    color:    DS.colors.textHint,
   },
   headerTitle: {
-    position:   'absolute',
-    fontFamily: DS.font.bold,
-    color:      DS.home.text,
-    textAlign:  'center',
+    position:  'absolute',
+    fontWeight: 'bold',
+    color:     DS.home.text,
+    textAlign: 'center',
   },
   settingsBtn: {
     position: 'absolute',
@@ -245,11 +244,11 @@ const styles = StyleSheet.create({
     lineHeight: s(46),
   },
   streakLabel: {
-    fontFamily: DS.font.medium,
+    fontWeight: '500',
     color:      DS.home.text,
   },
   streakCount: {
-    fontFamily: DS.font.bold,
+    fontWeight: 'bold',
     color:      DS.home.accent,
   },
 
@@ -277,12 +276,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
   },
   infoTitle: {
-    fontFamily: DS.font.bold,
+    fontWeight: 'bold',
     color:      DS.home.text,
   },
   infoMemo: {
-    fontFamily: DS.font.regular,
-    color:      DS.home.textSoft,
+    color: DS.home.textSoft,
   },
   chipsRow: {
     flexDirection: 'row',
@@ -297,7 +295,7 @@ const styles = StyleSheet.create({
     borderColor:     DS.home.outline,
   },
   chipText: {
-    fontFamily: DS.font.medium,
+    fontWeight: '500',
     color:      DS.home.text,
   },
   featuredBtn: {
@@ -308,7 +306,7 @@ const styles = StyleSheet.create({
     borderColor:    DS.home.accent,
   },
   featuredText: {
-    fontFamily: DS.font.medium,
+    fontWeight: '500',
     color:      DS.home.accent,
   },
 
@@ -321,7 +319,7 @@ const styles = StyleSheet.create({
     borderColor:   DS.home.accent,
   },
   editText: {
-    fontFamily: DS.font.bold,
+    fontWeight: 'bold',
     color:      DS.home.accent,
   },
   calLink: {
@@ -330,7 +328,7 @@ const styles = StyleSheet.create({
     alignItems:    'center',
   },
   calLinkText: {
-    fontFamily: DS.font.bold,
+    fontWeight: 'bold',
     color:      DS.home.accent,
   },
 
@@ -353,8 +351,7 @@ const styles = StyleSheet.create({
     gap:        s(6),
   },
   tabLabel: {
-    fontFamily: DS.font.regular,
-    color:      DS.colors.textHint,
+    color: DS.colors.textHint,
   },
   tabItemCenter: {
     flex:       1,
@@ -372,7 +369,7 @@ const styles = StyleSheet.create({
     elevation:       6,
   },
   tabLabelActive: {
-    fontFamily: DS.font.bold,
+    fontWeight: 'bold',
     color:      DS.colors.accent,
   },
 });

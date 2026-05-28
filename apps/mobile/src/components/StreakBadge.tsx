@@ -41,18 +41,16 @@ const styles = StyleSheet.create({
     gap:             4,
   },
   label: {
-    fontFamily: DS.font.regular,
-    fontSize:   13,
-    color:      DS.home.textSoft,
+    fontSize: 13,
+    color:    DS.home.textSoft,
   },
   count: {
-    fontFamily: DS.font.bold,
+    fontWeight: 'bold',
     fontSize:   15,
     color:      DS.home.accent,
   },
   note: {
-    fontFamily: DS.font.regular,
-    fontSize:   13,
-    color:      DS.home.textSoft,
+    fontSize: 13,
+    color:    DS.home.textSoft,
   },
 });

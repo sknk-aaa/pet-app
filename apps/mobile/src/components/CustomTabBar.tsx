@@ -144,11 +144,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   labelSide: {
-    fontFamily: DS.font.regular,
     color:      DS.home.text,
   },
   labelHomeActive: {
-    fontFamily: DS.font.bold,
+    fontWeight: 'bold',
     color:      DS.home.accent,
   },
 });

@@ -60,7 +60,7 @@ const styles = StyleSheet.create({
     elevation:         8,
   },
   text: {
-    fontFamily: DS.font.medium,
+    fontWeight: '500',
     fontSize:   15,
     color:      '#fff',
   },

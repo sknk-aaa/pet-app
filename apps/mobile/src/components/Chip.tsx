@@ -41,7 +41,7 @@ export function Chip({ label, icon, selected, small, onPress, style, textStyle }
       )}
       <Text
         style={[
-          { fontFamily: selected ? DS.font.medium : DS.font.regular, fontSize: size, color },
+          { fontWeight: selected ? '500' : 'normal', fontSize: size, color },
           textStyle,
         ]}
       >

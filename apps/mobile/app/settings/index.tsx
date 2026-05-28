@@ -39,6 +39,8 @@ export default function Settings() {
   const session        = useAuthStore(state => state.session);
   const isLoggedIn     = !!session;
   const displaySpecies = selectedPet ? SPECIES_DB_TO_DISPLAY[selectedPet.species] : 'ねこ';
+  const provider       = (session?.user?.app_metadata?.provider as string | undefined) ?? 'email';
+  const email          = session?.user?.email ?? '';
 
   const toggleCameraRoll = async (v: boolean) => {
     await setSetting('save_to_camera_roll', v ? 'true' : 'false');
@@ -69,6 +71,36 @@ export default function Settings() {
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll}>
+
+        {/* ── ログイン状態カード ── */}
+        {isLoggedIn ? (
+          <View style={styles.loginCard}>
+            <View style={styles.loginIconWrap}>
+              {provider === 'apple'  && <Ionicons name="logo-apple" size={22} color={DS.colors.text} />}
+              {provider === 'google' && <Text style={styles.googleLetter}>G</Text>}
+              {provider === 'email'  && <Ionicons name="mail-outline" size={22} color={DS.colors.text} />}
+            </View>
+            <View style={styles.loginInfo}>
+              <View style={styles.loginBadge}>
+                <Text style={styles.loginBadgeText}>ログイン中</Text>
+              </View>
+              <Text style={styles.loginEmail} numberOfLines={1}>{email}</Text>
+              <Text style={styles.loginProvider}>
+                {provider === 'apple'  ? 'Apple でログイン' :
+                 provider === 'google' ? 'Google でログイン' : 'メールでログイン'}
+              </Text>
+            </View>
+          </View>
+        ) : (
+          <TouchableOpacity style={styles.notLoginCard} onPress={() => router.push('/login')} activeOpacity={0.8}>
+            <Ionicons name="person-circle-outline" size={28} color={DS.colors.textMid} />
+            <View style={styles.loginInfo}>
+              <Text style={styles.notLoginTitle}>ログインしていません</Text>
+              <Text style={styles.notLoginSub}>ログインするとバックアップや今日のペット参加ができます</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color={DS.colors.textHint} />
+          </TouchableOpacity>
+        )}
 
         {/* Pet profile card */}
         <Card style={styles.petCard}>
@@ -124,17 +156,6 @@ export default function Settings() {
         </Card>
         <Text style={styles.sectionHelper}>通常の記録写真はこの端末内に保存されます</Text>
 
-        {/* 今日のペット */}
-        <Text style={styles.sectionLabel}>今日のペット</Text>
-        <Card style={styles.sectionCard} p={0}>
-          <SettingRow
-            label="自分の掲載履歴"
-            rightElement={isLoggedIn ? undefined : <LockRow label="ログインが必要" />}
-            onPress={isLoggedIn ? () => router.push('/settings/featured-history') : () => router.push('/login')}
-            divider={false}
-          />
-        </Card>
-
         {/* Pro card */}
         <View style={styles.proCard}>
           <View style={styles.proLeft}>
@@ -151,12 +172,6 @@ export default function Settings() {
 
         {/* アカウント */}
         <Text style={styles.sectionLabel}>アカウント</Text>
-        {isLoggedIn && (
-          <View style={styles.accountInfo}>
-            <Ionicons name="person-circle-outline" size={16} color={DS.colors.textMid} />
-            <Text style={styles.accountEmail}>{useAuthStore.getState().session?.user?.email}</Text>
-          </View>
-        )}
         <Card style={styles.sectionCard} p={0}>
           {isLoggedIn ? (
             <SettingRow
@@ -227,6 +242,62 @@ const styles = StyleSheet.create({
 
   scroll: { paddingHorizontal: 16, paddingBottom: 32 },
 
+  loginCard: {
+    flexDirection:     'row',
+    alignItems:        'center',
+    gap:               14,
+    backgroundColor:   DS.colors.card,
+    borderRadius:      DS.radius.card,
+    padding:           16,
+    marginBottom:      20,
+    marginTop:         4,
+    borderWidth:       1,
+    borderColor:       DS.colors.border,
+    ...DS.shadow.card,
+  },
+  notLoginCard: {
+    flexDirection:     'row',
+    alignItems:        'center',
+    gap:               12,
+    backgroundColor:   DS.colors.card,
+    borderRadius:      DS.radius.card,
+    padding:           16,
+    marginBottom:      20,
+    marginTop:         4,
+    borderWidth:       1,
+    borderColor:       DS.colors.border,
+    ...DS.shadow.card,
+  },
+  loginIconWrap: {
+    width:           44,
+    height:          44,
+    borderRadius:    22,
+    backgroundColor: DS.colors.cardCream,
+    borderWidth:     1,
+    borderColor:     DS.colors.border,
+    alignItems:      'center',
+    justifyContent:  'center',
+  },
+  googleLetter: {
+    fontSize:   20,
+    fontWeight: '700',
+    color:      '#4285F4',
+  },
+  loginInfo:    { flex: 1, gap: 3 },
+  loginBadge: {
+    alignSelf:         'flex-start',
+    backgroundColor:   '#E8F5E9',
+    borderRadius:      DS.radius.pill,
+    paddingVertical:   2,
+    paddingHorizontal: 8,
+    marginBottom:      2,
+  },
+  loginBadgeText: { fontSize: 11, fontWeight: '600', color: '#2E7D32' },
+  loginEmail:     { fontSize: 14, fontWeight: '600', color: DS.colors.text },
+  loginProvider:  { fontSize: 12, color: DS.colors.textHint },
+  notLoginTitle:  { fontSize: 14, fontWeight: '600', color: DS.colors.text },
+  notLoginSub:    { fontSize: 12, color: DS.colors.textMid, lineHeight: 18 },
+
   petCard: { marginBottom: 20, marginTop: 4 },
   petRow:  { flexDirection: 'row', alignItems: 'center', gap: 12 },
   petInfo: { flex: 1, gap: 4 },
@@ -290,15 +361,6 @@ const styles = StyleSheet.create({
   },
   proLeft:  { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
   proInfo:  { flex: 1, gap: 3 },
-  accountInfo: {
-    flexDirection: 'row',
-    alignItems:    'center',
-    gap:           6,
-    paddingHorizontal: 4,
-    paddingBottom: 6,
-    marginTop:     -4,
-  },
-  accountEmail: { fontSize: 13, color: DS.colors.textMid },
   proTitle: { fontSize: 15, fontWeight: '700', color: DS.colors.text },
   proSub:   { fontSize: 11, color: DS.colors.textMid },
   proBtn: {

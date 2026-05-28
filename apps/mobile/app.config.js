@@ -12,6 +12,12 @@ module.exports = ({ config }) => ({
   orientation: 'portrait',
   icon: './assets/icon.png',
   platforms: ['ios'],
+  updates: {
+    url: 'https://u.expo.dev/c1a5e2b7-800b-48d0-8d8f-ead54e05a1d9',
+  },
+  runtimeVersion: {
+    policy: 'appVersion',
+  },
   scheme: 'mainichipet',
   experiments: {
     typedRoutes: true,

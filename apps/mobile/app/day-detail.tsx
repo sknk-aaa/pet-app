@@ -14,12 +14,14 @@ import { DS } from '@/theme';
 import { Photo } from '@/components/Photo';
 import { Chip } from '@/components/Chip';
 import { useEntryByDate } from '@/hooks/useEntries';
+import { useAppStore } from '@/store/appStore';
 import { formatDisplayDate } from '@/utils/date';
 import { ANNIVERSARY_TAG_DB_TO_DISPLAY } from '@/utils/species';
 
 export default function DayDetail() {
   const { date } = useLocalSearchParams<{ date: string }>();
-  const { data: entry, isLoading } = useEntryByDate(date ?? '');
+  const selectedPetId = useAppStore(state => state.selectedPetId);
+  const { data: entry, isLoading } = useEntryByDate(date ?? '', selectedPetId ?? '');
 
   const tagDisplay = entry?.anniversary_tag_type
     ? ANNIVERSARY_TAG_DB_TO_DISPLAY[entry.anniversary_tag_type]

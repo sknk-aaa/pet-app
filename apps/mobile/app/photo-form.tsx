@@ -57,8 +57,14 @@ export default function PhotoForm() {
   const [saving,   setSaving]   = useState(false);
   const [withdrawing, setWithdrawing] = useState(false);
 
+  const initialPet = selectedPetId ? (pets.find(p => p.id === selectedPetId) ?? pets[0]) : pets[0];
+  const [selectedPets, setSelectedPets] = useState<import('@/types').Pet[]>(
+    initialPet ? [initialPet] : []
+  );
+
   useEffect(() => {
-    getEntryByDate(today).then(entry => {
+    if (!selectedPetId) return;
+    getEntryByDate(today, selectedPetId).then(entry => {
       if (!entry) return;
       setExistingEntryId(entry.id);
       setImageUri(entry.image_uri);
@@ -70,13 +76,14 @@ export default function PhotoForm() {
       setFeaturedSubmitted(entry.featured_submitted === 1);
       setFeaturedCandidateId(entry.featured_candidate_id);
       setFeaturedStatus(entry.featured_status_cache);
+      if (entry.pets.length > 0) setSelectedPets(entry.pets);
       if (entry.anniversary_tag_type) {
         const display = Object.entries(ANNIVERSARY_TAG_DISPLAY_TO_DB)
           .find(([, v]) => v === entry.anniversary_tag_type)?.[0] ?? null;
         setTag(display);
       }
     });
-  }, [today]);
+  }, [today, selectedPetId]);
 
   useEffect(() => {
     if (session && awaitingFeaturedLogin) {
@@ -137,9 +144,8 @@ export default function PhotoForm() {
         await saveToMediaLibrary(finalImageUri).catch(() => {});
       }
 
-      const tagType    = tag ? ANNIVERSARY_TAG_DISPLAY_TO_DB[tag] as AnniversaryTagType : null;
-      const activePets = selectedPetId ? pets.filter(p => p.id === selectedPetId) : pets.slice(0, 1);
-      const petIds     = activePets.map(p => p.id);
+      const tagType = tag ? ANNIVERSARY_TAG_DISPLAY_TO_DB[tag] as AnniversaryTagType : null;
+      const petIds  = selectedPets.map(p => p.id);
 
       let submittedEntry;
       if (existingEntryId) {
@@ -148,8 +154,8 @@ export default function PhotoForm() {
           ...(photoChanged ? { image_uri: finalImageUri, thumbnail_uri: thumbnailUri } : {}),
           anniversary_tag_type: tagType,
           anniversary_tag_name: tagType ? tag : null,
-        });
-        submittedEntry = await getEntryByDate(today);
+        }, petIds);
+        submittedEntry = await getEntryByDate(today, petIds[0]);
       } else {
         submittedEntry = await createEntry(
           { date: today, title: title.trim(), memo: memo.trim() || null,
@@ -161,9 +167,8 @@ export default function PhotoForm() {
 
       if (featured && session && submittedEntry && !submittedEntry.featured_submitted) {
         const streakState       = await getStreakState();
-        const firstPet          = activePets[0];
-        const petNamesDisplay   = activePets.map(p => p.name).join('と');
-        const petSpeciesPrimary = firstPet ? SPECIES_DB_TO_DISPLAY[firstPet.species] : '';
+        const petNamesDisplay   = selectedPets.map(p => p.name).join('と');
+        const petSpeciesPrimary = primaryPet ? SPECIES_DB_TO_DISPLAY[primaryPet.species] : '';
         await addPendingUpload('featured_candidate', {
           entry_id: submittedEntry.id, entry_date: today,
           title: title.trim(), pet_names_display: petNamesDisplay,
@@ -199,8 +204,8 @@ export default function PhotoForm() {
     }
   };
 
-  const activePet      = selectedPetId ? pets.find(p => p.id === selectedPetId) : pets[0];
-  const displaySpecies = activePet ? SPECIES_DB_TO_DISPLAY[activePet.species] : 'ねこ';
+  const primaryPet     = selectedPets[0] ?? null;
+  const displaySpecies = primaryPet ? SPECIES_DB_TO_DISPLAY[primaryPet.species] : 'ねこ';
   const participationStatus = featuredCandidateId
     ? featuredStatus === 'approved' || featuredStatus === 'scheduled'
       ? '掲載候補として確認済みです'
@@ -336,18 +341,52 @@ export default function PhotoForm() {
           <View style={styles.fieldGroup}>
             <Text style={styles.fieldLabel}>写っているペット</Text>
             <View style={styles.petChipsRow}>
-              {activePet && (
-                <View style={styles.petSelected}>
-                  <PetAvatar species={displaySpecies} iconUri={activePet.icon_uri} size={26} />
-                  <Text style={styles.petSelectedName}>{activePet.name}</Text>
-                  <View style={styles.checkCircle}>
-                    <Ionicons name="checkmark" size={10} color="#fff" />
-                  </View>
-                </View>
+              {selectedPets.map((pet, idx) => (
+                <TouchableOpacity
+                  key={pet.id}
+                  style={styles.petSelected}
+                  onPress={idx > 0 ? () => setSelectedPets(prev => prev.filter(p => p.id !== pet.id)) : undefined}
+                  activeOpacity={idx > 0 ? 0.7 : 1}
+                >
+                  <PetAvatar
+                    species={SPECIES_DB_TO_DISPLAY[pet.species]}
+                    iconUri={pet.icon_uri}
+                    size={26}
+                  />
+                  <Text style={styles.petSelectedName}>{pet.name}</Text>
+                  {idx > 0 ? (
+                    <Ionicons name="close-circle" size={14} color={DS.colors.textHint} />
+                  ) : (
+                    <View style={styles.checkCircle}>
+                      <Ionicons name="checkmark" size={10} color="#fff" />
+                    </View>
+                  )}
+                </TouchableOpacity>
+              ))}
+              {pets.filter(p => !selectedPets.some(sp => sp.id === p.id)).length > 0 && (
+                <TouchableOpacity
+                  style={styles.addPetBtn}
+                  onPress={() => {
+                    const remaining = pets.filter(p => !selectedPets.some(sp => sp.id === p.id));
+                    if (Platform.OS === 'ios') {
+                      ActionSheetIOS.showActionSheetWithOptions(
+                        { options: ['キャンセル', ...remaining.map(p => p.name)], cancelButtonIndex: 0 },
+                        idx => {
+                          if (idx === 0) return;
+                          setSelectedPets(prev => [...prev, remaining[idx - 1]]);
+                        }
+                      );
+                    } else {
+                      Alert.alert('ペットを追加', '', remaining.map(p => ({
+                        text: p.name,
+                        onPress: () => setSelectedPets(prev => [...prev, p]),
+                      })));
+                    }
+                  }}
+                >
+                  <Text style={styles.addPetBtnText}>＋ 追加</Text>
+                </TouchableOpacity>
               )}
-              <TouchableOpacity style={styles.addPetBtn}>
-                <Text style={styles.addPetBtnText}>＋ 追加</Text>
-              </TouchableOpacity>
             </View>
           </View>
 

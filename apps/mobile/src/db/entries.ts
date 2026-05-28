@@ -24,8 +24,9 @@ async function attachPets(
   const result: EntryWithPets[] = [];
   for (const entry of entries) {
     const petRows = await db.getAllAsync<{ pet_id: string }>(
-      'SELECT pet_id FROM entry_pets WHERE entry_id = ?',
-      [entry.id]
+      `SELECT pet_id FROM entry_pets WHERE entry_id = ?
+       ORDER BY CASE WHEN pet_id = ? THEN 0 ELSE 1 END`,
+      [entry.id, entry.primary_pet_id ?? '']
     );
     const pets: Pet[] = petRows
       .map(r => petMap.get(r.pet_id))
@@ -35,11 +36,11 @@ async function attachPets(
   return result;
 }
 
-export async function getEntryByDate(date: string): Promise<EntryWithPets | null> {
+export async function getEntryByDate(date: string, primaryPetId: string): Promise<EntryWithPets | null> {
   const db = await getDb();
   const row = await db.getFirstAsync<Entry>(
-    'SELECT * FROM entries WHERE date = ?',
-    [date]
+    'SELECT * FROM entries WHERE date = ? AND primary_pet_id = ?',
+    [date, primaryPetId]
   );
   if (!row) return null;
   return (await attachPets(db, [row]))[0];
@@ -58,13 +59,13 @@ export async function getEntryById(id: string): Promise<EntryWithPets | null> {
 export async function getEntriesForMonth(
   year: number,
   month: number,
-  petFilter: string
+  primaryPetId: string | null
 ): Promise<CalendarEntryInfo[]> {
   const db = await getDb();
   const prefix = `${String(year)}-${String(month).padStart(2, '0')}`;
 
   let rows: Entry[];
-  if (petFilter === 'all') {
+  if (!primaryPetId) {
     rows = await db.getAllAsync<Entry>(
       `SELECT id, date, thumbnail_uri, anniversary_tag_type, featured_status_cache
        FROM entries WHERE date LIKE ? ORDER BY date ASC`,
@@ -72,12 +73,10 @@ export async function getEntriesForMonth(
     );
   } else {
     rows = await db.getAllAsync<Entry>(
-      `SELECT e.id, e.date, e.thumbnail_uri, e.anniversary_tag_type, e.featured_status_cache
-       FROM entries e
-       INNER JOIN entry_pets ep ON ep.entry_id = e.id
-       WHERE e.date LIKE ? AND ep.pet_id = ?
-       ORDER BY e.date ASC`,
-      [`${prefix}%`, petFilter]
+      `SELECT id, date, thumbnail_uri, anniversary_tag_type, featured_status_cache
+       FROM entries WHERE date LIKE ? AND primary_pet_id = ?
+       ORDER BY date ASC`,
+      [`${prefix}%`, primaryPetId]
     );
   }
   return rows.map(r => ({
@@ -88,55 +87,45 @@ export async function getEntriesForMonth(
   }));
 }
 
-export async function getAnniversaryEntries(petFilter: string): Promise<EntryWithPets[]> {
+export async function getAnniversaryEntries(primaryPetId: string | null): Promise<EntryWithPets[]> {
   const db = await getDb();
   let rows: Entry[];
-  if (petFilter === 'all') {
+  if (!primaryPetId) {
     rows = await db.getAllAsync<Entry>(
-      `SELECT * FROM entries WHERE anniversary_tag_type IS NOT NULL
-       ORDER BY date DESC`
+      `SELECT * FROM entries WHERE anniversary_tag_type IS NOT NULL ORDER BY date DESC`
     );
   } else {
     rows = await db.getAllAsync<Entry>(
-      `SELECT e.* FROM entries e
-       INNER JOIN entry_pets ep ON ep.entry_id = e.id
-       WHERE e.anniversary_tag_type IS NOT NULL AND ep.pet_id = ?
-       ORDER BY e.date DESC`,
-      [petFilter]
+      `SELECT * FROM entries WHERE anniversary_tag_type IS NOT NULL AND primary_pet_id = ?
+       ORDER BY date DESC`,
+      [primaryPetId]
     );
   }
   return attachPets(db, rows);
 }
 
-// ホームの「思い出」: 同月同日の過去エントリを優先、なければランダム
 export async function getMemoryEntry(
   todayDate: string,
-  petFilter: string
+  primaryPetId: string | null
 ): Promise<Entry | null> {
   const db = await getDb();
   const [, month, day] = todayDate.split('-');
   const pattern = `%-${month}-${day}`;
 
-  const baseWhere = petFilter === 'all'
-    ? `date != ? AND date LIKE ?`
-    : `date != ? AND date LIKE ? AND e.id IN (SELECT entry_id FROM entry_pets WHERE pet_id = ?)`;
-  const baseParams = petFilter === 'all'
-    ? [todayDate, pattern]
-    : [todayDate, pattern, petFilter];
+  const petCondition = primaryPetId ? ` AND primary_pet_id = ?` : '';
+  const baseParams = primaryPetId
+    ? [todayDate, pattern, primaryPetId]
+    : [todayDate, pattern];
 
   const same = await db.getFirstAsync<Entry>(
-    `SELECT * FROM entries WHERE ${baseWhere} ORDER BY RANDOM() LIMIT 1`,
+    `SELECT * FROM entries WHERE date != ? AND date LIKE ?${petCondition} ORDER BY RANDOM() LIMIT 1`,
     baseParams
   );
   if (same) return same;
 
-  // 同月同日がなければランダム
-  const randomWhere = petFilter === 'all'
-    ? `date != ?`
-    : `date != ? AND id IN (SELECT entry_id FROM entry_pets WHERE pet_id = ?)`;
-  const randomParams = petFilter === 'all' ? [todayDate] : [todayDate, petFilter];
+  const randomParams = primaryPetId ? [todayDate, primaryPetId] : [todayDate];
   return db.getFirstAsync<Entry>(
-    `SELECT * FROM entries WHERE ${randomWhere} ORDER BY RANDOM() LIMIT 1`,
+    `SELECT * FROM entries WHERE date != ?${primaryPetId ? ' AND primary_pet_id = ?' : ''} ORDER BY RANDOM() LIMIT 1`,
     randomParams
   );
 }
@@ -148,24 +137,25 @@ export async function createEntry(
   const db = await getDb();
   const id = generateUUID();
   const now = nowISOString();
+  const primaryPetId = petIds[0] ?? null;
 
-  // 既存エントリチェック (streak 更新用)
   const existing = await db.getFirstAsync<{ id: string }>(
-    'SELECT id FROM entries WHERE date = ?',
-    [data.date]
+    'SELECT id FROM entries WHERE date = ? AND primary_pet_id = ?',
+    [data.date, primaryPetId]
   );
 
   await db.withTransactionAsync(async () => {
     await db.runAsync(
       `INSERT INTO entries(
-         id, date, title, memo, image_uri, thumbnail_uri,
+         id, date, primary_pet_id, title, memo, image_uri, thumbnail_uri,
          anniversary_tag_type, anniversary_tag_name,
          featured_submitted, featured_candidate_id, featured_status_cache,
          created_at, updated_at
-       ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, 0, NULL, NULL, ?, ?)`,
+       ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, 0, NULL, NULL, ?, ?)`,
       [
         id,
         data.date,
+        primaryPetId,
         data.title,
         data.memo ?? null,
         data.image_uri,
@@ -197,9 +187,12 @@ export async function updateEntry(
 ): Promise<void> {
   const db = await getDb();
   const now = nowISOString();
-  const patch = { ...data, updated_at: now };
+  const patch: Record<string, string | number | null> = { ...data as Record<string, string | number | null>, updated_at: now };
+  if (petIds !== undefined && petIds.length > 0) {
+    patch.primary_pet_id = petIds[0];
+  }
   const fields = Object.keys(patch).map(k => `${k} = ?`).join(', ');
-  const values = [...Object.values(patch), id];
+  const values: (string | number | null)[] = [...Object.values(patch), id];
 
   await db.withTransactionAsync(async () => {
     await db.runAsync(`UPDATE entries SET ${fields} WHERE id = ?`, values);
@@ -218,7 +211,6 @@ export async function updateEntry(
 export async function deleteEntry(id: string): Promise<void> {
   const db = await getDb();
 
-  // 写真ファイルを削除
   const entry = await db.getFirstAsync<{ image_uri: string; thumbnail_uri: string }>(
     'SELECT image_uri, thumbnail_uri FROM entries WHERE id = ?',
     [id]
@@ -231,7 +223,6 @@ export async function deleteEntry(id: string): Promise<void> {
   await db.runAsync('DELETE FROM entries WHERE id = ?', [id]);
 }
 
-// entries の featured_* カラムを更新
 export async function updateEntryFeaturedState(
   id: string,
   featuredSubmitted: 0 | 1,

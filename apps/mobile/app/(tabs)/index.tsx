@@ -16,10 +16,12 @@ import { Photo } from '@/components/Photo';
 import { StreakBadge } from '@/components/StreakBadge';
 import { SaveToast } from '@/components/SaveToast';
 import { PawIcon } from '@/components/icons/PawIcon';
+import { PetAvatar } from '@/components/PetAvatar';
 import { useTodayEntry, useMemoryEntry } from '@/hooks/useEntries';
 import { useStreak } from '@/hooks/useStreak';
 import { useSelectedPet } from '@/hooks/usePets';
 import { useAppStore } from '@/store/appStore';
+import { SPECIES_DB_TO_DISPLAY } from '@/utils/species';
 import { formatDisplayDate, getTodayJST } from '@/utils/date';
 import { ANNIVERSARY_TAG_DB_TO_DISPLAY } from '@/utils/species';
 import type { EntryWithPets, Entry } from '@/types';
@@ -59,16 +61,30 @@ export default function Home() {
 
         {/* ── ヘッダー ── */}
         <View style={styles.header}>
-          <Text style={styles.headerDate}>{formatHomeDate(today)}</Text>
-          <Text style={styles.headerTitle}>今日の1枚</Text>
-          <View style={styles.headerRight}>
-            <TouchableOpacity
-              onPress={() => router.push('/settings')}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            >
-              <Ionicons name="settings-outline" size={22} color={DS.home.text} />
-            </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => router.push('/settings')}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            style={styles.headerLeft}
+          >
+            <Ionicons name="settings-outline" size={22} color={DS.home.text} />
+          </TouchableOpacity>
+          <View style={styles.headerCenter}>
+            <Text style={styles.headerTitle}>今日の1枚</Text>
+            <Text style={styles.headerDate}>{formatHomeDate(today)}</Text>
           </View>
+          <TouchableOpacity
+            style={styles.petPill}
+            onPress={() => router.push('/pet-select')}
+            activeOpacity={0.8}
+          >
+            <PetAvatar
+              species={selectedPet ? SPECIES_DB_TO_DISPLAY[selectedPet.species] : 'ねこ'}
+              iconUri={selectedPet?.icon_uri}
+              size={22}
+            />
+            <Text style={styles.petPillName}>{selectedPet?.name ?? '—'}</Text>
+            <Ionicons name="chevron-down" size={10} color={DS.colors.textHint} />
+          </TouchableOpacity>
         </View>
 
         {isLoading ? (
@@ -243,21 +259,28 @@ const styles = StyleSheet.create({
   // ── ヘッダー ──
   header: {
     flexDirection:     'row',
-    alignItems:        'flex-start',
-    paddingHorizontal: 20,
+    alignItems:        'center',
+    paddingHorizontal: 16,
     paddingTop:        6,
-    paddingBottom:     16,
+    paddingBottom:     14,
+  },
+  headerLeft: {
+    width:       36,
+    alignItems:  'flex-start',
+    justifyContent: 'center',
+  },
+  headerCenter: {
+    flex:       1,
+    alignItems: 'center',
+    gap:        2,
   },
   headerDate: {
-    flex:       1,
-    fontSize:   13,
-    color:      DS.home.text,
-    paddingTop: 4,
+    fontSize: 12,
+    color:    DS.home.textSoft,
   },
   headerTitle: {
-    flex:          1,
     fontWeight:    'bold',
-    fontSize:      19,
+    fontSize:      17,
     color:         DS.home.text,
     textAlign:     'center',
     letterSpacing: 0,
@@ -268,6 +291,20 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     paddingTop: 2,
   },
+  petPill: {
+    flexDirection:   'row',
+    alignItems:      'center',
+    gap:             5,
+    backgroundColor: DS.colors.card,
+    borderRadius:    DS.radius.pill,
+    paddingVertical: 5,
+    paddingLeft:     5,
+    paddingRight:    9,
+    borderWidth:     1,
+    borderColor:     DS.colors.border,
+    ...DS.shadow.card,
+  },
+  petPillName: { fontSize: 12, fontWeight: '600', color: DS.colors.text },
 
   loader: { minHeight: 240, justifyContent: 'center', alignItems: 'center' },
 

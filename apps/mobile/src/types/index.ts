@@ -63,7 +63,8 @@ export type Pet = {
 
 export type Entry = {
   id: string;
-  date: string;                   // 'YYYY-MM-DD' UNIQUE
+  date: string;                   // 'YYYY-MM-DD'
+  primary_pet_id: string | null;
   title: string;
   memo: string | null;
   image_uri: string;

@@ -1,6 +1,7 @@
 import * as SQLite from 'expo-sqlite';
 import { nowISOString } from '@/utils/date';
 import { migration001 } from '@/db/migrations/001_init';
+import { migration002 } from '@/db/migrations/002_primary_pet';
 
 let _db: SQLite.SQLiteDatabase | null = null;
 
@@ -34,6 +35,7 @@ async function runMigrations(db: SQLite.SQLiteDatabase): Promise<void> {
 
   const migrations: Array<{ version: number; run: (db: SQLite.SQLiteDatabase) => Promise<void> }> = [
     { version: 1, run: migration001 },
+    { version: 2, run: migration002 },
   ];
 
   for (const m of migrations) {

@@ -32,129 +32,117 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
 
   return (
     <View style={[styles.container, { paddingBottom: bottomPad }]}>
-      {/* 上部の二重線 */}
-      <View style={styles.borderOuter} />
-      <View style={styles.borderInner} />
+      {state.routes.map((route: { key: string; name: string }, idx: number) => {
+        const isActive = state.index === idx;
+        const isHome   = idx === 1;
+        const tab      = TABS[idx];
 
-      <View style={styles.tabs}>
-        {state.routes.map((route: { key: string; name: string }, idx: number) => {
-          const isActive = state.index === idx;
-          const isHome   = idx === 1;
-          const tab      = TABS[idx];
-
-          const onPress = () => {
-            const event = navigation.emit({
-              type:              'tabPress',
-              target:            route.key,
-              canPreventDefault: true,
-            });
-            if (!isActive && !event.defaultPrevented) {
-              navigation.navigate(route.name);
-            }
-          };
-
-          if (isHome) {
-            return (
-              <TouchableOpacity
-                key={route.key}
-                onPress={onPress}
-                activeOpacity={0.75}
-                style={styles.tab}
-              >
-                <View style={[styles.homeCircle, isActive && styles.homeCircleActive]}>
-                  <Ionicons
-                    name={tab.iconActive}
-                    size={22}
-                    color={isActive ? DS.home.accent : DS.home.text}
-                  />
-                </View>
-                <Text style={[styles.label, isActive ? styles.labelHomeActive : styles.labelInactive]}>
-                  {tab.label}
-                </Text>
-              </TouchableOpacity>
-            );
+        const onPress = () => {
+          const event = navigation.emit({
+            type:              'tabPress',
+            target:            route.key,
+            canPreventDefault: true,
+          });
+          if (!isActive && !event.defaultPrevented) {
+            navigation.navigate(route.name);
           }
+        };
 
+        if (isHome) {
           return (
             <TouchableOpacity
               key={route.key}
               onPress={onPress}
-              activeOpacity={0.65}
-              style={[styles.tab, styles.tabSide]}
+              activeOpacity={0.8}
+              style={styles.tab}
             >
-              <Ionicons
-                name={isActive ? tab.iconActive : tab.icon}
-                size={22}
-                color={isActive ? DS.home.text : DS.home.textSoft}
-              />
-              <Text style={[styles.label, isActive ? styles.labelActive : styles.labelInactive]}>
+              <View style={[styles.homeButton, isActive && styles.homeButtonActive]}>
+                <Ionicons
+                  name={tab.iconActive}
+                  size={22}
+                  color={isActive ? '#FFFFFF' : DS.home.textSoft}
+                />
+              </View>
+              <Text style={[styles.label, isActive ? styles.labelHomeActive : styles.labelInactive]}>
                 {tab.label}
               </Text>
             </TouchableOpacity>
           );
-        })}
-      </View>
+        }
+
+        return (
+          <TouchableOpacity
+            key={route.key}
+            onPress={onPress}
+            activeOpacity={0.7}
+            style={[styles.tab, styles.tabSide]}
+          >
+            <Ionicons
+              name={isActive ? tab.iconActive : tab.icon}
+              size={22}
+              color={isActive ? DS.home.accent : DS.home.textSoft}
+            />
+            <Text style={[styles.label, isActive ? styles.labelActive : styles.labelInactive]}>
+              {tab.label}
+            </Text>
+          </TouchableOpacity>
+        );
+      })}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
+    flexDirection:   'row',
+    alignItems:      'flex-start',
     backgroundColor: DS.home.background,
+    borderTopWidth:  StyleSheet.hairlineWidth,
+    borderTopColor:  DS.home.outline,
+    paddingTop:      10,
+    height:          TAB_HEIGHT + 34,
     ...Platform.select({ android: { elevation: 8 } }),
-  },
-  borderOuter: {
-    height:          1,
-    backgroundColor: DS.home.text,
-    opacity:         0.18,
-  },
-  borderInner: {
-    height:          StyleSheet.hairlineWidth,
-    backgroundColor: DS.home.text,
-    opacity:         0.08,
-    marginTop:       2,
-  },
-  tabs: {
-    flexDirection: 'row',
-    alignItems:    'flex-start',
-    paddingTop:    10,
-    height:        TAB_HEIGHT,
   },
   tab: {
     flex:       1,
     alignItems: 'center',
-    gap:        3,
+    gap:        4,
   },
   tabSide: {
     paddingTop: 4,
   },
-  homeCircle: {
-    width:           44,
-    height:          44,
-    borderRadius:    2,
+  homeButton: {
+    width:           48,
+    height:          48,
+    borderRadius:    12,
     backgroundColor: 'transparent',
     alignItems:      'center',
     justifyContent:  'center',
-    marginTop:       -8,
+    marginTop:       -10,
   },
-  homeCircleActive: {
-    backgroundColor: DS.home.activeTab,
+  homeButtonActive: {
+    backgroundColor: DS.home.accent,
+    shadowColor:     DS.home.accent,
+    shadowOffset:    { width: 0, height: 4 },
+    shadowOpacity:   0.35,
+    shadowRadius:    10,
+    elevation:       6,
   },
   label: {
-    fontSize:      9,
-    letterSpacing: 0.5,
-    textAlign:     'center',
+    fontSize:   10,
+    textAlign:  'center',
+    letterSpacing: 0.2,
   },
   labelInactive: {
     fontFamily: DS.font.regular,
     color:      DS.home.textSoft,
   },
   labelActive: {
-    fontFamily: DS.font.semibold,
-    color:      DS.home.text,
+    fontFamily: DS.font.bold,
+    color:      DS.home.accent,
   },
   labelHomeActive: {
-    fontFamily: DS.font.semibold,
+    fontFamily: DS.font.bold,
     color:      DS.home.accent,
   },
 });

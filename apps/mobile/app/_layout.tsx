@@ -2,12 +2,11 @@ import { useEffect } from 'react';
 import { Stack, router } from 'expo-router';
 import { useFonts } from 'expo-font';
 import {
-  ShipporiMincho_400Regular,
-  ShipporiMincho_500Medium,
-  ShipporiMincho_600SemiBold,
-  ShipporiMincho_700Bold,
-  ShipporiMincho_800ExtraBold,
-} from '@expo-google-fonts/shippori-mincho';
+  NotoSansJP_400Regular,
+  NotoSansJP_500Medium,
+  NotoSansJP_700Bold,
+  NotoSansJP_900Black,
+} from '@expo-google-fonts/noto-sans-jp';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { AppState } from 'react-native';
@@ -111,11 +110,10 @@ function AppContent() {
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
-    ShipporiMincho_400Regular,
-    ShipporiMincho_500Medium,
-    ShipporiMincho_600SemiBold,
-    ShipporiMincho_700Bold,
-    ShipporiMincho_800ExtraBold,
+    NotoSansJP_400Regular,
+    NotoSansJP_500Medium,
+    NotoSansJP_700Bold,
+    NotoSansJP_900Black,
   });
 
   if (!fontsLoaded) return null;

@@ -81,6 +81,9 @@ importers:
       '@expo-google-fonts/m-plus-rounded-1c':
         specifier: ^0.4.3
         version: 0.4.3
+      '@expo-google-fonts/noto-sans-jp':
+        specifier: ^0.4.3
+        version: 0.4.3
       '@expo-google-fonts/shippori-mincho':
         specifier: ^0.4.1
         version: 0.4.1
@@ -957,6 +960,9 @@ packages:
 
   '@expo-google-fonts/m-plus-rounded-1c@0.4.3':
     resolution: {integrity: sha512-ac0KX6FZqbs++JJNbF/pIn/hA/IvIYtwPiHiX71uCrkmTH4FIiAS9TsqBXimRmipgcttRj03TzeJtkhtT2LZBA==}
+
+  '@expo-google-fonts/noto-sans-jp@0.4.3':
+    resolution: {integrity: sha512-Fl+Z6vtD24HFAYsvzB0S9Nery1ly16B9PesdY0wBd+wEHAvkNglnkTUspU0HqGOubkmoa8zusJrKv6vDx1o70A==}
 
   '@expo-google-fonts/shippori-mincho@0.4.1':
     resolution: {integrity: sha512-+nyw31jQWKm8GJLU1kcDYBRJ9jIp/8H6R1RSipkXQMf3+GIKSR3l8zJxuyoeal2+EzFDgo/xFQceM24MItobyA==}
@@ -5502,6 +5508,8 @@ snapshots:
     optional: true
 
   '@expo-google-fonts/m-plus-rounded-1c@0.4.3': {}
+
+  '@expo-google-fonts/noto-sans-jp@0.4.3': {}
 
   '@expo-google-fonts/shippori-mincho@0.4.1': {}
 

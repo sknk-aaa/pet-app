@@ -25,10 +25,9 @@ import { DS } from '@/theme';
 import type { Product, SubscriptionProduct } from 'expo-iap';
 
 const FEATURES = [
-  { icon: 'calendar',           text: 'カレンダーを無制限に振り返る' },
-  { icon: 'star',               text: '今日のペットに何度でも参加できる' },
-  { icon: 'cloud-upload-outline', text: 'バックアップ容量が増える' },
-  { icon: 'shield-checkmark-outline', text: '広告なしで快適に使える' },
+  { icon: 'paw',              text: '2匹目以降のペットを登録できる' },
+  { icon: 'calendar',        text: 'ペットごとにカレンダーで振り返れる' },
+  { icon: 'ribbon-outline',  text: 'ペットごとに記念日を管理できる' },
 ];
 
 export default function Pro() {

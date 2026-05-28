@@ -2,6 +2,7 @@ import React from 'react';
 import {
   View,
   Text,
+  Alert,
   TouchableOpacity,
   StyleSheet,
 } from 'react-native';
@@ -10,15 +11,20 @@ import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { usePets } from '@/hooks/usePets';
 import { useAppStore } from '@/store/appStore';
+import { useAuthStore } from '@/store/authStore';
 import { setSetting } from '@/db/settings';
 import { SPECIES_DB_TO_DISPLAY } from '@/utils/species';
 import { speciesEmoji } from '@/utils/species';
 import { DS } from '@/theme';
 import { PetAvatar } from '@/components/PetAvatar';
 
+const MAX_PETS_FREE = 1;
+
 export default function PetSelect() {
   const pets = usePets();
   const { selectedPetId, setSelectedPetId } = useAppStore();
+  const isPro = useAuthStore(state => state.isPro);
+  const canAddPet = isPro || pets.length < MAX_PETS_FREE;
 
   const handleSelect = async (id: string) => {
     setSelectedPetId(id);
@@ -62,7 +68,19 @@ export default function PetSelect() {
           );
         })}
 
-        <TouchableOpacity style={styles.addRow} onPress={() => router.push('/settings/pet-form')}>
+        <TouchableOpacity
+          style={styles.addRow}
+          onPress={() => {
+            if (!canAddPet) {
+              Alert.alert('Pro機能', '2匹目以降の登録にはProプランが必要です。', [
+                { text: 'キャンセル', style: 'cancel' },
+                { text: 'Proを見る', onPress: () => router.push('/pro') },
+              ]);
+              return;
+            }
+            router.push('/settings/pet-form');
+          }}
+        >
           <View style={[styles.avatar, styles.addAvatar]}>
             <Ionicons name="add" size={24} color={DS.colors.accent} />
           </View>

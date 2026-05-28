@@ -106,7 +106,7 @@ export default function Calendar() {
     navigation.setOptions({
       headerRight: () => (
         <TouchableOpacity style={styles.petPill} onPress={() => router.push('/pet-select')}>
-          <PetAvatar species={displaySpecies} iconUri={selectedPet?.icon_uri} size={22} />
+          <PetAvatar species={displaySpecies} iconUri={selectedPet?.icon_uri} size={32} />
           <Text style={styles.petPillName}>{selectedPet?.name ?? 'うちの子'}</Text>
           <Ionicons name="chevron-down" size={10} color={DS.colors.textHint} />
         </TouchableOpacity>

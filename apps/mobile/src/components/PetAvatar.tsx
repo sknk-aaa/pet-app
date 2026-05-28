@@ -48,9 +48,9 @@ export function PetAvatar({ size = 44, species = 'ねこ', iconUri, bg }: Props)
 
 const styles = StyleSheet.create({
   circle: {
-    backgroundColor: DS.colors.accentLight,
-    borderWidth:     1.5,
-    borderColor:     DS.colors.border,
+    backgroundColor: DS.colors.pawWarm,
+    borderWidth:     1,
+    borderColor:     'rgba(240,112,64,0.2)',
     alignItems:      'center',
     justifyContent:  'center',
   },

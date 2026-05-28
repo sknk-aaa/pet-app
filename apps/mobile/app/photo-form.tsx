@@ -381,21 +381,8 @@ export default function PhotoForm() {
           <View style={styles.fieldGroup}>
             <Text style={styles.fieldLabel}>記念日タグ</Text>
             <View style={styles.tagChipsRow}>
-              {PRESET_TAGS.map(t => (
-                <TouchableOpacity
-                  key={t}
-                  style={[styles.tagChip, tag === t && styles.tagChipSelected]}
-                  onPress={() => setTag(tag === t ? null : t)}
-                >
-                  {tag === t && (
-                    <View style={styles.tagCheckCircle}>
-                      <Ionicons name="checkmark" size={9} color="#fff" />
-                    </View>
-                  )}
-                  <Text style={[styles.tagChipText, tag === t && styles.tagChipTextSelected]}>{t}</Text>
-                </TouchableOpacity>
-              ))}
-              {tag && !(PRESET_TAGS as readonly string[]).includes(tag) && (
+              {tag ? (
+                /* タグが選択されている：そのチップだけ表示 */
                 <TouchableOpacity
                   style={[styles.tagChip, styles.tagChipSelected]}
                   onPress={() => setTag(null)}
@@ -404,25 +391,39 @@ export default function PhotoForm() {
                     <Ionicons name="checkmark" size={9} color="#fff" />
                   </View>
                   <Text style={styles.tagChipTextSelected}>{tag}</Text>
+                  <Ionicons name="close" size={13} color={DS.colors.accent} style={{ marginLeft: 2 }} />
                 </TouchableOpacity>
+              ) : (
+                /* タグ未選択：プリセット＋追加ボタン */
+                <>
+                  {PRESET_TAGS.map(t => (
+                    <TouchableOpacity
+                      key={t}
+                      style={styles.tagChip}
+                      onPress={() => setTag(t)}
+                    >
+                      <Text style={styles.tagChipText}>{t}</Text>
+                    </TouchableOpacity>
+                  ))}
+                  <TouchableOpacity
+                    style={styles.addTagBtn}
+                    onPress={() => {
+                      Alert.prompt(
+                        '記念日タグ',
+                        'タグ名を入力してください',
+                        [
+                          { text: 'キャンセル', style: 'cancel' },
+                          { text: '追加', onPress: (text) => { if (text?.trim()) setTag(text.trim()); } },
+                        ],
+                        'plain-text'
+                      );
+                    }}
+                  >
+                    <Ionicons name="add" size={15} color={DS.colors.textMid} />
+                    <Text style={styles.addTagBtnText}>追加</Text>
+                  </TouchableOpacity>
+                </>
               )}
-              <TouchableOpacity
-                style={styles.addTagBtn}
-                onPress={() => {
-                  Alert.prompt(
-                    '記念日タグ',
-                    'タグ名を入力してください',
-                    [
-                      { text: 'キャンセル', style: 'cancel' },
-                      { text: '追加', onPress: (text) => { if (text?.trim()) setTag(text.trim()); } },
-                    ],
-                    'plain-text'
-                  );
-                }}
-              >
-                <Ionicons name="add" size={15} color={DS.colors.textMid} />
-                <Text style={styles.addTagBtnText}>追加</Text>
-              </TouchableOpacity>
             </View>
           </View>
         </Card>

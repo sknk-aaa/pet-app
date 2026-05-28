@@ -1,14 +1,13 @@
 import * as AppleAuthentication from 'expo-apple-authentication';
-import {
-  GoogleSignin,
-  statusCodes,
-} from '@react-native-google-signin/google-signin';
-import Constants from 'expo-constants';
+import * as WebBrowser from 'expo-web-browser';
 import { supabase } from '@/services/supabase';
+
 import { clearPushToken } from '@/services/notifications';
 import { loginRevenueCat, logoutRevenueCat } from '@/services/iap';
 import { useAuthStore } from '@/store/authStore';
 import type { Session } from '@supabase/supabase-js';
+
+WebBrowser.maybeCompleteAuthSession();
 
 export async function signInWithApple(): Promise<void> {
   const credential = await AppleAuthentication.signInAsync({
@@ -28,39 +27,26 @@ export async function signInWithApple(): Promise<void> {
   if (data.user?.id) loginRevenueCat(data.user.id).catch(() => {});
 }
 
-function decodeJwtPayload(jwt: string): Record<string, unknown> | null {
-  try {
-    const payload = jwt.split('.')[1];
-    const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
-    const padded = base64.padEnd(base64.length + (4 - (base64.length % 4)) % 4, '=');
-    return JSON.parse(atob(padded)) as Record<string, unknown>;
-  } catch {
-    return null;
-  }
-}
+const GOOGLE_REDIRECT_URI = 'mainichipet://auth/callback';
 
 export async function signInWithGoogle(): Promise<void> {
-  const iosClientId = Constants.expoConfig?.extra?.googleIosClientId as string | undefined;
-  if (!iosClientId) {
-    throw new Error('Google iOS Client ID が設定されていません。EAS Secret GOOGLE_IOS_CLIENT_ID を確認してください。');
-  }
-  GoogleSignin.configure({
-    scopes: ['email', 'profile'],
-    iosClientId,
-  });
-  await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
-  await GoogleSignin.signIn();
-  const tokens = await GoogleSignin.getTokens();
-  if (!tokens.idToken) {
-    throw new Error('Google Sign In: idToken が取得できませんでした');
-  }
-  const payload = decodeJwtPayload(tokens.idToken);
-  const nonce = typeof payload?.nonce === 'string' ? payload.nonce : undefined;
-  const { data, error } = await supabase.auth.signInWithIdToken({
+  const { data: oauthData, error: oauthError } = await supabase.auth.signInWithOAuth({
     provider: 'google',
-    token: tokens.idToken,
-    ...(nonce ? { nonce } : {}),
+    options: {
+      redirectTo: GOOGLE_REDIRECT_URI,
+      skipBrowserRedirect: true,
+    },
   });
+  if (oauthError || !oauthData.url) throw oauthError ?? new Error('OAuth URL が取得できませんでした');
+
+  const result = await WebBrowser.openAuthSessionAsync(oauthData.url, GOOGLE_REDIRECT_URI);
+  if (result.type !== 'success') throw new Error('Googleログインがキャンセルされました');
+
+  const url = new URL(result.url);
+  const code = url.searchParams.get('code');
+  if (!code) throw new Error('認証コードが取得できませんでした');
+
+  const { data, error } = await supabase.auth.exchangeCodeForSession(code);
   if (error) throw error;
   if (data.user?.id) loginRevenueCat(data.user.id).catch(() => {});
 }

@@ -2,11 +2,11 @@ import { useEffect } from 'react';
 import { Stack, router } from 'expo-router';
 import { useFonts } from 'expo-font';
 import {
-  NotoSansJP_400Regular,
-  NotoSansJP_500Medium,
-  NotoSansJP_700Bold,
-  NotoSansJP_900Black,
-} from '@expo-google-fonts/noto-sans-jp';
+  MPLUSRounded1c_400Regular,
+  MPLUSRounded1c_500Medium,
+  MPLUSRounded1c_700Bold,
+  MPLUSRounded1c_800ExtraBold,
+} from '@expo-google-fonts/m-plus-rounded-1c';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { AppState } from 'react-native';
@@ -110,10 +110,10 @@ function AppContent() {
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
-    NotoSansJP_400Regular,
-    NotoSansJP_500Medium,
-    NotoSansJP_700Bold,
-    NotoSansJP_900Black,
+    MPLUSRounded1c_400Regular,
+    MPLUSRounded1c_500Medium,
+    MPLUSRounded1c_700Bold,
+    MPLUSRounded1c_800ExtraBold,
   });
 
   if (!fontsLoaded) return null;

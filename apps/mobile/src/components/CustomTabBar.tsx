@@ -11,7 +11,7 @@ import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { DS } from '@/theme';
 
-const TAB_HEIGHT = 56;
+const TAB_HEIGHT = 64;
 
 type TabConfig = {
   name:       string;
@@ -23,7 +23,7 @@ type TabConfig = {
 const TABS: TabConfig[] = [
   { name: 'calendar',  label: 'カレンダー',  icon: 'calendar-outline', iconActive: 'calendar'   },
   { name: 'index',     label: 'ホーム',       icon: 'paw-outline',      iconActive: 'paw'        },
-  { name: 'today-pet', label: '今日のペット', icon: 'image-outline',    iconActive: 'image'      },
+  { name: 'today-pet', label: '今日のペット', icon: 'apps-outline',     iconActive: 'apps'       },
 ];
 
 export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
@@ -48,6 +48,7 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
           }
         };
 
+        // ── ホームタブ（中央・大きな円） ──
         if (isHome) {
           return (
             <TouchableOpacity
@@ -56,20 +57,21 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
               activeOpacity={0.8}
               style={styles.tab}
             >
-              <View style={[styles.homeButton, isActive && styles.homeButtonActive]}>
+              <View style={styles.homeCircle}>
                 <Ionicons
                   name={tab.iconActive}
-                  size={22}
-                  color={isActive ? '#FFFFFF' : DS.home.textSoft}
+                  size={28}
+                  color={DS.home.accent}
                 />
               </View>
-              <Text style={[styles.label, isActive ? styles.labelHomeActive : styles.labelInactive]}>
+              <Text style={[styles.label, styles.labelHomeActive]}>
                 {tab.label}
               </Text>
             </TouchableOpacity>
           );
         }
 
+        // ── 両サイドタブ ──
         return (
           <TouchableOpacity
             key={route.key}
@@ -79,10 +81,10 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
           >
             <Ionicons
               name={isActive ? tab.iconActive : tab.icon}
-              size={22}
-              color={isActive ? DS.home.accent : DS.home.textSoft}
+              size={24}
+              color={isActive ? DS.home.text : DS.home.text}
             />
-            <Text style={[styles.label, isActive ? styles.labelActive : styles.labelInactive]}>
+            <Text style={[styles.label, styles.labelSide]}>
               {tab.label}
             </Text>
           </TouchableOpacity>
@@ -95,51 +97,47 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
 const styles = StyleSheet.create({
   container: {
     flexDirection:   'row',
-    alignItems:      'flex-start',
+    alignItems:      'flex-end',
     backgroundColor: DS.home.background,
     borderTopWidth:  StyleSheet.hairlineWidth,
     borderTopColor:  DS.home.outline,
-    paddingTop:      10,
+    paddingTop:      6,
     height:          TAB_HEIGHT + 34,
-    ...Platform.select({ android: { elevation: 8 } }),
+    ...Platform.select({ android: { elevation: 4 } }),
   },
   tab: {
     flex:       1,
     alignItems: 'center',
     gap:        4,
+    paddingBottom: 4,
   },
   tabSide: {
-    paddingTop: 4,
+    paddingTop: 8,
   },
-  homeButton: {
-    width:           48,
-    height:          48,
-    borderRadius:    12,
-    backgroundColor: 'transparent',
+
+  // 中央のサーモンピーチ大円
+  homeCircle: {
+    width:           60,
+    height:          60,
+    borderRadius:    30,
+    backgroundColor: DS.home.activeTab,   // #F5C4A0
     alignItems:      'center',
     justifyContent:  'center',
-    marginTop:       -10,
+    marginBottom:    2,
+    shadowColor:     '#C85020',
+    shadowOffset:    { width: 0, height: 2 },
+    shadowOpacity:   0.18,
+    shadowRadius:    6,
+    elevation:       3,
   },
-  homeButtonActive: {
-    backgroundColor: DS.home.accent,
-    shadowColor:     DS.home.accent,
-    shadowOffset:    { width: 0, height: 4 },
-    shadowOpacity:   0.35,
-    shadowRadius:    10,
-    elevation:       6,
-  },
+
   label: {
-    fontSize:   10,
-    textAlign:  'center',
-    letterSpacing: 0.2,
+    fontSize:  10,
+    textAlign: 'center',
   },
-  labelInactive: {
+  labelSide: {
     fontFamily: DS.font.regular,
-    color:      DS.home.textSoft,
-  },
-  labelActive: {
-    fontFamily: DS.font.bold,
-    color:      DS.home.accent,
+    color:      DS.home.text,
   },
   labelHomeActive: {
     fontFamily: DS.font.bold,

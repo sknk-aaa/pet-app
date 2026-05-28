@@ -32,7 +32,7 @@ const CELL_HEIGHT = 52;
 const GRID_GAP = 0;
 const GRID_LINE = 'rgba(210, 190, 172, 0.45)';
 const SCREEN_HORIZONTAL_PADDING = 14;
-const GRID_CARD_PADDING = 12;
+const GRID_CARD_PADDING = 0;
 const MONTHS = Array.from({ length: 12 }, (_, index) => index + 1);
 
 export default function Calendar() {
@@ -158,7 +158,7 @@ export default function Calendar() {
 
       <ScrollView contentContainerStyle={styles.scroll}>
         {/* Calendar grid */}
-        <Card style={styles.gridCard} p={12}>
+        <Card style={styles.gridCard} p={0}>
           {/* Day headers */}
           <View style={styles.weekRow}>
             {WEEKDAYS.map((d, i) => (
@@ -375,36 +375,33 @@ const styles = StyleSheet.create({
 
   gridCard: { overflow: 'hidden' },
   weekRow: {
-    flexDirection:   'row',
+    flexDirection:    'row',
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderColor:     GRID_LINE,
-    marginBottom:    0,
+    borderColor:      GRID_LINE,
   },
   weekday: {
-    fontSize:        11,
-    fontWeight:      '600',
-    color:           DS.colors.textMid,
-    textAlign:       'center',
-    paddingVertical: 5,
+    fontSize:         11,
+    fontWeight:       '600',
+    color:            DS.colors.textMid,
+    textAlign:        'center',
+    paddingVertical:  6,
     borderRightWidth: StyleSheet.hairlineWidth,
-    borderColor:     GRID_LINE,
+    borderColor:      GRID_LINE,
   },
   weekdaySun: { color: DS.colors.red },
   weekdaySat: { color: DS.colors.sage },
   grid: {
-    flexDirection:  'row',
-    flexWrap:       'wrap',
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderColor:    GRID_LINE,
+    flexDirection: 'row',
+    flexWrap:      'wrap',
   },
   cell: {
-    alignItems:       'center',
-    gap:              1,
-    paddingTop:       2,
-    paddingBottom:    3,
-    borderRightWidth: StyleSheet.hairlineWidth,
+    alignItems:        'center',
+    gap:               1,
+    paddingTop:        2,
+    paddingBottom:     3,
+    borderRightWidth:  StyleSheet.hairlineWidth,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderColor:      GRID_LINE,
+    borderColor:       GRID_LINE,
   },
   dayNum:         { fontSize: 10, lineHeight: 14 },
   dayNumToday:    { fontWeight: '700' },
@@ -420,8 +417,7 @@ const styles = StyleSheet.create({
   dayBadgeToday:    { backgroundColor: DS.colors.accentLight },
   thumb:     { borderRadius: 4, overflow: 'hidden' },
   thumbEmpty: {
-    borderRadius:    4,
-    backgroundColor: DS.colors.cardCream,
+    borderRadius: 4,
   },
   anniBadge:   { position: 'absolute', top: 1, right: 1 },
   pawBadge:    { position: 'absolute', bottom: 1, right: 1 },

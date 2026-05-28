@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   Switch,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -163,7 +164,19 @@ export default function Settings() {
           {isLoggedIn ? (
             <SettingRow
               label="ログアウト"
-              onPress={async () => { await signOut(); }}
+              onPress={() => {
+                Alert.alert('ログアウト', 'ログアウトしますか？', [
+                  { text: 'キャンセル', style: 'cancel' },
+                  {
+                    text: 'ログアウト',
+                    style: 'destructive',
+                    onPress: async () => {
+                      await signOut();
+                      router.replace('/(tabs)');
+                    },
+                  },
+                ]);
+              }}
             />
           ) : (
             <SettingRow

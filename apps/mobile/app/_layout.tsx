@@ -2,11 +2,12 @@ import { useEffect } from 'react';
 import { Stack, router } from 'expo-router';
 import { useFonts } from 'expo-font';
 import {
-  MPLUSRounded1c_400Regular,
-  MPLUSRounded1c_500Medium,
-  MPLUSRounded1c_700Bold,
-  MPLUSRounded1c_800ExtraBold,
-} from '@expo-google-fonts/m-plus-rounded-1c';
+  ShipporiMincho_400Regular,
+  ShipporiMincho_500Medium,
+  ShipporiMincho_600SemiBold,
+  ShipporiMincho_700Bold,
+  ShipporiMincho_800ExtraBold,
+} from '@expo-google-fonts/shippori-mincho';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { AppState } from 'react-native';
@@ -110,10 +111,11 @@ function AppContent() {
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
-    MPLUSRounded1c_400Regular,
-    MPLUSRounded1c_500Medium,
-    MPLUSRounded1c_700Bold,
-    MPLUSRounded1c_800ExtraBold,
+    ShipporiMincho_400Regular,
+    ShipporiMincho_500Medium,
+    ShipporiMincho_600SemiBold,
+    ShipporiMincho_700Bold,
+    ShipporiMincho_800ExtraBold,
   });
 
   if (!fontsLoaded) return null;

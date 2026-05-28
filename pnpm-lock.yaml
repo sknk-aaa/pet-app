@@ -81,6 +81,9 @@ importers:
       '@expo-google-fonts/m-plus-rounded-1c':
         specifier: ^0.4.3
         version: 0.4.3
+      '@expo-google-fonts/shippori-mincho':
+        specifier: ^0.4.1
+        version: 0.4.1
       '@expo-google-fonts/zen-maru-gothic':
         specifier: ^0.4.1
         version: 0.4.1
@@ -954,6 +957,9 @@ packages:
 
   '@expo-google-fonts/m-plus-rounded-1c@0.4.3':
     resolution: {integrity: sha512-ac0KX6FZqbs++JJNbF/pIn/hA/IvIYtwPiHiX71uCrkmTH4FIiAS9TsqBXimRmipgcttRj03TzeJtkhtT2LZBA==}
+
+  '@expo-google-fonts/shippori-mincho@0.4.1':
+    resolution: {integrity: sha512-+nyw31jQWKm8GJLU1kcDYBRJ9jIp/8H6R1RSipkXQMf3+GIKSR3l8zJxuyoeal2+EzFDgo/xFQceM24MItobyA==}
 
   '@expo-google-fonts/zen-maru-gothic@0.4.1':
     resolution: {integrity: sha512-DCDiIfyvhsq4geQRW5WBf2cxIU4qdz95RMcBMXsUgCORZUcLQEyKG/UwaRWjEBp+94GnnPEVEklhSa6DGn2raA==}
@@ -5496,6 +5502,8 @@ snapshots:
     optional: true
 
   '@expo-google-fonts/m-plus-rounded-1c@0.4.3': {}
+
+  '@expo-google-fonts/shippori-mincho@0.4.1': {}
 
   '@expo-google-fonts/zen-maru-gothic@0.4.1': {}
 

@@ -10,10 +10,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { DS } from '@/theme';
-import { Card } from '@/components/Card';
 import { Photo } from '@/components/Photo';
-import { StreakBadge } from '@/components/StreakBadge';
 import { useTodayEntry, useMemoryEntry } from '@/hooks/useEntries';
 import { useStreak } from '@/hooks/useStreak';
 import { useSelectedPet } from '@/hooks/usePets';
@@ -21,7 +18,30 @@ import { formatDisplayDate, getTodayJST } from '@/utils/date';
 import { ANNIVERSARY_TAG_DB_TO_DISPLAY } from '@/utils/species';
 import type { EntryWithPets, Entry } from '@/types';
 
-function formatHomeDate(date: string): string {
+// ─── palette ─────────────────────────────────────────────
+const C = {
+  bg:        '#F2EDE3',  // 古紙
+  paper:     '#FAF7F0',  // 明るい紙
+  ink:       '#1A1008',  // 万年筆インク
+  inkMid:    '#6B5140',  // セピア中
+  inkFaint:  '#A08B76',  // セピア薄
+  accent:    '#8B3018',  // バーントシエナ
+  accentMid: '#B05A30',  // テラコッタ
+  accentBg:  '#EDE0D4',  // テラコッタ薄
+  border:    '#C8B89A',  // 紙のボーダー
+  rule:      '#D4C4A8',  // 罫線
+} as const;
+
+// ─── fonts (ShipporiMincho) ───────────────────────────────
+const F = {
+  regular:  'ShipporiMincho_400Regular',
+  medium:   'ShipporiMincho_500Medium',
+  semibold: 'ShipporiMincho_600SemiBold',
+  bold:     'ShipporiMincho_700Bold',
+  heavy:    'ShipporiMincho_800ExtraBold',
+} as const;
+
+function formatJournalDate(date: string): string {
   const [, month, day] = date.split('-').map(Number);
   const weekday = ['日', '月', '火', '水', '木', '金', '土'][
     new Date(Number(date.slice(0, 4)), month - 1, day).getDay()
@@ -45,28 +65,38 @@ export default function Home() {
 
         {/* ── ヘッダー ── */}
         <View style={styles.header}>
-          <Text style={styles.headerDate}>{formatHomeDate(today)}</Text>
-          <Text style={styles.headerTitle}>今日の1枚</Text>
-          <View style={styles.headerRight}>
-            <TouchableOpacity
-              onPress={() => router.push('/settings')}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            >
-              <Ionicons name="settings-outline" size={22} color={DS.home.text} />
-            </TouchableOpacity>
+          <Text style={styles.headerDate}>{formatJournalDate(today)}</Text>
+          <View style={styles.headerCenter}>
+            <Text style={styles.headerTitle}>今日の1枚</Text>
           </View>
+          <TouchableOpacity
+            onPress={() => router.push('/settings')}
+            style={styles.headerRight}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <Ionicons name="settings-outline" size={19} color={C.inkFaint} />
+          </TouchableOpacity>
         </View>
 
-        {/* ── ストリークバッジ ── */}
+        {/* ── 罫線 ── */}
+        <View style={styles.ruleThick} />
+
+        {/* ── ストリーク ── */}
         {streakCount > 0 && (
           <View style={styles.streakRow}>
-            <StreakBadge count={streakCount} note={isRecorded ? undefined : '昨日まで記録中'} />
+            <Text style={styles.streakEmoji}>🔥</Text>
+            <Text style={styles.streakMain}>連続</Text>
+            <Text style={styles.streakCount}>{streakCount}</Text>
+            <Text style={styles.streakMain}>日</Text>
+            {!isRecorded && (
+              <Text style={styles.streakNote}>　昨日まで</Text>
+            )}
           </View>
         )}
 
         {isLoading ? (
           <View style={styles.loader}>
-            <ActivityIndicator color={DS.home.accent} />
+            <ActivityIndicator color={C.accentMid} size="large" />
           </View>
         ) : todayEntry ? (
           <RecordedView entry={todayEntry} />
@@ -79,6 +109,8 @@ export default function Home() {
   );
 }
 
+// ─────────────────────────────────────────────────────────
+
 function RecordedView({ entry }: { entry: EntryWithPets }) {
   const tagDisplay = entry.anniversary_tag_type
     ? ANNIVERSARY_TAG_DB_TO_DISPLAY[entry.anniversary_tag_type]
@@ -86,76 +118,99 @@ function RecordedView({ entry }: { entry: EntryWithPets }) {
 
   return (
     <>
-      {/* カード */}
-      <View style={styles.cardOuter}>
-        <View style={styles.cardInner}>
-          <Photo radius={0} style={styles.photo} uri={entry.image_uri} />
-          <View style={styles.cardBody}>
-            <Text style={styles.infoTitle}>{entry.title}</Text>
-            {entry.memo ? (
-              <Text style={styles.infoMemo}>{entry.memo}</Text>
-            ) : null}
-            <View style={styles.chipsRow}>
-              {entry.pets.map(pet => (
-                <Chip key={pet.id} icon="paw" label={pet.name} />
-              ))}
-              {tagDisplay && <Chip icon="pricetag-outline" label={tagDisplay} />}
-            </View>
-            {entry.featured_submitted === 1 && (
-              <View style={styles.featuredBtn}>
-                <Ionicons name="paw" size={18} color={DS.home.accent} />
-                <Text style={styles.featuredText}>今日のペット 参加中</Text>
-              </View>
+      {/* 写真：マウント写真風 */}
+      <View style={styles.photoMount}>
+        <Photo radius={0} style={styles.photo} uri={entry.image_uri} />
+      </View>
+
+      {/* 日記本文エリア */}
+      <View style={styles.entry}>
+
+        {/* タイトル */}
+        <Text style={styles.entryTitle}>{entry.title}</Text>
+
+        {/* メモ */}
+        {entry.memo ? (
+          <Text style={styles.entryMemo}>{entry.memo}</Text>
+        ) : null}
+
+        {/* タグ */}
+        {(entry.pets.length > 0 || tagDisplay) && (
+          <View style={styles.tagsRow}>
+            {entry.pets.map((pet, i) => (
+              <React.Fragment key={pet.id}>
+                {i > 0 && <Text style={styles.tagDot}>·</Text>}
+                <View style={styles.tag}>
+                  <Ionicons name="paw" size={11} color={C.inkFaint} />
+                  <Text style={styles.tagText}>{pet.name}</Text>
+                </View>
+              </React.Fragment>
+            ))}
+            {tagDisplay && (
+              <>
+                <Text style={styles.tagDot}>·</Text>
+                <Text style={styles.tagText}>{tagDisplay}</Text>
+              </>
             )}
           </View>
-        </View>
+        )}
+
+        {/* 今日のペット 参加中 */}
+        {entry.featured_submitted === 1 && (
+          <View style={styles.featuredBanner}>
+            <View style={styles.featuredLine} />
+            <View style={styles.featuredBadge}>
+              <Ionicons name="paw" size={11} color={C.accentMid} />
+              <Text style={styles.featuredText}>今日のペット 参加中</Text>
+            </View>
+            <View style={styles.featuredLine} />
+          </View>
+        )}
       </View>
 
       {/* アクション行 */}
-      <View style={styles.actionRow}>
+      <View style={styles.actions}>
         <TouchableOpacity
           style={styles.editBtn}
           onPress={() => router.push('/photo-form')}
-          activeOpacity={0.75}
+          activeOpacity={0.6}
         >
-          <Ionicons name="create-outline" size={13} color={DS.home.accent} />
+          <Ionicons name="create-outline" size={12} color={C.accentMid} />
           <Text style={styles.editText}>編集</Text>
         </TouchableOpacity>
         <TouchableOpacity
           onPress={() => router.push('/(tabs)/calendar')}
-          activeOpacity={0.75}
+          activeOpacity={0.6}
         >
-          <Text style={styles.calLinkText}>カレンダーで見返す ›</Text>
+          <Text style={styles.calLink}>カレンダーで見返す ›</Text>
         </TouchableOpacity>
       </View>
+
+      <View style={[styles.ruleHair, { marginTop: 28 }]} />
     </>
   );
 }
 
-function Chip({ icon, label }: { icon: keyof typeof Ionicons.glyphMap; label: string }) {
-  return (
-    <View style={styles.chip}>
-      <Ionicons name={icon} size={14} color={DS.home.text} />
-      <Text style={styles.chipText}>{label}</Text>
-    </View>
-  );
-}
+// ─────────────────────────────────────────────────────────
 
 function UnrecordedView({ petName }: { petName: string }) {
   const { data: memory } = useMemoryEntry();
+
   return (
     <>
-      <Card style={styles.emptyCard}>
-        <View style={styles.cameraCircle}>
-          <Ionicons name="camera-outline" size={28} color={DS.home.accent} />
-        </View>
-        <Text style={styles.emptyTitle}>今日はまだ記録がありません</Text>
-        <Text style={styles.emptySub}>{petName}の今日の渾身の1枚を残しましょう</Text>
-        <TouchableOpacity style={styles.cta} onPress={() => router.push('/photo-form')} activeOpacity={0.85}>
-          <Ionicons name="camera-outline" size={18} color="#fff" />
-          <Text style={styles.ctaText}>今日の1枚を残す</Text>
-        </TouchableOpacity>
-      </Card>
+      {/* 空の写真スロット */}
+      <TouchableOpacity
+        style={styles.emptyMount}
+        onPress={() => router.push('/photo-form')}
+        activeOpacity={0.75}
+      >
+        <Ionicons name="camera-outline" size={28} color={C.inkFaint} />
+        <Text style={styles.emptyTitle}>今日の1枚を残す</Text>
+        <Text style={styles.emptySub}>{petName}の渾身の1枚を</Text>
+      </TouchableOpacity>
+
+      <View style={[styles.ruleHair, { marginTop: 28 }]} />
+
       {memory && <MemoryCard entry={memory} />}
     </>
   );
@@ -163,224 +218,264 @@ function UnrecordedView({ petName }: { petName: string }) {
 
 function MemoryCard({ entry }: { entry: Entry }) {
   return (
-    <Card style={styles.memCard} p={0}>
-      <View style={styles.memHead}>
-        <View style={styles.memHeadLeft}>
-          <Ionicons name="image-outline" size={16} color={DS.colors.textMid} />
-          <Text style={styles.memHeadTitle}>思い出の1枚</Text>
-        </View>
-        <View style={styles.memBadge}>
-          <Text style={styles.memBadgeText}>去年の今日</Text>
-        </View>
+    <View style={styles.memory}>
+      <Text style={styles.memoryLabel}>思い出の1枚 · 去年の今日</Text>
+      <View style={styles.photoMount}>
+        <Photo radius={0} style={styles.memPhoto} uri={entry.thumbnail_uri} />
       </View>
-      <Photo style={styles.memPhoto} uri={entry.thumbnail_uri} />
       <View style={styles.memFoot}>
         <Text style={styles.memTitle}>{entry.title}</Text>
         <Text style={styles.memDate}>{formatDisplayDate(entry.date)}</Text>
       </View>
-    </Card>
+    </View>
   );
 }
 
+// ─────────────────────────────────────────────────────────
+
 const styles = StyleSheet.create({
-  safe:   { flex: 1, backgroundColor: DS.home.background },
-  scroll: { paddingBottom: 24 },
+  safe:   { flex: 1, backgroundColor: C.bg },
+  scroll: { paddingBottom: 48 },
 
   // ── ヘッダー ──
   header: {
-    flexDirection:   'row',
-    alignItems:      'center',
-    paddingHorizontal: 20,
-    marginBottom:    8,
-    paddingTop:      8,
+    flexDirection:     'row',
+    alignItems:        'center',
+    paddingHorizontal: 24,
+    paddingTop:        10,
+    paddingBottom:     14,
+    gap:               8,
   },
   headerDate: {
+    fontFamily: F.regular,
+    fontSize:   11,
+    color:      C.inkFaint,
+    letterSpacing: 0.4,
     flex:       1,
-    fontFamily: DS.font.regular,
-    fontSize:   13,
-    color:      DS.home.textSoft,
+  },
+  headerCenter: {
+    position:   'absolute',
+    left:       0,
+    right:      0,
+    alignItems: 'center',
   },
   headerTitle: {
-    flex:          1,
-    fontFamily:    DS.font.bold,
-    fontSize:      27,
-    color:         DS.home.text,
-    textAlign:     'center',
-    letterSpacing: -0.5,
+    fontFamily:    F.bold,
+    fontSize:      20,
+    color:         C.ink,
+    letterSpacing: 4,
   },
   headerRight: {
     flex:       1,
     alignItems: 'flex-end',
   },
 
-  // ── ストリーク ──
-  streakRow: { alignItems: 'center', marginBottom: 14 },
-  loader:    { minHeight: 200, justifyContent: 'center', alignItems: 'center' },
+  // ── 罫線 ──
+  ruleThick: {
+    height:           2,
+    backgroundColor:  C.ink,
+    marginHorizontal: 24,
+    marginBottom:     4,
+  },
+  ruleHair: {
+    height:           StyleSheet.hairlineWidth,
+    backgroundColor:  C.rule,
+    marginHorizontal: 24,
+    marginBottom:     24,
+  },
 
-  // ── 写真カード ──
-  cardOuter: {
-    marginHorizontal: 16,
-    marginBottom:     14,
-    borderRadius:     20,
-    backgroundColor:  '#ffffff',
-    shadowColor:      '#321905',
-    shadowOffset:     { width: 0, height: 2 },
-    shadowOpacity:    0.10,
-    shadowRadius:     18,
+  // ── ストリーク ──
+  streakRow: {
+    flexDirection:     'row',
+    alignItems:        'baseline',
+    paddingHorizontal: 24,
+    paddingVertical:   12,
+    gap:               3,
+  },
+  streakEmoji: { fontSize: 14, lineHeight: 18 },
+  streakMain:  {
+    fontFamily: F.regular,
+    fontSize:   13,
+    color:      C.inkMid,
+  },
+  streakCount: {
+    fontFamily: F.bold,
+    fontSize:   18,
+    color:      C.accent,
+    lineHeight: 22,
+  },
+  streakNote: {
+    fontFamily: F.regular,
+    fontSize:   12,
+    color:      C.inkFaint,
+  },
+
+  loader: { minHeight: 240, justifyContent: 'center', alignItems: 'center' },
+
+  // ── 写真マウント ──
+  photoMount: {
+    marginHorizontal: 20,
+    marginBottom:     0,
+    borderWidth:      1,
+    borderColor:      C.border,
+    backgroundColor:  C.paper,
+    shadowColor:      '#1A1008',
+    shadowOffset:     { width: 0, height: 4 },
+    shadowOpacity:    0.12,
+    shadowRadius:     10,
     elevation:        4,
   },
-  cardInner: {
-    borderRadius: 20,
-    overflow:     'hidden',
-  },
-  photo: { width: '100%', height: 300 },
+  photo:    { width: '100%', height: 300 },
+  memPhoto: { width: '100%', height: 200 },
 
-  // カード本体
-  cardBody: {
-    paddingTop:        14,
-    paddingHorizontal: 16,
+  // ── 日記本文 ──
+  entry: {
+    paddingHorizontal: 24,
+    paddingTop:        20,
     paddingBottom:     16,
+    gap:               10,
   },
-  infoTitle: {
-    fontFamily:    DS.font.bold,
-    fontSize:      22,
-    color:         DS.home.text,
-    marginBottom:  5,
-    lineHeight:    29,
-    letterSpacing: -0.3,
+  entryTitle: {
+    fontFamily:    F.bold,
+    fontSize:      28,
+    color:         C.ink,
+    lineHeight:    40,
+    letterSpacing: -0.5,
   },
-  infoMemo: {
-    fontFamily:   DS.font.regular,
-    fontSize:     14,
-    color:        DS.home.textSoft,
-    lineHeight:   25,
-    marginBottom: 13,
+  entryMemo: {
+    fontFamily: F.regular,
+    fontSize:   15,
+    color:      C.inkMid,
+    lineHeight: 28,
   },
 
-  // チップ
-  chipsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 13 },
-  chip: {
-    height:        32,
-    borderRadius:  16,
-    borderWidth:   1.5,
-    borderColor:   DS.home.outline,
+  // タグ
+  tagsRow: {
+    flexDirection: 'row',
+    flexWrap:      'wrap',
+    alignItems:    'center',
+    gap:           6,
+    marginTop:     2,
+  },
+  tag: {
     flexDirection: 'row',
     alignItems:    'center',
-    gap:           5,
-    paddingLeft:   10,
-    paddingRight:  14,
+    gap:           4,
   },
-  chipText: {
-    fontFamily: DS.font.regular,
+  tagDot: {
+    fontFamily: F.regular,
+    fontSize:   14,
+    color:      C.border,
+  },
+  tagText: {
+    fontFamily: F.regular,
     fontSize:   13,
-    color:      DS.home.text,
+    color:      C.inkFaint,
   },
 
   // 今日のペット参加中
-  featuredBtn: {
-    height:         44,
-    borderRadius:   22,
-    borderWidth:    1.5,
-    borderColor:    DS.home.accent,
-    flexDirection:  'row',
-    alignItems:     'center',
-    justifyContent: 'center',
-    gap:            8,
+  featuredBanner: {
+    flexDirection: 'row',
+    alignItems:    'center',
+    gap:           10,
+    marginTop:     4,
+  },
+  featuredLine: {
+    flex:            1,
+    height:          StyleSheet.hairlineWidth,
+    backgroundColor: C.accentMid,
+  },
+  featuredBadge: {
+    flexDirection: 'row',
+    alignItems:    'center',
+    gap:           5,
   },
   featuredText: {
-    fontFamily: DS.font.medium,
-    fontSize:   15,
-    color:      DS.home.accent,
+    fontFamily:    F.medium,
+    fontSize:      12,
+    color:         C.accentMid,
+    letterSpacing: 0.8,
   },
 
-  // アクション行
-  actionRow: {
+  // アクション
+  actions: {
     flexDirection:     'row',
     alignItems:        'center',
     justifyContent:    'space-between',
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
     paddingVertical:   4,
   },
   editBtn: {
-    height:        38,
-    borderRadius:  19,
-    borderWidth:   1.5,
-    borderColor:   DS.home.accent,
-    flexDirection: 'row',
-    alignItems:    'center',
-    gap:           6,
-    paddingLeft:   14,
-    paddingRight:  16,
+    flexDirection:     'row',
+    alignItems:        'center',
+    gap:               5,
+    paddingVertical:   6,
+    paddingHorizontal: 12,
+    borderWidth:       1,
+    borderColor:       C.accentMid,
   },
   editText: {
-    fontFamily: DS.font.medium,
-    fontSize:   14,
-    color:      DS.home.accent,
+    fontFamily:    F.medium,
+    fontSize:      13,
+    color:         C.accentMid,
+    letterSpacing: 0.5,
   },
-  calLinkText: {
-    fontFamily: DS.font.medium,
-    fontSize:   14,
-    color:      DS.home.accent,
+  calLink: {
+    fontFamily:    F.medium,
+    fontSize:      13,
+    color:         C.accentMid,
+    letterSpacing: 0.5,
   },
 
   // ── 未記録 ──
-  emptyCard: { alignItems: 'center', gap: 12, paddingVertical: 32, paddingHorizontal: 22, marginHorizontal: 16 },
-  cameraCircle: {
-    width:           56,
-    height:          56,
-    borderRadius:    28,
-    backgroundColor: DS.home.pill,
-    alignItems:      'center',
-    justifyContent:  'center',
+  emptyMount: {
+    marginHorizontal: 20,
+    height:           280,
+    borderWidth:      1,
+    borderColor:      C.border,
+    borderStyle:      'dashed',
+    alignItems:       'center',
+    justifyContent:   'center',
+    gap:              10,
+    backgroundColor:  C.paper,
   },
-  emptyTitle: { fontFamily: DS.font.bold, fontSize: 20, color: DS.home.text, textAlign: 'center', marginTop: 4 },
-  emptySub:   { fontFamily: DS.font.regular, fontSize: 14, color: DS.home.textSoft, textAlign: 'center', lineHeight: 23 },
-  cta: {
-    flexDirection:   'row',
-    alignItems:      'center',
-    gap:             8,
-    width:           '100%',
-    backgroundColor: DS.home.accent,
-    borderRadius:    DS.radius.pill,
-    paddingVertical: 15,
-    justifyContent:  'center',
-    marginTop:       8,
-    shadowColor:     '#321905',
-    shadowOffset:    { width: 0, height: 4 },
-    shadowOpacity:   0.20,
-    shadowRadius:    12,
-    elevation:       6,
+  emptyTitle: {
+    fontFamily: F.bold,
+    fontSize:   18,
+    color:      C.inkMid,
+    letterSpacing: 1,
   },
-  ctaText: { fontFamily: DS.font.bold, color: '#fff', fontSize: 17 },
+  emptySub: {
+    fontFamily: F.regular,
+    fontSize:   13,
+    color:      C.inkFaint,
+  },
 
-  // ── 思い出カード ──
-  memCard: { overflow: 'hidden', marginTop: 16, marginHorizontal: 16 },
-  memHead: {
-    flexDirection:     'row',
-    alignItems:        'center',
-    justifyContent:    'space-between',
-    paddingHorizontal: 16,
-    paddingTop:        14,
-    paddingBottom:     10,
+  // ── 思い出 ──
+  memory: { gap: 0, marginTop: 8 },
+  memoryLabel: {
+    fontFamily:        F.regular,
+    fontSize:          11,
+    color:             C.inkFaint,
+    letterSpacing:     1.2,
+    paddingHorizontal: 24,
+    marginBottom:      12,
   },
-  memHeadLeft:  { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  memHeadTitle: { fontFamily: DS.font.bold, fontSize: 16, color: DS.colors.text },
-  memBadge: {
-    backgroundColor:   DS.colors.cardCream,
-    borderRadius:      DS.radius.pill,
-    paddingVertical:   3,
-    paddingHorizontal: 10,
-    borderWidth:       1,
-    borderColor:       DS.colors.border,
-  },
-  memBadgeText: { fontFamily: DS.font.medium, fontSize: 12, color: DS.colors.textMid },
-  memPhoto:  { width: '100%', height: 200, borderRadius: 0 },
   memFoot: {
-    paddingVertical:   14,
-    paddingHorizontal: 16,
+    paddingHorizontal: 24,
+    paddingTop:        16,
     alignItems:        'center',
     gap:               4,
   },
-  memTitle: { fontFamily: DS.font.bold, fontSize: 20, color: DS.colors.text },
-  memDate:  { fontFamily: DS.font.regular, fontSize: 13, color: DS.colors.textHint },
+  memTitle: {
+    fontFamily: F.bold,
+    fontSize:   20,
+    color:      C.ink,
+  },
+  memDate: {
+    fontFamily: F.regular,
+    fontSize:   12,
+    color:      C.inkFaint,
+    letterSpacing: 0.5,
+  },
 });

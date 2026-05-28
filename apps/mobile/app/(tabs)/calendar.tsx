@@ -179,7 +179,7 @@ export default function Calendar() {
           {/* Grid */}
           <View style={styles.grid}>
             {cells.map((day, idx) => {
-              if (!day) return <View key={idx} style={{ width: cellWidth }} />;
+              if (!day) return <View key={idx} style={[styles.cell, { width: cellWidth }]} />;
               const col      = idx % 7;
               const ds       = dateStr(day);
               const entry    = entryMap.get(ds);

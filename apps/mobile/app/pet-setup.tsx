@@ -8,14 +8,17 @@ import {
   StyleSheet,
   Platform,
   Alert,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { createPet } from '@/db/pets';
 import { setSetting } from '@/db/settings';
 import { useAppStore } from '@/store/appStore';
 import { SPECIES_DISPLAY_TO_DB, GENDER_DISPLAY_TO_DB } from '@/utils/species';
 import { generateUUID } from '@/utils/uuid';
+import { pickPhoto, processIcon } from '@/services/photo';
 import { DS } from '@/theme';
 import { SPECIES_OPTIONS, GENDER_OPTIONS } from '@/dummy';
 
@@ -24,13 +27,21 @@ const EMOJI: Record<string, string> = {
 };
 
 export default function PetSetup() {
-  const [name,    setName]    = useState('');
-  const [species, setSpecies] = useState<string | null>(null);
-  const [gender,  setGender]  = useState<string | null>(null);
+  const [name,     setName]     = useState('');
+  const [species,  setSpecies]  = useState<string | null>(null);
+  const [gender,   setGender]   = useState<string | null>(null);
   const [birthday, setBirthday] = useState('');
+  const [iconUri,  setIconUri]  = useState<string | null>(null);
 
   const canProceed = name.trim().length > 0 && species !== null;
   const [saving, setSaving] = useState(false);
+
+  const handlePickIcon = async () => {
+    const uri = await pickPhoto();
+    if (!uri) return;
+    const processed = await processIcon(uri, 'tmp');
+    setIconUri(processed);
+  };
 
   const handleSubmit = async () => {
     if (!canProceed || saving || !species) return;
@@ -43,6 +54,7 @@ export default function PetSetup() {
         species: speciesDb,
         gender: genderDb,
         birthday: birthday.trim() || null,
+        icon_uri: iconUri,
       });
       const { setPets, setSelectedPetId } = useAppStore.getState();
       setPets([pet]);
@@ -69,7 +81,22 @@ export default function PetSetup() {
         <Text style={styles.heading}>うちの子を登録しよう</Text>
         <Text style={styles.sub}>後から変更できます</Text>
 
-        {/* アイコン */}
+        {/* アイコン写真 */}
+        <TouchableOpacity style={styles.iconContainer} onPress={handlePickIcon}>
+          {iconUri ? (
+            <Image source={{ uri: iconUri }} style={styles.iconImage} />
+          ) : (
+            <View style={styles.iconPlaceholder}>
+              <Ionicons name="camera-outline" size={32} color={DS.colors.textHint} />
+              <Text style={styles.iconPlaceholderText}>写真を選ぶ</Text>
+            </View>
+          )}
+          <View style={styles.iconBadge}>
+            <Ionicons name="camera" size={14} color="#fff" />
+          </View>
+        </TouchableOpacity>
+
+        {/* 種別 */}
         <View style={styles.avatarRow}>
           {SPECIES_OPTIONS.map(s => (
             <TouchableOpacity
@@ -155,6 +182,18 @@ const styles = StyleSheet.create({
     textAlign:  'center',
     marginTop:  6,
     marginBottom: 32,
+  },
+  iconContainer: { position: 'relative', marginBottom: 24, alignSelf: 'center' },
+  iconImage: { width: 88, height: 88, borderRadius: 44 },
+  iconPlaceholder: {
+    width: 88, height: 88, borderRadius: 44,
+    backgroundColor: DS.colors.border, alignItems: 'center', justifyContent: 'center', gap: 4,
+  },
+  iconPlaceholderText: { fontSize: 11, color: DS.colors.textHint },
+  iconBadge: {
+    position: 'absolute', bottom: 0, right: 0,
+    width: 26, height: 26, borderRadius: 13,
+    backgroundColor: DS.colors.accent, alignItems: 'center', justifyContent: 'center',
   },
   avatarRow: {
     flexDirection:  'row',

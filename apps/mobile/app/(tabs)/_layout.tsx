@@ -28,7 +28,7 @@ function PetPillHeader() {
       onPress={() => router.push('/pet-select')}
       activeOpacity={0.8}
     >
-      <PetAvatar species={species} iconUri={selectedPet?.icon_uri} size={28} />
+      <PetAvatar species={species} iconUri={selectedPet?.icon_uri} size={32} bg={DS.colors.pawWarm} />
       <Text style={styles.petPillName}>{selectedPet?.name ?? '—'}</Text>
       <Ionicons name="chevron-down" size={10} color={DS.colors.textHint} />
     </TouchableOpacity>

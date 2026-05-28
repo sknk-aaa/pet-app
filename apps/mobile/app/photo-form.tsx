@@ -8,6 +8,7 @@ import {
   StyleSheet,
   Alert,
   ActionSheetIOS,
+  Modal,
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -55,8 +56,9 @@ export default function PhotoForm() {
   const [featuredCandidateId, setFeaturedCandidateId] = useState<string | null>(null);
   const [featuredStatus, setFeaturedStatus] = useState<FeaturedStatus | null>(null);
   const [awaitingFeaturedLogin, setAwaitingFeaturedLogin] = useState(false);
-  const [saving,   setSaving]   = useState(false);
-  const [withdrawing, setWithdrawing] = useState(false);
+  const [saving,          setSaving]          = useState(false);
+  const [withdrawing,     setWithdrawing]     = useState(false);
+  const [petModalVisible, setPetModalVisible] = useState(false);
 
   const initialPet = selectedPetId ? (pets.find(p => p.id === selectedPetId) ?? pets[0]) : pets[0];
   const [selectedPets, setSelectedPets] = useState<import('@/types').Pet[]>(
@@ -367,23 +369,7 @@ export default function PhotoForm() {
               {pets.filter(p => !selectedPets.some(sp => sp.id === p.id)).length > 0 && (
                 <TouchableOpacity
                   style={styles.addPetBtn}
-                  onPress={() => {
-                    const remaining = pets.filter(p => !selectedPets.some(sp => sp.id === p.id));
-                    if (Platform.OS === 'ios') {
-                      ActionSheetIOS.showActionSheetWithOptions(
-                        { options: ['キャンセル', ...remaining.map(p => p.name)], cancelButtonIndex: 0 },
-                        i => {
-                          if (i === 0) return;
-                          setSelectedPets(prev => [...prev, remaining[i - 1]]);
-                        }
-                      );
-                    } else {
-                      Alert.alert('ペットを追加', '', remaining.map(p => ({
-                        text: p.name,
-                        onPress: () => setSelectedPets(prev => [...prev, p]),
-                      })));
-                    }
-                  }}
+                  onPress={() => setPetModalVisible(true)}
                 >
                   <Ionicons name="add" size={15} color={DS.colors.accent} />
                   <Text style={styles.addPetBtnText}>追加</Text>
@@ -423,16 +409,15 @@ export default function PhotoForm() {
               <TouchableOpacity
                 style={styles.addTagBtn}
                 onPress={() => {
-                  if (Platform.OS === 'ios') {
-                    ActionSheetIOS.showActionSheetWithOptions(
-                      { options: ['キャンセル', ...OTHER_TAGS], cancelButtonIndex: 0 },
-                      i => { if (i > 0) setTag(OTHER_TAGS[i - 1]); }
-                    );
-                  } else {
-                    Alert.alert('タグを選択', '', OTHER_TAGS.map(t => ({
-                      text: t, onPress: () => setTag(t),
-                    })));
-                  }
+                  Alert.prompt(
+                    '記念日タグ',
+                    'タグ名を入力してください',
+                    [
+                      { text: 'キャンセル', style: 'cancel' },
+                      { text: '追加', onPress: (text) => { if (text?.trim()) setTag(text.trim()); } },
+                    ],
+                    'plain-text'
+                  );
                 }}
               >
                 <Ionicons name="add" size={15} color={DS.colors.textMid} />
@@ -500,6 +485,47 @@ export default function PhotoForm() {
           <Text style={styles.saveBtnText}>{saving ? '保存中…' : '保存する'}</Text>
         </TouchableOpacity>
       </ScrollView>
+
+      {/* ── ペット選択モーダル ── */}
+      <Modal
+        visible={petModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setPetModalVisible(false)}
+      >
+        <TouchableOpacity
+          style={styles.petModalBackdrop}
+          activeOpacity={1}
+          onPress={() => setPetModalVisible(false)}
+        />
+        <View style={styles.petSheet}>
+          <View style={styles.petSheetHandle} />
+          <Text style={styles.petSheetTitle}>ペットを追加</Text>
+          {pets.filter(p => !selectedPets.some(sp => sp.id === p.id)).map(pet => (
+            <TouchableOpacity
+              key={pet.id}
+              style={styles.petSheetRow}
+              onPress={() => {
+                setSelectedPets(prev => [...prev, pet]);
+                setPetModalVisible(false);
+              }}
+              activeOpacity={0.7}
+            >
+              <PetAvatar
+                species={SPECIES_DB_TO_DISPLAY[pet.species]}
+                iconUri={pet.icon_uri}
+                size={44}
+                bg={DS.colors.pawWarm}
+              />
+              <Text style={styles.petSheetName}>{pet.name}</Text>
+              <Ionicons name="add-circle-outline" size={22} color={DS.colors.accent} />
+            </TouchableOpacity>
+          ))}
+          <TouchableOpacity style={styles.petSheetCancel} onPress={() => setPetModalVisible(false)}>
+            <Text style={styles.petSheetCancelText}>キャンセル</Text>
+          </TouchableOpacity>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -641,6 +667,49 @@ const styles = StyleSheet.create({
     borderColor:       DS.colors.border,
   },
   addTagBtnText: { fontSize: 13, color: DS.colors.textMid },
+
+  petModalBackdrop: {
+    flex:            1,
+    backgroundColor: 'rgba(44,26,14,0.35)',
+  },
+  petSheet: {
+    backgroundColor:      DS.colors.bg,
+    borderTopLeftRadius:  24,
+    borderTopRightRadius: 24,
+    paddingHorizontal:    20,
+    paddingTop:           12,
+    paddingBottom:        40,
+    gap:                  4,
+  },
+  petSheetHandle: {
+    width:           40,
+    height:          4,
+    borderRadius:    2,
+    backgroundColor: DS.colors.border,
+    alignSelf:       'center',
+    marginBottom:    12,
+  },
+  petSheetTitle: {
+    fontSize:      17,
+    fontWeight:    '700',
+    color:         DS.colors.text,
+    marginBottom:  8,
+  },
+  petSheetRow: {
+    flexDirection:  'row',
+    alignItems:     'center',
+    gap:            14,
+    paddingVertical: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: DS.colors.border,
+  },
+  petSheetName: { flex: 1, fontSize: 16, fontWeight: '600', color: DS.colors.text },
+  petSheetCancel: {
+    alignItems:      'center',
+    paddingVertical: 14,
+    marginTop:       4,
+  },
+  petSheetCancelText: { fontSize: 15, color: DS.colors.textMid },
 
   toggleRow:  { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
   toggleInfo: { flex: 1, paddingRight: 12, gap: 4 },

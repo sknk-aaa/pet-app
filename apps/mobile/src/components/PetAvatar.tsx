@@ -6,6 +6,7 @@ type Props = {
   size?: number;
   species?: string;
   iconUri?: string | null;
+  bg?: string;
 };
 
 const SPECIES_EMOJI: Record<string, string> = {
@@ -17,7 +18,7 @@ const SPECIES_EMOJI: Record<string, string> = {
   その他:     '🐾',
 };
 
-export function PetAvatar({ size = 44, species = 'ねこ', iconUri }: Props) {
+export function PetAvatar({ size = 44, species = 'ねこ', iconUri, bg }: Props) {
   const emoji = SPECIES_EMOJI[species] ?? '🐾';
   const fontSize = size * 0.48;
 
@@ -26,9 +27,10 @@ export function PetAvatar({ size = 44, species = 'ねこ', iconUri }: Props) {
       style={[
         styles.circle,
         {
-          width:  size,
-          height: size,
+          width:        size,
+          height:       size,
           borderRadius: size / 2,
+          ...(bg ? { backgroundColor: bg } : {}),
         },
       ]}
     >

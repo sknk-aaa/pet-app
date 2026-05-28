@@ -141,6 +141,7 @@ export default function Calendar() {
 
       {/* ── Row2: ストリーク（中央）+ グリッドボタン（右端） ── */}
       <View style={styles.statsRow}>
+        <View style={{ flex: 1 }} />
         <View style={styles.statsPill}>
           <PawIcon size={15} color={DS.colors.accent} />
           <Text style={styles.statsLabel}>連続</Text>
@@ -151,9 +152,11 @@ export default function Calendar() {
           <Text style={styles.statsSage}>{entries.length}</Text>
           <Text style={styles.statsLabel}>枚</Text>
         </View>
-        <TouchableOpacity style={styles.gridViewBtn} onPress={() => router.push('/photo-grid')}>
-          <Ionicons name="grid-outline" size={20} color={DS.colors.textMid} />
-        </TouchableOpacity>
+        <View style={{ flex: 1, alignItems: 'flex-end' }}>
+          <TouchableOpacity style={styles.gridViewBtn} onPress={() => router.push('/photo-grid')}>
+            <Ionicons name="grid-outline" size={20} color={DS.colors.textMid} />
+          </TouchableOpacity>
+        </View>
       </View>
 
 
@@ -336,6 +339,7 @@ const styles = StyleSheet.create({
   todayInCardText: { fontSize: 14, fontWeight: '600', color: DS.colors.accent },
 
   statsRow: {
+    flexDirection:     'row',
     alignItems:        'center',
     paddingHorizontal: 16,
     paddingBottom:     8,
@@ -351,11 +355,7 @@ const styles = StyleSheet.create({
     borderWidth:       1,
     borderColor:       DS.colors.border,
   },
-  gridViewBtn: {
-    position: 'absolute',
-    right:    16,
-    padding:  4,
-  },
+  gridViewBtn: { padding: 4 },
   statsLabel:   { fontSize: 13, color: DS.colors.textMid },
   statsAccent:  { fontSize: 17, fontWeight: '700', color: DS.colors.accent },
   statsSage:    { fontSize: 17, fontWeight: '700', color: DS.colors.sage },

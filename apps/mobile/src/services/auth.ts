@@ -40,34 +40,41 @@ export async function signInWithGoogle(): Promise<void> {
   if (oauthError || !oauthData.url) throw oauthError ?? new Error('OAuth URL が取得できませんでした');
 
   const result = await WebBrowser.openAuthSessionAsync(oauthData.url, GOOGLE_REDIRECT_URI);
-  if (result.type !== 'success') throw new Error('Googleログインがキャンセルされました');
 
-  const url = new URL(result.url);
+  if (result.type !== 'success') {
+    throw new Error(`ブラウザ結果: ${result.type}`);
+  }
 
-  // PKCE flow: ?code=xxx
-  const code = url.searchParams.get('code');
+  const resultUrl = result.url;
+
+  // new URL() はカスタムスキームで失敗するため正規表現でパース
+  const queryMatch = resultUrl.match(/\?([^#]*)/);
+  const queryParams = new URLSearchParams(queryMatch?.[1] ?? '');
+  const code = queryParams.get('code');
+
   if (code) {
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-    if (error) throw error;
+    if (error) throw new Error(`exchangeCodeForSession エラー: ${error.message}`);
     if (data.user?.id) loginRevenueCat(data.user.id).catch(() => {});
     return;
   }
 
-  // Implicit flow: #access_token=xxx&refresh_token=xxx
-  const hash = new URLSearchParams(url.hash.replace('#', ''));
-  const accessToken = hash.get('access_token');
-  const refreshToken = hash.get('refresh_token');
+  const hashMatch = resultUrl.match(/#(.*)/);
+  const hashParams = new URLSearchParams(hashMatch?.[1] ?? '');
+  const accessToken = hashParams.get('access_token');
+  const refreshToken = hashParams.get('refresh_token');
+
   if (accessToken) {
     const { data, error } = await supabase.auth.setSession({
       access_token: accessToken,
       refresh_token: refreshToken ?? '',
     });
-    if (error) throw error;
+    if (error) throw new Error(`setSession エラー: ${error.message}`);
     if (data.user?.id) loginRevenueCat(data.user.id).catch(() => {});
     return;
   }
 
-  throw new Error(`認証情報が取得できませんでした: ${result.url}`);
+  throw new Error(`URL パース失敗: ${resultUrl}`);
 }
 
 export async function signInWithPassword(email: string, password: string): Promise<void> {

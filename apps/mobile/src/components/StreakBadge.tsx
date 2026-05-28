@@ -30,9 +30,9 @@ const styles = StyleSheet.create({
   pill: {
     height:          32,
     borderRadius:    16,
-    backgroundColor: '#FEF4EC',
+    backgroundColor: 'rgba(255, 245, 235, 0.55)',
     borderWidth:     1,
-    borderColor:     '#F0DECE',
+    borderColor:     'rgba(240, 220, 200, 0.4)',
     flexDirection:   'row',
     alignItems:      'center',
     paddingLeft:     18,
@@ -46,9 +46,9 @@ const styles = StyleSheet.create({
     color:      DS.home.textSoft,
   },
   count: {
-    fontFamily: DS.font.medium,
-    fontSize:   13,
-    color:      DS.home.textSoft,
+    fontFamily: DS.font.bold,
+    fontSize:   15,
+    color:      DS.home.accent,
   },
   note: {
     fontFamily: DS.font.regular,

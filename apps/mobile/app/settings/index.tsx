@@ -272,7 +272,7 @@ export default function Settings() {
           />
           <SettingRow
             label="レビューして応援する"
-            onPress={() => Linking.openURL('https://apps.apple.com/app/id__APP_ID__?action=write-review')}
+            onPress={() => Linking.openURL('https://apps.apple.com/app/id6774140775?action=write-review')}
           />
           <SettingRow
             label="プライバシーポリシー"

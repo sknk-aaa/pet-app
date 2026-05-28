@@ -53,9 +53,6 @@ export function useToggleReaction(featuredPetId: string) {
         queryClient.setQueryData(['featured_pet_today'], ctx.prev);
       }
     },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['featured_pet_today'] });
-    },
   });
 }
 

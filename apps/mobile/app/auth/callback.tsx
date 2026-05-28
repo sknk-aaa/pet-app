@@ -13,13 +13,15 @@ export default function AuthCallback() {
       supabase.auth
         .verifyOtp({ token_hash, type: type as 'email' })
         .then(({ error }) => {
-          if (error) console.error('[AuthCallback]', error);
-        })
-        .finally(() => {
-          router.dismissAll();
+          if (error) {
+            console.error('[AuthCallback]', error);
+            router.replace('/login');
+          } else {
+            router.replace('/(tabs)');
+          }
         });
     } else {
-      router.dismissAll();
+      router.replace('/(tabs)');
     }
   }, []);
 

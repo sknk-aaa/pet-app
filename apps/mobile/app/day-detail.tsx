@@ -58,7 +58,7 @@ export default function DayDetail() {
         </View>
       ) : (
         <ScrollView contentContainerStyle={styles.scroll}>
-          <Photo style={styles.photo} uri={entry.image_uri} resizeMode="contain" />
+          <Photo style={styles.photo} uri={entry.image_uri} autoAspect />
 
           <View style={styles.card}>
             {petNames ? <Text style={styles.petName}>{petNames}</Text> : null}
@@ -98,7 +98,7 @@ const styles = StyleSheet.create({
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   emptyText: { fontSize: 15, color: DS.colors.textMid },
   scroll: { paddingHorizontal: 16, paddingBottom: 32, gap: 16 },
-  photo: { width: '100%', aspectRatio: 3 / 4, backgroundColor: '#111', borderRadius: DS.radius.card },
+  photo: { width: '100%', borderRadius: DS.radius.card },
   card: {
     backgroundColor: DS.colors.card, borderRadius: DS.radius.card,
     padding: 20, gap: 10, ...DS.shadow.card,

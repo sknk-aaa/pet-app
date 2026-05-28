@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Image, StyleSheet, StyleProp, ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -8,6 +8,7 @@ type Props = {
   radius?: number;
   uri?: string | null;
   resizeMode?: 'cover' | 'contain' | 'stretch' | 'center';
+  autoAspect?: boolean;
 };
 
 const WARM_GRADIENT: [string, string, string, string] = [
@@ -17,10 +18,20 @@ const WARM_GRADIENT: [string, string, string, string] = [
   '#E8D098',
 ];
 
-export function Photo({ style, aspectRatio, radius = 16, uri, resizeMode = 'cover' }: Props) {
+export function Photo({ style, aspectRatio, radius = 16, uri, resizeMode = 'cover', autoAspect = false }: Props) {
+  const [computedAspect, setComputedAspect] = useState<number | undefined>(undefined);
+
+  useEffect(() => {
+    if (autoAspect && uri) {
+      Image.getSize(uri, (w, h) => setComputedAspect(w / h));
+    }
+  }, [uri, autoAspect]);
+
+  const resolvedAspect = autoAspect ? computedAspect : aspectRatio;
+
   const baseStyle: ViewStyle = {
     borderRadius: radius,
-    ...(aspectRatio != null ? { aspectRatio } : {}),
+    ...(resolvedAspect != null ? { aspectRatio: resolvedAspect } : {}),
   };
   const flatStyle = StyleSheet.flatten([baseStyle, style]) ?? baseStyle;
 

@@ -17,13 +17,11 @@ import { DS } from '@/theme';
 import { PetAvatar } from '@/components/PetAvatar';
 
 const MAX_PETS_FREE = 1;
-const MAX_PETS_PRO = 10;
 
 export default function Pets() {
   const pets = usePets();
   const isPro = useAuthStore(state => state.isPro);
-  const maxPets = isPro ? MAX_PETS_PRO : MAX_PETS_FREE;
-  const canAddPet = pets.length < maxPets;
+  const canAddPet = isPro || pets.length < MAX_PETS_FREE;
 
   const handleAdd = () => {
     if (!canAddPet) {

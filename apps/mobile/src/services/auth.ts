@@ -43,12 +43,31 @@ export async function signInWithGoogle(): Promise<void> {
   if (result.type !== 'success') throw new Error('Googleログインがキャンセルされました');
 
   const url = new URL(result.url);
-  const code = url.searchParams.get('code');
-  if (!code) throw new Error('認証コードが取得できませんでした');
 
-  const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-  if (error) throw error;
-  if (data.user?.id) loginRevenueCat(data.user.id).catch(() => {});
+  // PKCE flow: ?code=xxx
+  const code = url.searchParams.get('code');
+  if (code) {
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+    if (error) throw error;
+    if (data.user?.id) loginRevenueCat(data.user.id).catch(() => {});
+    return;
+  }
+
+  // Implicit flow: #access_token=xxx&refresh_token=xxx
+  const hash = new URLSearchParams(url.hash.replace('#', ''));
+  const accessToken = hash.get('access_token');
+  const refreshToken = hash.get('refresh_token');
+  if (accessToken) {
+    const { data, error } = await supabase.auth.setSession({
+      access_token: accessToken,
+      refresh_token: refreshToken ?? '',
+    });
+    if (error) throw error;
+    if (data.user?.id) loginRevenueCat(data.user.id).catch(() => {});
+    return;
+  }
+
+  throw new Error(`認証情報が取得できませんでした: ${result.url}`);
 }
 
 export async function signInWithPassword(email: string, password: string): Promise<void> {

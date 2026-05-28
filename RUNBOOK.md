@@ -78,6 +78,11 @@ iPhone アプリ（Expo / React Native）
 - 削除・再作成した場合は Supabase の Push 設定を更新する
   - Dashboard → Project Settings → Edge Functions の Secret に `EXPO_ACCESS_TOKEN` を再設定
 
+### Apple OAuth Secret Key（6ヶ月ごと・現在は未使用）
+- Supabase の Apple 認証設定に Secret Key フィールドがあるが、**ネイティブ iOS 認証のみなので現在は空欄で正しい**
+- 将来 Web ブラウザからの Sign in with Apple を追加した場合は Secret Key が必要になり、6ヶ月ごとの更新が必要
+- 更新場所: Supabase Dashboard → Authentication → Providers → Apple → Secret Key
+
 ### Google OAuth（有効期限なし）
 - Google Cloud Console でプロジェクトを削除しない限り有効
 - Client ID / Secret の確認: https://console.cloud.google.com → 認証情報

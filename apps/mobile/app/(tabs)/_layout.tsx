@@ -75,7 +75,7 @@ export default function TabsLayout() {
 
 const styles = StyleSheet.create({
   header: {
-    height:          56,
+    height:          110,
     backgroundColor: DS.colors.bg,
   },
   headerLeft:  { paddingLeft: 16 },

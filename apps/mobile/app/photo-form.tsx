@@ -23,6 +23,7 @@ import { PetAvatar } from '@/components/PetAvatar';
 import { createEntry, getEntryByDate, updateEntry, updateEntryFeaturedState } from '@/db/entries';
 import { addPendingUpload, removePendingFeaturedCandidate } from '@/db/pendingUploads';
 import { getStreakState } from '@/db/streak';
+import * as FileSystem from 'expo-file-system';
 import { pickPhoto, takePhoto, processPhoto, saveToMediaLibrary } from '@/services/photo';
 import { flushPendingUploads } from '@/services/uploadQueue';
 import { supabase } from '@/services/supabase';
@@ -43,6 +44,8 @@ export default function PhotoForm() {
 
   const [existingEntryId, setExistingEntryId] = useState<string | null>(null);
   const [imageUri, setImageUri] = useState<string | null>(null);
+  const [originalImageUri, setOriginalImageUri] = useState<string | null>(null);
+  const [originalThumbnailUri, setOriginalThumbnailUri] = useState<string | null>(null);
   const [title,    setTitle]    = useState('');
   const [memo,     setMemo]     = useState('');
   const [tag,      setTag]      = useState<string | null>(null);
@@ -59,6 +62,8 @@ export default function PhotoForm() {
       if (!entry) return;
       setExistingEntryId(entry.id);
       setImageUri(entry.image_uri);
+      setOriginalImageUri(entry.image_uri);
+      setOriginalThumbnailUri(entry.thumbnail_uri);
       setTitle(entry.title);
       setMemo(entry.memo ?? '');
       setFeatured(entry.featured_submitted === 1);
@@ -108,9 +113,27 @@ export default function PhotoForm() {
     setSaving(true);
     try {
       const entryId = existingEntryId ?? generateUUID();
-      const { imageUri: finalImageUri, thumbnailUri } = await processPhoto(imageUri, entryId);
+      const photoChanged = imageUri !== originalImageUri;
 
-      if (settings.save_to_camera_roll) {
+      let finalImageUri: string;
+      let thumbnailUri: string;
+      if (photoChanged) {
+        const fileKey = existingEntryId ? `${existingEntryId}_${Date.now()}` : entryId;
+        const processed = await processPhoto(imageUri, fileKey);
+        finalImageUri = processed.imageUri;
+        thumbnailUri  = processed.thumbnailUri;
+        if (existingEntryId && originalImageUri) {
+          await FileSystem.deleteAsync(originalImageUri, { idempotent: true }).catch(() => {});
+          if (originalThumbnailUri) {
+            await FileSystem.deleteAsync(originalThumbnailUri, { idempotent: true }).catch(() => {});
+          }
+        }
+      } else {
+        finalImageUri = imageUri!;
+        thumbnailUri  = originalThumbnailUri ?? '';
+      }
+
+      if (settings.save_to_camera_roll && photoChanged) {
         await saveToMediaLibrary(finalImageUri).catch(() => {});
       }
 
@@ -122,7 +145,7 @@ export default function PhotoForm() {
       if (existingEntryId) {
         await updateEntry(existingEntryId, {
           title: title.trim(), memo: memo.trim() || null,
-          image_uri: finalImageUri, thumbnail_uri: thumbnailUri,
+          ...(photoChanged ? { image_uri: finalImageUri, thumbnail_uri: thumbnailUri } : {}),
           anniversary_tag_type: tagType,
           anniversary_tag_name: tagType ? tag : null,
         });

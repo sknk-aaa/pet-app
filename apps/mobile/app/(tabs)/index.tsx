@@ -97,7 +97,17 @@ function RecordedView({ entry, streak }: { entry: EntryWithPets; streak: number 
 
           {/* カード下部：情報エリア */}
           <View style={styles.cardBody}>
-            <Text style={styles.infoTitle}>{entry.title}</Text>
+            <View style={styles.titleRow}>
+              <Text style={styles.infoTitle}>{entry.title}</Text>
+              <TouchableOpacity
+                style={styles.editBtn}
+                onPress={() => router.push('/photo-form')}
+                activeOpacity={0.75}
+              >
+                <Ionicons name="create-outline" size={14} color={DS.home.accent} />
+                <Text style={styles.editText}>編集</Text>
+              </TouchableOpacity>
+            </View>
 
             {entry.memo ? (
               <Text style={styles.infoMemo}>{entry.memo}</Text>
@@ -124,30 +134,13 @@ function RecordedView({ entry, streak }: { entry: EntryWithPets; streak: number 
         </View>
 
         {/* ── ストリークバッジ（写真右上） ── */}
-        {streak >= 1 && (
+        {streak >= 2 && (
           <View style={styles.streakOverlay}>
             <StreakBadge count={streak} />
           </View>
         )}
       </View>
 
-      {/* ── アクション行 ── */}
-      <View style={styles.actionRow}>
-        <TouchableOpacity
-          style={styles.editBtn}
-          onPress={() => router.push('/photo-form')}
-          activeOpacity={0.75}
-        >
-          <Ionicons name="create-outline" size={14} color={DS.home.accent} />
-          <Text style={styles.editText}>編集</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => router.push('/(tabs)/calendar')}
-          activeOpacity={0.75}
-        >
-          <Text style={styles.calLinkText}>カレンダーで見返す ›</Text>
-        </TouchableOpacity>
-      </View>
     </>
   );
 }
@@ -301,7 +294,13 @@ const styles = StyleSheet.create({
     paddingBottom:          18,
     gap:                    12,
   },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems:    'flex-start',
+    gap:           8,
+  },
   infoTitle: {
+    flex:          1,
     fontWeight:    'bold',
     fontSize:      19,
     color:         DS.home.text,
@@ -354,31 +353,20 @@ const styles = StyleSheet.create({
     color:    DS.home.accent,
   },
 
-  // ── アクション行 ──
-  actionRow: {
-    flexDirection:     'row',
-    alignItems:        'center',
-    justifyContent:    'space-between',
-    paddingHorizontal: 22,
-    marginBottom:      8,
-  },
   editBtn: {
-    height:        34,
-    borderRadius:  17,
-    borderWidth:   1,
-    borderColor:   DS.home.accent,
-    flexDirection: 'row',
-    alignItems:    'center',
-    gap:           5,
-    paddingLeft:   12,
-    paddingRight:  14,
+    flexDirection:   'row',
+    alignItems:      'center',
+    gap:             4,
+    borderRadius:    DS.radius.pill,
+    borderWidth:     1,
+    borderColor:     DS.home.accent,
+    paddingVertical: 4,
+    paddingLeft:     8,
+    paddingRight:    10,
+    marginTop:       2,
   },
   editText: {
-    fontSize: 13,
-    color:    DS.home.accent,
-  },
-  calLinkText: {
-    fontSize: 13,
+    fontSize: 12,
     color:    DS.home.accent,
   },
 

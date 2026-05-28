@@ -1,5 +1,5 @@
 import { Tabs, router } from 'expo-router';
-import { TouchableOpacity, Text, StyleSheet, View } from 'react-native';
+import { TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { CustomTabBar } from '@/components/CustomTabBar';
 import { PetAvatar } from '@/components/PetAvatar';
@@ -28,7 +28,7 @@ function PetPillHeader() {
       onPress={() => router.push('/pet-select')}
       activeOpacity={0.8}
     >
-      <PetAvatar species={species} iconUri={selectedPet?.icon_uri} size={22} />
+      <PetAvatar species={species} iconUri={selectedPet?.icon_uri} size={28} />
       <Text style={styles.petPillName}>{selectedPet?.name ?? '—'}</Text>
       <Ionicons name="chevron-down" size={10} color={DS.colors.textHint} />
     </TouchableOpacity>
@@ -53,6 +53,7 @@ export default function TabsLayout() {
           title:            'カレンダー',
           headerTitle:      'カレンダー',
           headerTitleStyle: styles.calendarTitle,
+          headerLeft:       () => <SettingsHeaderButton />,
         }}
       />
       <Tabs.Screen
@@ -66,8 +67,8 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="today-pet"
         options={{
-          title:      '今日のペット',
-          headerLeft: () => <SettingsHeaderButton />,
+          title:        '今日のペット',
+          headerShown:  false,
         }}
       />
     </Tabs>
@@ -79,18 +80,18 @@ const styles = StyleSheet.create({
     height:          110,
     backgroundColor: DS.colors.bg,
   },
-  headerLeft:  { paddingLeft: 16 },
-  headerRight: { paddingRight: 14 },
-  headerButton:    { padding: 6 },
-  calendarTitle:   { fontSize: 20, fontWeight: '700', color: DS.colors.text },
+  headerLeft:    { paddingLeft: 16 },
+  headerRight:   { paddingRight: 14 },
+  headerButton:  { padding: 6 },
+  calendarTitle: { fontSize: 20, fontWeight: '700', color: DS.colors.text },
   petPill: {
     flexDirection:   'row',
     alignItems:      'center',
     gap:             5,
     backgroundColor: DS.colors.card,
     borderRadius:    DS.radius.pill,
-    paddingVertical: 5,
-    paddingLeft:     5,
+    paddingVertical: 4,
+    paddingLeft:     4,
     paddingRight:    9,
     borderWidth:     1,
     borderColor:     DS.colors.border,

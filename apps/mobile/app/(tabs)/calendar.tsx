@@ -139,7 +139,7 @@ export default function Calendar() {
         </View>
       </View>
 
-      {/* ── Row2: ストリーク + グリッドボタン ── */}
+      {/* ── Row2: ストリーク（中央）+ グリッドボタン（右端） ── */}
       <View style={styles.statsRow}>
         <View style={styles.statsPill}>
           <PawIcon size={15} color={DS.colors.accent} />
@@ -155,6 +155,7 @@ export default function Calendar() {
           <Ionicons name="grid-outline" size={20} color={DS.colors.textMid} />
         </TouchableOpacity>
       </View>
+
 
       <ScrollView contentContainerStyle={styles.scroll}>
         {/* Calendar grid */}
@@ -335,11 +336,9 @@ const styles = StyleSheet.create({
   todayInCardText: { fontSize: 14, fontWeight: '600', color: DS.colors.accent },
 
   statsRow: {
-    flexDirection:     'row',
     alignItems:        'center',
     paddingHorizontal: 16,
     paddingBottom:     8,
-    gap:               10,
   },
   statsPill: {
     flexDirection:     'row',
@@ -352,11 +351,15 @@ const styles = StyleSheet.create({
     borderWidth:       1,
     borderColor:       DS.colors.border,
   },
+  gridViewBtn: {
+    position: 'absolute',
+    right:    16,
+    padding:  4,
+  },
   statsLabel:   { fontSize: 13, color: DS.colors.textMid },
   statsAccent:  { fontSize: 17, fontWeight: '700', color: DS.colors.accent },
   statsSage:    { fontSize: 17, fontWeight: '700', color: DS.colors.sage },
   statsDivider: { width: 1, height: 18, backgroundColor: DS.colors.border, marginHorizontal: 6 },
-  gridViewBtn:  { padding: 4 },
 
   petPill: {
     flexDirection:   'row',

@@ -48,7 +48,7 @@ export default function TodayPet() {
     : 0;
 
   return (
-    <SafeAreaView style={styles.safe} edges={[]}>
+    <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.header}>
         <Text style={styles.headerDate}>{formatDisplayDate(today)}</Text>
         <Text style={styles.heading}>今日のペット</Text>

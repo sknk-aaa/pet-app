@@ -78,7 +78,7 @@ export default function TodayPet() {
           <>
             {/* Main photo card */}
             <Card style={styles.photoCard} p={0}>
-              <Photo style={styles.photo} uri={pet.image_url} />
+              <Photo style={styles.photo} uri={pet.image_url} resizeMode="contain" />
               <View style={styles.petInfo}>
                 <Text style={styles.petName}>{pet.pet_names_display}</Text>
                 <Text style={styles.petTitle}>{pet.title}</Text>
@@ -169,7 +169,7 @@ const styles = StyleSheet.create({
   emptySubtitle:    { fontSize: 13, color: DS.colors.textMid },
 
   photoCard: { overflow: 'hidden' },
-  photo:     { width: '100%', height: 260, borderRadius: 0 },
+  photo:     { width: '100%', aspectRatio: 3 / 4, backgroundColor: '#111', borderRadius: 0 },
   petInfo:   { padding: 14, paddingBottom: 16, gap: 10 },
   petName:   { fontSize: 20, fontWeight: '700', color: DS.colors.text },
   petTitle:  { fontSize: 14, color: DS.colors.textMid },

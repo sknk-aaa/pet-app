@@ -214,21 +214,22 @@ function MemoryCard({ entry }: { entry: Entry }) {
 
 const styles = StyleSheet.create({
   safe:   { flex: 1, backgroundColor: DS.home.background },
-  scroll: { paddingBottom: 28 },
+  scroll: { paddingTop: 10, paddingBottom: 28 },
 
   // ── ヘッダー ──
   header: {
     flexDirection:     'row',
-    alignItems:        'center',
+    alignItems:        'flex-start',
     paddingHorizontal: 20,
     paddingTop:        6,
-    paddingBottom:     10,
+    paddingBottom:     16,
   },
   headerDate: {
     flex:       1,
     fontFamily: DS.font.regular,
     fontSize:   13,
     color:      DS.home.text,
+    paddingTop: 4,
   },
   headerTitle: {
     flex:          1,
@@ -237,10 +238,12 @@ const styles = StyleSheet.create({
     color:         DS.home.text,
     textAlign:     'center',
     letterSpacing: 0,
+    paddingTop:    18,
   },
   headerRight: {
     flex:       1,
     alignItems: 'flex-end',
+    paddingTop: 2,
   },
 
   // ── ストリーク ──
@@ -266,7 +269,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     overflow:     'hidden',
   },
-  photo: { width: '100%', height: 300 },
+  photo: { width: '100%', aspectRatio: 1 },
 
   // カード本文
   cardBody: {
@@ -277,9 +280,9 @@ const styles = StyleSheet.create({
   },
   infoTitle: {
     fontFamily:    DS.font.bold,
-    fontSize:      22,
+    fontSize:      19,
     color:         DS.home.text,
-    lineHeight:    30,
+    lineHeight:    27,
     letterSpacing: -0.3,
   },
   infoMemo: {
@@ -307,7 +310,7 @@ const styles = StyleSheet.create({
   },
   chipText: {
     fontFamily: DS.font.regular,
-    fontSize:   13,
+    fontSize:   12,
     color:      DS.home.text,
   },
 
@@ -343,7 +346,7 @@ const styles = StyleSheet.create({
     height:        34,
     borderRadius:  17,
     borderWidth:   1,
-    borderColor:   DS.home.outline,
+    borderColor:   DS.home.accent,
     flexDirection: 'row',
     alignItems:    'center',
     gap:           5,
@@ -353,12 +356,12 @@ const styles = StyleSheet.create({
   editText: {
     fontFamily: DS.font.regular,
     fontSize:   13,
-    color:      DS.home.textSoft,
+    color:      DS.home.accent,
   },
   calLinkText: {
     fontFamily: DS.font.regular,
     fontSize:   13,
-    color:      DS.home.textSoft,
+    color:      DS.home.accent,
   },
 
   // ── 未記録 ──

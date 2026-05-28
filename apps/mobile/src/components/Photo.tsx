@@ -7,6 +7,7 @@ type Props = {
   aspectRatio?: number;
   radius?: number;
   uri?: string | null;
+  resizeMode?: 'cover' | 'contain' | 'stretch' | 'center';
 };
 
 const WARM_GRADIENT: [string, string, string, string] = [
@@ -16,7 +17,7 @@ const WARM_GRADIENT: [string, string, string, string] = [
   '#E8D098',
 ];
 
-export function Photo({ style, aspectRatio, radius = 16, uri }: Props) {
+export function Photo({ style, aspectRatio, radius = 16, uri, resizeMode = 'cover' }: Props) {
   const baseStyle: ViewStyle = {
     borderRadius: radius,
     ...(aspectRatio != null ? { aspectRatio } : {}),
@@ -29,7 +30,7 @@ export function Photo({ style, aspectRatio, radius = 16, uri }: Props) {
         source={{ uri }}
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         style={flatStyle as any}
-        resizeMode="cover"
+        resizeMode={resizeMode}
       />
     );
   }

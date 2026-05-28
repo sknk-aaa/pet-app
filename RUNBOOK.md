@@ -161,6 +161,8 @@ Dashboard → Settings → Database → Create a new backup
 cd apps/mobile
 eas update --branch production --message "修正内容"
 ```
+- `runtimeVersion: appVersion`（`version: "1.0.0"`）を使用。version を変えると既存ビルドに OTA が当たらなくなる
+- 適用タイミング: 起動時にバックグラウンドでダウンロード → 次回起動で適用（2回起動が必要）
 
 ### パッケージ追加・ネイティブ変更がある場合
 新ビルドが必要。App Store の審査（通常 1〜3 日）が入る。
@@ -219,10 +221,13 @@ vercel --prod --yes --cwd /home/aaa/project/pet-app/apps/admin
 3. Secret Key は**空欄**であることを確認（JWT 形式のキーは不要）
 
 ### Google Sign In でログインできない
+Google ログインは `expo-web-browser` + `supabase.auth.signInWithOAuth` のブラウザ OAuth フローを使用。
 1. Supabase → Authentication → Providers → Google が有効か確認
-2. Supabase の iOS Client IDs フィールドに iOS クライアント ID が入っているか確認
-3. Google Cloud Console で OAuth クライアントがアクティブか確認
-4. EAS Secret `GOOGLE_IOS_CLIENT_ID` が正しい値か確認: `eas env:list`
+2. Google Cloud Console で Web OAuth クライアントがアクティブか確認
+3. Supabase の Redirect URLs に `mainichipet://auth/callback` が登録されているか確認
+4. `apps/mobile/src/services/auth.ts` の `signInWithGoogle` 関数を確認
+
+※ `@react-native-google-signin` は raw nonce を JS に返さないため signInWithIdToken は使用しない
 
 ### 管理画面にログインできない
 1. `app_metadata.is_admin` を確認:

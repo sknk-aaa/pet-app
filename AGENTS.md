@@ -159,7 +159,9 @@ pet-app/
 - **タイムゾーン**: Asia/Tokyo 固定。「今日」の判定は JST
 - **フォント**: カスタムフォント不使用。iOS システムフォントに任せる。`fontFamily` を指定しない
 - **パッケージ追加**: `npx expo install` を使う。`pnpm add` 直接は Expo SDK 互換性が壊れる
-- **expo-iap**: バージョン `2.9.7` 固定（それ以外はビルドエラー）
+- **IAP**: `expo-iap` は削除済み。`react-native-purchases`（RevenueCat）を使用
+- **Google ログイン**: `expo-web-browser` + `supabase.auth.signInWithOAuth` を使用。`@react-native-google-signin` の `signInWithIdToken` は nonce 問題で使用不可
+- **OTA**: `expo-updates` 導入済み。`runtimeVersion: appVersion`（1.0.0）。JS のみの変更は `eas update --branch production`
 - **EAS ビルド**: `set -a && source .env && set +a` で環境変数を手動ロードしてから実行
 - **コメント**: 原則不要。意図がコードだけでは伝わらない場合のみ書く
 - **`any` 禁止**。TypeScript の型安全性を優先する

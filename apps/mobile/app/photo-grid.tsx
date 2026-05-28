@@ -19,7 +19,7 @@ import type { CalendarEntryInfo } from '@/types';
 const COLS = 3;
 const GAP  = 2;
 
-type Section = { yearMonth: string; label: string; entries: CalendarEntryInfo[] };
+type Section = { yearMonth: string; year: number; month: number; entries: CalendarEntryInfo[] };
 
 function groupByMonth(entries: CalendarEntryInfo[]): Section[] {
   const map = new Map<string, CalendarEntryInfo[]>();
@@ -30,7 +30,7 @@ function groupByMonth(entries: CalendarEntryInfo[]): Section[] {
   }
   return Array.from(map.entries()).map(([ym, items]) => {
     const [y, m] = ym.split('-').map(Number);
-    return { yearMonth: ym, label: `${y}年${m}月`, entries: items };
+    return { yearMonth: ym, year: y, month: m, entries: items };
   });
 }
 
@@ -61,9 +61,12 @@ export default function PhotoGrid() {
         </View>
       ) : (
         <ScrollView contentContainerStyle={styles.scroll}>
-          {sections.map(section => (
+          {sections.map((section, i) => (
             <View key={section.yearMonth}>
-              <Text style={styles.sectionLabel}>{section.label}</Text>
+              {(i === 0 || sections[i - 1].year !== section.year) && (
+                <Text style={styles.yearLabel}>{section.year}年</Text>
+              )}
+              <Text style={styles.sectionLabel}>{section.month}月</Text>
               <View style={styles.grid}>
                 {section.entries.map(entry => (
                   <TouchableOpacity
@@ -102,12 +105,20 @@ const styles = StyleSheet.create({
   loader:   { flex: 1, alignItems: 'center', justifyContent: 'center' },
   empty:    { fontSize: 15, color: DS.colors.textHint },
   scroll:   { paddingBottom: 32 },
-  sectionLabel: {
-    fontSize:          15,
+  yearLabel: {
+    fontSize:          18,
     fontWeight:        '700',
     color:             DS.colors.text,
     paddingHorizontal: 14,
-    paddingTop:        18,
+    paddingTop:        20,
+    paddingBottom:     2,
+  },
+  sectionLabel: {
+    fontSize:          14,
+    fontWeight:        '600',
+    color:             DS.colors.textMid,
+    paddingHorizontal: 14,
+    paddingTop:        10,
     paddingBottom:     8,
   },
   grid: {

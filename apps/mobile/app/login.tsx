@@ -12,22 +12,40 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { signInWithEmail, signInWithApple, signInWithGoogle } from '@/services/auth';
+import { signInWithPassword, signUpWithEmail, signInWithApple, signInWithGoogle } from '@/services/auth';
 import { DS } from '@/theme';
 
-export default function Login() {
-  const [email,   setEmail]   = useState('');
-  const [sent,    setSent]    = useState(false);
-  const [loading, setLoading] = useState(false);
+type Mode = 'signin' | 'signup';
 
-  const handleEmailLogin = async () => {
-    if (!email.includes('@') || loading) return;
+export default function Login() {
+  const [mode,     setMode]     = useState<Mode>('signin');
+  const [email,    setEmail]    = useState('');
+  const [password, setPassword] = useState('');
+  const [loading,  setLoading]  = useState(false);
+  const [signedUp, setSignedUp] = useState(false);
+
+  const isValid = email.includes('@') && password.length >= 6;
+
+  const handleEmailSubmit = async () => {
+    if (!isValid || loading) return;
     setLoading(true);
     try {
-      await signInWithEmail(email.trim());
-      setSent(true);
-    } catch {
-      Alert.alert('エラー', 'メールの送信に失敗しました。もう一度お試しください。');
+      if (mode === 'signin') {
+        await signInWithPassword(email.trim(), password);
+        router.dismiss();
+      } else {
+        await signUpWithEmail(email.trim(), password);
+        setSignedUp(true);
+      }
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : '';
+      const isInvalidCreds = msg.includes('Invalid login credentials') || msg.includes('invalid_credentials');
+      Alert.alert(
+        'エラー',
+        mode === 'signin'
+          ? (isInvalidCreds ? 'メールアドレスまたはパスワードが正しくありません' : 'ログインに失敗しました')
+          : '登録に失敗しました。もう一度お試しください',
+      );
     } finally {
       setLoading(false);
     }
@@ -38,7 +56,7 @@ export default function Login() {
     setLoading(true);
     try {
       await signInWithApple();
-      router.back();
+      router.dismiss();
     } catch (e) {
       console.error('[Apple Login]', e);
       Alert.alert('エラー', 'Appleログインに失敗しました。');
@@ -52,7 +70,7 @@ export default function Login() {
     setLoading(true);
     try {
       await signInWithGoogle();
-      router.back();
+      router.dismiss();
     } catch (e) {
       console.error('[Google Login]', e);
       Alert.alert('エラー', 'Googleログインに失敗しました。');
@@ -76,40 +94,75 @@ export default function Login() {
         style={styles.body}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        {sent ? (
+        {signedUp ? (
           <View style={styles.sentView}>
             <Text style={styles.sentEmoji}>📬</Text>
-            <Text style={styles.sentTitle}>メールを送信しました</Text>
+            <Text style={styles.sentTitle}>確認メールを送信しました</Text>
             <Text style={styles.sentSub}>
-              {email} に届いたリンクからログインしてください
+              {email} に届いたリンクをタップして登録を完了してください
             </Text>
-            <TouchableOpacity style={styles.backBtn} onPress={() => setSent(false)}>
-              <Text style={styles.backBtnText}>メールアドレスを変更する</Text>
+            <TouchableOpacity style={styles.backBtn} onPress={() => { setSignedUp(false); setMode('signin'); }}>
+              <Text style={styles.backBtnText}>ログイン画面に戻る</Text>
             </TouchableOpacity>
           </View>
         ) : (
           <>
-            <Text style={styles.heading}>メールアドレスでログイン</Text>
-            <Text style={styles.sub}>
-              入力したアドレスにログインリンクを送ります
-            </Text>
+            {/* モード切り替え */}
+            <View style={styles.modeToggle}>
+              <TouchableOpacity
+                style={[styles.modeBtn, mode === 'signin' && styles.modeBtnActive]}
+                onPress={() => setMode('signin')}
+              >
+                <Text style={[styles.modeBtnText, mode === 'signin' && styles.modeBtnTextActive]}>
+                  ログイン
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modeBtn, mode === 'signup' && styles.modeBtnActive]}
+                onPress={() => setMode('signup')}
+              >
+                <Text style={[styles.modeBtnText, mode === 'signup' && styles.modeBtnTextActive]}>
+                  新規登録
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* メール + パスワード */}
             <TextInput
               style={styles.input}
               value={email}
               onChangeText={setEmail}
-              placeholder="example@mail.com"
+              placeholder="メールアドレス"
               placeholderTextColor={DS.colors.textHint}
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
             />
+            <TextInput
+              style={styles.input}
+              value={password}
+              onChangeText={setPassword}
+              placeholder="パスワード（6文字以上）"
+              placeholderTextColor={DS.colors.textHint}
+              secureTextEntry
+              autoCapitalize="none"
+            />
+
             <TouchableOpacity
-              style={[styles.button, (!email.includes('@') || loading) && styles.buttonDisabled]}
-              disabled={!email.includes('@') || loading}
-              onPress={handleEmailLogin}
+              style={[styles.button, (!isValid || loading) && styles.buttonDisabled]}
+              disabled={!isValid || loading}
+              onPress={handleEmailSubmit}
             >
-              <Text style={styles.buttonText}>リンクを送る</Text>
+              <Text style={styles.buttonText}>
+                {mode === 'signin' ? 'ログイン' : 'アカウントを作成'}
+              </Text>
             </TouchableOpacity>
+
+            <View style={styles.dividerRow}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>または</Text>
+              <View style={styles.dividerLine} />
+            </View>
 
             {Platform.OS === 'ios' && (
               <TouchableOpacity style={styles.socialBtn} onPress={handleAppleLogin} disabled={loading}>
@@ -129,118 +182,66 @@ export default function Login() {
 }
 
 const styles = StyleSheet.create({
-  safe: {
-    flex:            1,
-    backgroundColor: DS.colors.bg,
-  },
+  safe: { flex: 1, backgroundColor: DS.colors.bg },
   handle: {
-    width:           40,
-    height:           4,
-    borderRadius:     2,
-    backgroundColor:  DS.colors.border,
-    alignSelf:        'center',
-    marginTop:         8,
+    width: 40, height: 4, borderRadius: 2,
+    backgroundColor: DS.colors.border,
+    alignSelf: 'center', marginTop: 8,
   },
   nav: {
-    flexDirection:  'row',
-    alignItems:     'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical:   14,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: 20, paddingVertical: 14,
   },
-  navTitle: {
-    fontSize:   17,
-    fontWeight: '600',
-    color:      DS.colors.text,
+  navTitle: { fontSize: 17, fontWeight: '600', color: DS.colors.text },
+
+  body: { flex: 1, paddingHorizontal: 24, paddingTop: 8, gap: 12 },
+
+  modeToggle: {
+    flexDirection: 'row',
+    backgroundColor: DS.colors.border,
+    borderRadius: DS.radius.pill,
+    padding: 3,
+    marginBottom: 4,
   },
-  body: {
-    flex:    1,
-    paddingHorizontal: 24,
-    paddingTop:        24,
-    gap:               16,
+  modeBtn: {
+    flex: 1, paddingVertical: 8, borderRadius: DS.radius.pill, alignItems: 'center',
   },
-  heading: {
-    fontSize:   22,
-    fontWeight: '700',
-    color:      DS.colors.text,
-    textAlign:  'center',
-  },
-  sub: {
-    fontSize:   14,
-    color:      DS.colors.textMid,
-    textAlign:  'center',
-    lineHeight: 22,
-  },
+  modeBtnActive: { backgroundColor: DS.colors.card },
+  modeBtnText:   { fontSize: 14, fontWeight: '500', color: DS.colors.textMid },
+  modeBtnTextActive: { color: DS.colors.text, fontWeight: '600' },
+
   input: {
     backgroundColor: DS.colors.card,
-    borderRadius:    DS.radius.md,
-    borderWidth:     1,
-    borderColor:     DS.colors.border,
-    paddingHorizontal: 16,
-    paddingVertical:   14,
-    fontSize:          16,
-    color:             DS.colors.text,
-    marginTop:         8,
+    borderRadius: DS.radius.md,
+    borderWidth: 1, borderColor: DS.colors.border,
+    paddingHorizontal: 16, paddingVertical: 14,
+    fontSize: 16, color: DS.colors.text,
   },
   button: {
     backgroundColor: DS.colors.accent,
-    borderRadius:    DS.radius.pill,
-    paddingVertical: 16,
-    alignItems:      'center',
+    borderRadius: DS.radius.pill,
+    paddingVertical: 16, alignItems: 'center',
     ...DS.shadow.float,
   },
-  buttonDisabled: {
-    backgroundColor: DS.colors.accentPill,
-    shadowOpacity:   0,
-    elevation:       0,
-  },
-  buttonText: {
-    color:      '#fff',
-    fontSize:   17,
-    fontWeight: '700',
-  },
-  sentView: {
-    flex:        1,
-    alignItems:  'center',
-    justifyContent: 'center',
-    gap:         16,
-    paddingHorizontal: 24,
-  },
-  sentEmoji: { fontSize: 56 },
-  sentTitle: {
-    fontSize:   22,
-    fontWeight: '700',
-    color:      DS.colors.text,
-    textAlign:  'center',
-  },
-  sentSub: {
-    fontSize:   14,
-    color:      DS.colors.textMid,
-    textAlign:  'center',
-    lineHeight: 22,
-  },
-  backBtn: {
-    marginTop: 8,
-  },
-  backBtnText: {
-    fontSize:   14,
-    color:      DS.colors.accent,
-    fontWeight: '600',
-  },
+  buttonDisabled: { backgroundColor: DS.colors.accentPill, shadowOpacity: 0, elevation: 0 },
+  buttonText: { color: '#fff', fontSize: 17, fontWeight: '700' },
+
+  dividerRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginVertical: 4 },
+  dividerLine: { flex: 1, height: 1, backgroundColor: DS.colors.border },
+  dividerText: { fontSize: 13, color: DS.colors.textHint },
+
   socialBtn: {
-    flexDirection:   'row',
-    alignItems:      'center',
-    justifyContent:  'center',
-    gap:              8,
-    backgroundColor: DS.colors.card,
-    borderRadius:    DS.radius.pill,
-    paddingVertical: 14,
-    borderWidth:      1,
-    borderColor:      DS.colors.border,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 8, backgroundColor: DS.colors.card,
+    borderRadius: DS.radius.pill, paddingVertical: 14,
+    borderWidth: 1, borderColor: DS.colors.border,
   },
-  socialBtnText: {
-    fontSize:   16,
-    fontWeight: '600',
-    color:      DS.colors.text,
-  },
+  socialBtnText: { fontSize: 16, fontWeight: '600', color: DS.colors.text },
+
+  sentView: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16, paddingHorizontal: 24 },
+  sentEmoji: { fontSize: 56 },
+  sentTitle: { fontSize: 22, fontWeight: '700', color: DS.colors.text, textAlign: 'center' },
+  sentSub:   { fontSize: 14, color: DS.colors.textMid, textAlign: 'center', lineHeight: 22 },
+  backBtn:   { marginTop: 8 },
+  backBtnText: { fontSize: 14, color: DS.colors.accent, fontWeight: '600' },
 });

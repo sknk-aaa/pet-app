@@ -16,10 +16,10 @@ export default function AuthCallback() {
           if (error) console.error('[AuthCallback]', error);
         })
         .finally(() => {
-          router.replace('/(tabs)');
+          router.dismissAll();
         });
     } else {
-      router.replace('/(tabs)');
+      router.dismissAll();
     }
   }, []);
 

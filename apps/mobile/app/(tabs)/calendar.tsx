@@ -16,12 +16,13 @@ import { Card } from '@/components/Card';
 import { Photo } from '@/components/Photo';
 import { PetAvatar } from '@/components/PetAvatar';
 import { useMonthEntries } from '@/hooks/useEntries';
+import { useStreak } from '@/hooks/useStreak';
 import { useSelectedPet } from '@/hooks/usePets';
+import { PawIcon } from '@/components/icons/PawIcon';
 import {
   getTodayJST,
   getMonthStartDay,
   getMonthTotalDays,
-  formatMonthLabel,
 } from '@/utils/date';
 import { SPECIES_DB_TO_DISPLAY } from '@/utils/species';
 import type { CalendarEntryInfo } from '@/types';
@@ -52,7 +53,8 @@ export default function Calendar() {
   const selectedPet = useSelectedPet();
   const displaySpecies = selectedPet ? SPECIES_DB_TO_DISPLAY[selectedPet.species] : 'ねこ';
 
-  const { data: entries = [] } = useMonthEntries(year, month);
+  const { data: entries = [] }    = useMonthEntries(year, month);
+  const { data: streakData }       = useStreak();
 
   const entryMap = useMemo(() => {
     const m = new Map<string, CalendarEntryInfo>();
@@ -114,26 +116,42 @@ export default function Calendar() {
 
   return (
     <SafeAreaView style={styles.safe} edges={[]}>
-      {/* ── 日付行 ── */}
-      <View style={styles.dateRow}>
-        <View style={styles.dateRowLeft}>
-          <TouchableOpacity style={styles.monthBtn} onPress={openMonthPicker} activeOpacity={0.7}>
-            <Text style={styles.monthLabel}>{formatMonthLabel(year, month)}</Text>
-            <Ionicons name="chevron-down" size={14} color={DS.colors.textMid} />
+      {/* ── Row1: 月ナビカード ── */}
+      <View style={styles.navRow}>
+        <View style={styles.navCard}>
+          <TouchableOpacity style={styles.navArrowBtn} onPress={prevMonth}>
+            <Ionicons name="chevron-back" size={18} color={DS.colors.accent} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.navLabelBtn} onPress={openMonthPicker} activeOpacity={0.7}>
+            <Text style={styles.navLabel}>{year}年 {month}月</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.navArrowBtn} onPress={nextMonth}>
+            <Ionicons name="chevron-forward" size={18} color={DS.colors.accent} />
           </TouchableOpacity>
           {!isCurrentMonth && (
             <TouchableOpacity
-              style={styles.todayBtn}
+              style={styles.todayInCard}
               onPress={() => { setYear(todayYear); setMonth(todayMonth); setSelectedDate(null); }}
             >
-              <Text style={styles.todayBtnText}>今日へ</Text>
+              <Text style={styles.todayInCardText}>今日</Text>
             </TouchableOpacity>
           )}
         </View>
-        <TouchableOpacity
-          style={styles.gridViewBtn}
-          onPress={() => router.push('/photo-grid')}
-        >
+      </View>
+
+      {/* ── Row2: ストリーク + グリッドボタン ── */}
+      <View style={styles.statsRow}>
+        <View style={styles.statsPill}>
+          <PawIcon size={15} color={DS.colors.accent} />
+          <Text style={styles.statsLabel}>連続</Text>
+          <Text style={styles.statsAccent}>{streakData?.display_streak ?? 0}</Text>
+          <Text style={styles.statsLabel}>日</Text>
+          <View style={styles.statsDivider} />
+          <Text style={styles.statsLabel}>今月</Text>
+          <Text style={styles.statsSage}>{entries.length}</Text>
+          <Text style={styles.statsLabel}>枚</Text>
+        </View>
+        <TouchableOpacity style={styles.gridViewBtn} onPress={() => router.push('/photo-grid')}>
           <Ionicons name="grid-outline" size={20} color={DS.colors.textMid} />
         </TouchableOpacity>
       </View>
@@ -296,24 +314,49 @@ const styles = StyleSheet.create({
   safe:   { flex: 1, backgroundColor: DS.colors.bg },
   scroll: { paddingHorizontal: 14, paddingBottom: 24, gap: 10 },
 
-  dateRow: {
+  navRow: { paddingHorizontal: 16, paddingTop: 10, paddingBottom: 6 },
+  navCard: {
+    flexDirection:  'row',
+    alignItems:     'center',
+    backgroundColor: DS.colors.card,
+    borderRadius:   DS.radius.pill,
+    borderWidth:    1,
+    borderColor:    DS.colors.border,
+    paddingVertical: 6,
+    paddingLeft:    4,
+    paddingRight:   8,
+    ...DS.shadow.card,
+  },
+  navArrowBtn:  { padding: 8 },
+  navLabelBtn:  { flex: 1, alignItems: 'center' },
+  navLabel:     { fontSize: 17, fontWeight: '700', color: DS.colors.text, letterSpacing: -0.3 },
+  todayInCard:  { paddingHorizontal: 10, paddingVertical: 4 },
+  todayInCardText: { fontSize: 14, fontWeight: '600', color: DS.colors.accent },
+
+  statsRow: {
     flexDirection:     'row',
     alignItems:        'center',
-    justifyContent:    'space-between',
     paddingHorizontal: 16,
-    paddingVertical:   10,
+    paddingBottom:     8,
+    gap:               10,
   },
-  monthBtn: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  monthLabel: { fontSize: 20, fontWeight: '700', color: DS.colors.text, letterSpacing: -0.4 },
-  dateRowLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  todayBtn: {
-    backgroundColor:   DS.colors.accentLight,
+  statsPill: {
+    flex:              1,
+    flexDirection:     'row',
+    alignItems:        'center',
+    justifyContent:    'center',
+    backgroundColor:   DS.colors.peach,
     borderRadius:      DS.radius.pill,
-    paddingHorizontal: 12,
-    paddingVertical:   6,
+    paddingVertical:   9,
+    paddingHorizontal: 16,
+    gap:               5,
+    ...DS.shadow.card,
   },
-  todayBtnText: { fontSize: 13, fontWeight: '600', color: DS.colors.accent },
-  gridViewBtn: { padding: 4 },
+  statsLabel:   { fontSize: 13, color: DS.colors.textMid },
+  statsAccent:  { fontSize: 17, fontWeight: '700', color: DS.colors.accent },
+  statsSage:    { fontSize: 17, fontWeight: '700', color: DS.colors.sage },
+  statsDivider: { width: 1, height: 18, backgroundColor: DS.colors.border, marginHorizontal: 6 },
+  gridViewBtn:  { padding: 4 },
 
   petPill: {
     flexDirection:   'row',

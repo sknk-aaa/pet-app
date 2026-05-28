@@ -17,6 +17,7 @@ import { PetAvatar } from '@/components/PetAvatar';
 import { useSelectedPet } from '@/hooks/usePets';
 import { useAppStore } from '@/store/appStore';
 import { useAuthStore } from '@/store/authStore';
+import { signOut } from '@/services/auth';
 import { setSetting } from '@/db/settings';
 import { requestPermission, scheduleOrUpdateDailyReminder } from '@/services/notifications';
 import { SPECIES_DB_TO_DISPLAY } from '@/utils/species';
@@ -33,8 +34,8 @@ function LockRow({ label }: { label: string }) {
 export default function Settings() {
   const selectedPet    = useSelectedPet();
   const { settings, updateSettings } = useAppStore();
-  const user           = useAuthStore(state => state.user);
-  const isLoggedIn     = !!user;
+  const session        = useAuthStore(state => state.session);
+  const isLoggedIn     = !!session;
   const displaySpecies = selectedPet ? SPECIES_DB_TO_DISPLAY[selectedPet.species] : 'ねこ';
 
   const toggleCameraRoll = async (v: boolean) => {
@@ -159,10 +160,17 @@ export default function Settings() {
         {/* アカウント */}
         <Text style={styles.sectionLabel}>アカウント</Text>
         <Card style={styles.sectionCard} p={0}>
-          <SettingRow
-            label="ログイン"
-            onPress={() => router.push('/login')}
-          />
+          {isLoggedIn ? (
+            <SettingRow
+              label="ログアウト"
+              onPress={async () => { await signOut(); }}
+            />
+          ) : (
+            <SettingRow
+              label="ログイン"
+              onPress={() => router.push('/login')}
+            />
+          )}
           <SettingRow
             label="購入を復元"
             rightElement={isLoggedIn ? undefined : <LockRow label="ログインが必要" />}

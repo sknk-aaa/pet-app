@@ -111,9 +111,6 @@ export default function Settings() {
             <View style={styles.petInfo}>
               <Text style={styles.petName}>{selectedPet?.name ?? 'まる'}</Text>
               <Text style={styles.petMeta}>登録中のペット 1匹</Text>
-              <View style={styles.planBadge}>
-                <Text style={styles.planBadgeText}>無料プラン</Text>
-              </View>
             </View>
             <Ionicons name="chevron-forward" size={16} color={DS.colors.textHint} />
           </TouchableOpacity>
@@ -175,6 +172,13 @@ export default function Settings() {
         {/* アカウント */}
         <Text style={styles.sectionLabel}>アカウント</Text>
         <Card style={styles.sectionCard} p={0}>
+          <View style={styles.planRow}>
+            <Text style={styles.planLabel}>現在のプラン</Text>
+            <View style={styles.planBadge}>
+              <Text style={styles.planBadgeText}>無料プラン</Text>
+            </View>
+          </View>
+          <View style={styles.sectionDivider} />
           {isLoggedIn ? (
             <SettingRow
               label="ログアウト"
@@ -305,17 +309,22 @@ const styles = StyleSheet.create({
   petInfo: { flex: 1, gap: 4 },
   petName: { fontSize: 18, fontWeight: '700', color: DS.colors.text },
   petMeta: { fontSize: 13, color: DS.colors.textMid },
+  planRow: {
+    flexDirection:  'row',
+    alignItems:     'center',
+    justifyContent: 'space-between',
+    paddingVertical: 14,
+  },
+  planLabel: { fontSize: 16, color: DS.colors.text },
   planBadge: {
-    alignSelf:         'flex-start',
     backgroundColor:   DS.colors.peach,
     borderRadius:      DS.radius.pill,
-    paddingVertical:   3,
-    paddingHorizontal: 10,
+    paddingVertical:   4,
+    paddingHorizontal: 12,
     borderWidth:       1,
     borderColor:       DS.colors.border,
-    marginTop:         2,
   },
-  planBadgeText: { fontSize: 11, color: DS.colors.textMid },
+  planBadgeText: { fontSize: 12, fontWeight: '500', color: DS.colors.textMid },
 
   sectionLabel: {
     fontSize:     13,

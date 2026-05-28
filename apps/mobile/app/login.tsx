@@ -75,6 +75,7 @@ export default function Login() {
   };
 
   const handleGoogleLogin = async () => {
+    Alert.alert('OTA確認', 'v7');
     if (loading) return;
     setLoading(true);
     try {

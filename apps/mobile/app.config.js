@@ -1,13 +1,10 @@
-import { ExpoConfig, ConfigContext } from 'expo/config';
-
-function googleIosUrlScheme(clientId: string | undefined): string {
+function googleIosUrlScheme(clientId) {
   if (!clientId) return '';
-  // clientId: "xxx.apps.googleusercontent.com" → "com.googleusercontent.apps.xxx"
   const id = clientId.replace('.apps.googleusercontent.com', '');
   return `com.googleusercontent.apps.${id}`;
 }
 
-export default ({ config }: ConfigContext): ExpoConfig => ({
+module.exports = ({ config }) => ({
   ...config,
   name: 'まいにちペット',
   slug: 'mainichi-pet',

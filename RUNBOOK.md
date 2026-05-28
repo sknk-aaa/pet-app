@@ -12,13 +12,14 @@ iPhone アプリ（Expo / React Native）
   ├─── Supabase（バックエンド）
   │      ├── PostgreSQL（全データ）
   │      ├── Storage（ペット写真）
-  │      ├── Auth（Apple / Google）
-  │      ├── Edge Functions（5本）
+  │      ├── Auth（Apple / Google / Email）
+  │      ├── Edge Functions（6本）
   │      └── pg_cron（毎日の自動処理）
   │
   ├─── Expo Push API → APNs → iPhone
   │
   └─── 管理画面（Next.js on Vercel）
+         URL: https://admin-one-ivory-70.vercel.app
 ```
 
 ---
@@ -39,11 +40,20 @@ iPhone アプリ（Expo / React Native）
 
 ### Supabase
 - **URL**: https://supabase.com/dashboard
+- **Project Ref**: `upshogdxxzwyauivmfxt`
+- **Region**: Northeast Asia (Tokyo)
 - 無料プランは非アクティブ（7 日間アクセスなし）で一時停止。定期的にダッシュボードかアプリを使えば復帰
 
 ### Vercel（管理画面）
 - **URL**: https://vercel.com/dashboard
+- **プロジェクト名**: `admin`（sknk-aaas-projects）
+- **本番 URL**: https://admin-one-ivory-70.vercel.app
 - 無料枠で運用可能
+
+### 管理画面ログイン
+- **メール**: `625.somq2525@gmail.com`
+- **パスワード**: 別途管理（初期設定済み）
+- 権限管理: Supabase Auth の `app_metadata.is_admin = true` で判定
 
 ---
 
@@ -85,17 +95,44 @@ iPhone アプリ（Expo / React Native）
 - `featured_pets` テーブルで毎日掲載されているか確認
 - Storage 使用量の確認（無料枠: 1GB）
 
-### Edge Functions（毎日の自動処理）
+### Edge Functions（6本）
 
-| 関数名 | 実行時刻 (JST) | 処理内容 |
+| 関数名 | トリガー | 処理内容 |
 |---|---|---|
-| select-candidate | 23:00 | 翌日分の候補を重み付きランダムで選出 |
-| publish-featured | 07:00 | 掲載・アーカイブ・Push 通知送信 |
-| cleanup-candidates | 00:10 | 前日以前の候補画像を Storage から削除 |
+| `select-candidate` | Cron 23:00 JST | 翌日分の候補を重み付きランダムで選出 |
+| `publish-featured` | Cron 07:00 JST | 掲載・アーカイブ・Push 通知送信 |
+| `cleanup-candidates` | Cron 00:10 JST | 前日以前の候補画像を Storage から削除 |
+| `send-featured-push` | `publish-featured` から呼び出し | 選ばれたユーザーに Push 通知 |
+| `withdraw-candidate` | アプリから呼び出し | ユーザーが投稿を取り下げ |
+| `delete-my-account` | アプリから呼び出し | アカウント・全データ削除 |
 
-pg_cron の確認（Supabase SQL Editor）:
+再デプロイ方法:
+```bash
+cd /home/aaa/project/pet-app
+supabase functions deploy <関数名> --project-ref upshogdxxzwyauivmfxt
+# 全関数一括
+for fn in select-candidate publish-featured cleanup-candidates send-featured-push withdraw-candidate delete-my-account; do
+  supabase functions deploy $fn --project-ref upshogdxxzwyauivmfxt
+done
+```
+
+### pg_cron（Cron ジョブ）
+
+登録済みジョブの確認（Supabase SQL Editor）:
 ```sql
-SELECT * FROM cron.job;
+SELECT jobname, schedule FROM cron.job;
+```
+
+| jobname | schedule (UTC) | JST |
+|---|---|---|
+| `select-tomorrow-candidate` | `0 14 * * *` | 毎日 23:00 |
+| `publish-today-featured-pet` | `0 22 * * *` | 毎日 07:00 |
+| `cleanup-yesterday-candidates` | `10 15 * * *` | 毎日 00:10 |
+| `retry-pending-pushes` | `*/5 * * * *` | 5分おき |
+
+実行履歴確認:
+```sql
+SELECT jobname, start_time, status FROM cron.job_run_details ORDER BY start_time DESC LIMIT 20;
 ```
 
 ### バックアップ
@@ -106,7 +143,7 @@ Dashboard → Settings → Database → Create a new backup
 有料プランにすると毎日自動バックアップ。
 
 ### ストレージ管理
-- `featured-photos` バケット: 候補投稿時の一時保存（cleanup-candidates で自動削除）
+- `featured-photos` バケット: 候補投稿時の一時保存（`cleanup-candidates` で自動削除）
 - `featured-archive` バケット: 掲載済み写真（永続保存・削除しない）
 
 ---
@@ -124,8 +161,16 @@ eas update --branch production --message "修正内容"
 新ビルドが必要。App Store の審査（通常 1〜3 日）が入る。
 ```bash
 cd apps/mobile
-EXPO_NO_CAPABILITY_SYNC=1 eas build --platform ios --profile production
+set -a && source .env && set +a
+eas build --platform ios --profile production
 eas submit --platform ios
+```
+
+### 開発ビルド（実機テスト用）
+```bash
+cd apps/mobile
+set -a && source .env && set +a
+eas build --profile development --platform ios
 ```
 
 ### Expo SDK バージョンアップ（半年〜1 年に 1 回）
@@ -135,6 +180,11 @@ eas submit --platform ios
 4. `pnpm typecheck` でエラーがないか確認
 5. EAS development build でテストしてから production build
 
+### 管理画面の再デプロイ
+```bash
+vercel --prod --yes --cwd /home/aaa/project/pet-app/apps/admin
+```
+
 ---
 
 ## 障害対応
@@ -142,7 +192,15 @@ eas submit --platform ios
 ### 今日のペットが更新されない
 1. Supabase → Logs → Edge Functions で `publish-featured` のエラーを確認
 2. `featured_candidates` に `status='approved'` の昨日分データがあるか確認
-3. pg_cron が動いているか確認: `SELECT * FROM cron.job_run_details ORDER BY start_time DESC LIMIT 10;`
+3. pg_cron が動いているか確認:
+   ```sql
+   SELECT jobname, start_time, status FROM cron.job_run_details ORDER BY start_time DESC LIMIT 10;
+   ```
+4. 手動で即時実行する場合:
+   ```bash
+   curl -X POST https://upshogdxxzwyauivmfxt.supabase.co/functions/v1/publish-featured \
+     -H "Authorization: Bearer <SERVICE_ROLE_KEY>"
+   ```
 
 ### Push 通知が届かない
 1. Edge Functions → `send-featured-push` のログでエラー確認
@@ -152,13 +210,28 @@ eas submit --platform ios
 
 ### Apple Sign In でログインできない
 1. Supabase → Authentication → Providers → Apple が有効か確認
-2. Client IDs に `com.mainichipet.app` が入っているか確認
+2. Client IDs に Bundle ID が入っているか確認
 3. Secret Key は**空欄**であることを確認（JWT 形式のキーは不要）
 
 ### Google Sign In でログインできない
 1. Supabase → Authentication → Providers → Google が有効か確認
-2. Google Cloud Console で OAuth クライアントがアクティブか確認
-3. Supabase の Callback URL が Google Console の「承認済みリダイレクト URI」に登録されているか確認
+2. Supabase の iOS Client IDs フィールドに iOS クライアント ID が入っているか確認
+3. Google Cloud Console で OAuth クライアントがアクティブか確認
+4. EAS Secret `GOOGLE_IOS_CLIENT_ID` が正しい値か確認: `eas env:list`
+
+### 管理画面にログインできない
+1. `app_metadata.is_admin` を確認:
+   ```bash
+   curl https://upshogdxxzwyauivmfxt.supabase.co/auth/v1/admin/users/<USER_ID> \
+     -H "Authorization: Bearer <SERVICE_ROLE_KEY>" | grep app_metadata
+   ```
+2. `is_admin` が `true` でない場合は admin API で設定:
+   ```bash
+   curl -X PUT https://upshogdxxzwyauivmfxt.supabase.co/auth/v1/admin/users/<USER_ID> \
+     -H "Authorization: Bearer <SERVICE_ROLE_KEY>" \
+     -H "Content-Type: application/json" \
+     -d '{"app_metadata":{"is_admin":true}}'
+   ```
 
 ### App Store からアプリが消えた
 → Apple Developer Program の更新忘れの可能性。developer.apple.com でメンバーシップを確認。
@@ -167,9 +240,11 @@ eas submit --platform ios
 
 ## 管理画面の日常運用
 
+URL: https://admin-one-ivory-70.vercel.app
+
 毎日の流れ:
 1. `select-candidate`（23:00 自動）が翌日候補を選出
-2. 管理者が管理画面の「レビュー」で承認 or 差し替え
+2. 管理者が管理画面の「レビュー」で承認 or 差し替え（翌朝 07:00 までに）
 3. `publish-featured`（07:00 自動）が掲載・通知送信
 
 通報対応:
@@ -179,21 +254,29 @@ eas submit --platform ios
 
 ## 環境変数まとめ
 
-### EAS Secrets（モバイルアプリ）
-```
-SUPABASE_URL
-SUPABASE_ANON_KEY
-```
-確認・追加: `eas secret:list` / `eas secret:create`
+### EAS 環境変数（モバイルアプリ）
+確認: `cd apps/mobile && eas env:list`
+追加: `eas env:create`
+更新: `eas env:update --name <KEY> --value <VALUE>`（visibility は **Secret** を選ぶ）
 
-### Vercel（管理画面）
-```
-NEXT_PUBLIC_SUPABASE_URL
-NEXT_PUBLIC_SUPABASE_ANON_KEY
-```
+| 変数名 | 内容 |
+|---|---|
+| `SUPABASE_URL` | Supabase プロジェクト URL |
+| `SUPABASE_ANON_KEY` | Supabase anon key |
+| `GOOGLE_IOS_CLIENT_ID` | Google OAuth iOS クライアント ID |
+
+### Vercel 環境変数（管理画面）
+確認: `vercel env ls --cwd apps/admin`
+
+| 変数名 | 内容 |
+|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase プロジェクト URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key（サーバーサイドのみ） |
 
 ### Supabase Edge Functions Secrets
-```
-EXPO_ACCESS_TOKEN   # Expo Push API 用（手動設定が必要）
-```
 設定場所: Supabase Dashboard → Project Settings → Edge Functions → Secrets
+
+| 変数名 | 内容 |
+|---|---|
+| `EXPO_ACCESS_TOKEN` | Expo Push API 用（手動設定が必要） |

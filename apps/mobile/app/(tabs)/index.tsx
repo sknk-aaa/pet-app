@@ -36,7 +36,6 @@ export default function Home() {
 
   const displayName = selectedPet?.name ?? 'うちの子';
   const streakCount = streak?.display_streak ?? 0;
-  const isRecorded  = !!todayEntry;
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -56,24 +55,14 @@ export default function Home() {
           </View>
         </View>
 
-        {/* ── ストリークバッジ ── */}
-        {streakCount > 0 && (
-          <View style={styles.streakRow}>
-            <StreakBadge
-              count={streakCount}
-              note={isRecorded ? undefined : '昨日まで記録中'}
-            />
-          </View>
-        )}
-
         {isLoading ? (
           <View style={styles.loader}>
             <ActivityIndicator color={DS.home.accent} size="large" />
           </View>
         ) : todayEntry ? (
-          <RecordedView entry={todayEntry} />
+          <RecordedView entry={todayEntry} streak={streakCount} />
         ) : (
-          <UnrecordedView petName={displayName} />
+          <UnrecordedView petName={displayName} streak={streakCount} />
         )}
 
       </ScrollView>
@@ -83,7 +72,7 @@ export default function Home() {
 
 // ─────────────────────────────────────────────────────────
 
-function RecordedView({ entry }: { entry: EntryWithPets }) {
+function RecordedView({ entry, streak }: { entry: EntryWithPets; streak: number }) {
   const tagDisplay = entry.anniversary_tag_type
     ? ANNIVERSARY_TAG_DB_TO_DISPLAY[entry.anniversary_tag_type]
     : null;
@@ -124,6 +113,13 @@ function RecordedView({ entry }: { entry: EntryWithPets }) {
             )}
           </View>
         </View>
+
+        {/* ── ストリークバッジ（写真右上） ── */}
+        {streak >= 2 && (
+          <View style={styles.streakOverlay}>
+            <StreakBadge count={streak} />
+          </View>
+        )}
       </View>
 
       {/* ── アクション行 ── */}
@@ -158,7 +154,7 @@ function Chip({ icon, label }: { icon: keyof typeof Ionicons.glyphMap; label: st
 
 // ─────────────────────────────────────────────────────────
 
-function UnrecordedView({ petName }: { petName: string }) {
+function UnrecordedView({ petName, streak: _streak }: { petName: string; streak: number }) {
   const { data: memory } = useMemoryEntry();
 
   return (
@@ -246,12 +242,13 @@ const styles = StyleSheet.create({
     paddingTop: 2,
   },
 
-  // ── ストリーク ──
-  streakRow: {
-    alignItems:   'center',
-    marginBottom: 16,
-  },
   loader: { minHeight: 240, justifyContent: 'center', alignItems: 'center' },
+
+  streakOverlay: {
+    position: 'absolute',
+    top:      12,
+    right:    12,
+  },
 
   // ── カード ──
   cardOuter: {

@@ -9,6 +9,7 @@ type Props = {
   uri?: string | null;
   resizeMode?: 'cover' | 'contain' | 'stretch' | 'center';
   autoAspect?: boolean;
+  minAspectRatio?: number;
 };
 
 const WARM_GRADIENT: [string, string, string, string] = [
@@ -18,7 +19,7 @@ const WARM_GRADIENT: [string, string, string, string] = [
   '#E8D098',
 ];
 
-export function Photo({ style, aspectRatio, radius = 16, uri, resizeMode = 'cover', autoAspect = false }: Props) {
+export function Photo({ style, aspectRatio, radius = 16, uri, resizeMode = 'cover', autoAspect = false, minAspectRatio }: Props) {
   const [computedAspect, setComputedAspect] = useState<number | undefined>(undefined);
 
   useEffect(() => {
@@ -27,7 +28,10 @@ export function Photo({ style, aspectRatio, radius = 16, uri, resizeMode = 'cove
     }
   }, [uri, autoAspect]);
 
-  const resolvedAspect = autoAspect ? computedAspect : aspectRatio;
+  const rawAspect = autoAspect ? computedAspect : aspectRatio;
+  const resolvedAspect = rawAspect != null && minAspectRatio != null
+    ? Math.max(rawAspect, minAspectRatio)
+    : rawAspect;
 
   const baseStyle: ViewStyle = {
     borderRadius: radius,

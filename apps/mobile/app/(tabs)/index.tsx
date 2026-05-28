@@ -95,7 +95,7 @@ function RecordedView({ entry }: { entry: EntryWithPets }) {
         <View style={styles.cardInner}>
 
           {/* 写真 */}
-          <Photo radius={0} style={styles.photo} uri={entry.image_uri} />
+          <Photo radius={0} style={styles.photo} uri={entry.image_uri} autoAspect minAspectRatio={3 / 3.5} />
 
           {/* カード下部：情報エリア */}
           <View style={styles.cardBody}>
@@ -269,7 +269,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     overflow:     'hidden',
   },
-  photo: { width: '100%', aspectRatio: 1 },
+  photo: { width: '100%' },
 
   // カード本文
   cardBody: {

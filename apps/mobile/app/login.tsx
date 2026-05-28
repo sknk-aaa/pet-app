@@ -79,7 +79,7 @@ export default function Login() {
     setLoading(true);
     try {
       await signInWithGoogle();
-      router.dismiss();
+      router.replace('/(tabs)');
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       Alert.alert('Googleログインエラー', msg);

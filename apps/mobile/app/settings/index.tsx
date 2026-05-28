@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
+import { Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { DS } from '@/theme';
 import { Card } from '@/components/Card';
@@ -267,7 +268,7 @@ export default function Settings() {
         <Card style={styles.sectionCard} p={0}>
           <SettingRow
             label="プライバシーポリシー"
-            onPress={() => router.push('/settings/privacy')}
+            onPress={() => Linking.openURL('https://sknk-aaa.github.io/pet-app/privacy/')}
           />
           <SettingRow
             label="利用規約"

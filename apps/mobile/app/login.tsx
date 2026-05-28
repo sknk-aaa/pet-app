@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -14,6 +14,7 @@ import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { signInWithPassword, signUpWithEmail, signInWithApple, signInWithGoogle } from '@/services/auth';
 import { MailSentIcon } from '@/components/icons/MailSentIcon';
+import { useAuthStore } from '@/store/authStore';
 import { DS } from '@/theme';
 
 type Mode = 'signin' | 'signup';
@@ -24,6 +25,11 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [loading,  setLoading]  = useState(false);
   const [signedUp, setSignedUp] = useState(false);
+  const session = useAuthStore(state => state.session);
+
+  useEffect(() => {
+    if (session) router.dismiss();
+  }, [session]);
 
   const isValid = email.includes('@') && password.length >= 6;
 
@@ -75,12 +81,10 @@ export default function Login() {
   };
 
   const handleGoogleLogin = async () => {
-    Alert.alert('OTA確認', 'v7');
     if (loading) return;
     setLoading(true);
     try {
       await signInWithGoogle();
-      router.dismissAll();
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       Alert.alert('Googleログインエラー', msg);

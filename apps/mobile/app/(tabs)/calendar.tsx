@@ -115,11 +115,11 @@ export default function Calendar() {
     <SafeAreaView style={styles.safe} edges={[]}>
       {/* ── 日付行 ── */}
       <View style={styles.dateRow}>
-        <TouchableOpacity style={styles.monthBtn} onPress={openMonthPicker} activeOpacity={0.7}>
-          <Text style={styles.monthLabel}>{formatMonthLabel(year, month)}</Text>
-          <Ionicons name="chevron-down" size={14} color={DS.colors.textMid} />
-        </TouchableOpacity>
-        <View style={styles.dateRowRight}>
+        <View style={styles.dateRowLeft}>
+          <TouchableOpacity style={styles.monthBtn} onPress={openMonthPicker} activeOpacity={0.7}>
+            <Text style={styles.monthLabel}>{formatMonthLabel(year, month)}</Text>
+            <Ionicons name="chevron-down" size={14} color={DS.colors.textMid} />
+          </TouchableOpacity>
           {!isCurrentMonth && (
             <TouchableOpacity
               style={styles.todayBtn}
@@ -128,13 +128,13 @@ export default function Calendar() {
               <Text style={styles.todayBtnText}>今日へ</Text>
             </TouchableOpacity>
           )}
-          <TouchableOpacity
-            style={styles.gridViewBtn}
-            onPress={() => router.push('/photo-grid')}
-          >
-            <Ionicons name="grid-outline" size={20} color={DS.colors.textMid} />
-          </TouchableOpacity>
         </View>
+        <TouchableOpacity
+          style={styles.gridViewBtn}
+          onPress={() => router.push('/photo-grid')}
+        >
+          <Ionicons name="grid-outline" size={20} color={DS.colors.textMid} />
+        </TouchableOpacity>
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll}>
@@ -304,7 +304,7 @@ const styles = StyleSheet.create({
   },
   monthBtn: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   monthLabel: { fontSize: 20, fontWeight: '700', color: DS.colors.text, letterSpacing: -0.4 },
-  dateRowRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  dateRowLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   todayBtn: {
     backgroundColor:   DS.colors.accentLight,
     borderRadius:      DS.radius.pill,

@@ -95,6 +95,7 @@ function AppContent() {
         <Stack.Screen name="pet-select"    options={{ presentation: 'modal' }} />
         <Stack.Screen name="day-detail"    />
         <Stack.Screen name="anniversaries" />
+        <Stack.Screen name="photo-grid" />
         <Stack.Screen name="settings"      />
         <Stack.Screen name="auth/callback" options={{ headerShown: false }} />
       </Stack>

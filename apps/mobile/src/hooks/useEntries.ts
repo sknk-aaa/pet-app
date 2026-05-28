@@ -4,6 +4,7 @@ import {
   getEntriesForMonth,
   getAnniversaryEntries,
   getMemoryEntry,
+  getAllEntries,
 } from '@/db/entries';
 import { getTodayJST } from '@/utils/date';
 import { useAppStore } from '@/store/appStore';
@@ -43,6 +44,15 @@ export function useAnniversaryEntries() {
   return useQuery<EntryWithPets[]>({
     queryKey: ['entries', 'anniversaries', selectedPetId],
     queryFn: () => getAnniversaryEntries(selectedPetId),
+    staleTime: 60_000,
+  });
+}
+
+export function useAllEntries() {
+  const selectedPetId = useAppStore(state => state.selectedPetId);
+  return useQuery<import('@/types').CalendarEntryInfo[]>({
+    queryKey: ['entries', 'all', selectedPetId],
+    queryFn:  () => getAllEntries(selectedPetId),
     staleTime: 60_000,
   });
 }

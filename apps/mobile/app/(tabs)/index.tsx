@@ -16,12 +16,10 @@ import { Photo } from '@/components/Photo';
 import { StreakBadge } from '@/components/StreakBadge';
 import { SaveToast } from '@/components/SaveToast';
 import { PawIcon } from '@/components/icons/PawIcon';
-import { PetAvatar } from '@/components/PetAvatar';
 import { useTodayEntry, useMemoryEntry } from '@/hooks/useEntries';
 import { useStreak } from '@/hooks/useStreak';
 import { useSelectedPet } from '@/hooks/usePets';
 import { useAppStore } from '@/store/appStore';
-import { SPECIES_DB_TO_DISPLAY } from '@/utils/species';
 import { formatDisplayDate, getTodayJST } from '@/utils/date';
 import { ANNIVERSARY_TAG_DB_TO_DISPLAY } from '@/utils/species';
 import type { EntryWithPets, Entry } from '@/types';
@@ -56,35 +54,13 @@ export default function Home() {
   }, [savedAt]);
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
+    <SafeAreaView style={styles.safe} edges={[]}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
 
         {/* ── ヘッダー ── */}
         <View style={styles.header}>
-          <TouchableOpacity
-            onPress={() => router.push('/settings')}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            style={styles.headerLeft}
-          >
-            <Ionicons name="settings-outline" size={22} color={DS.home.text} />
-          </TouchableOpacity>
-          <View style={styles.headerCenter}>
-            <Text style={styles.headerTitle}>今日の1枚</Text>
-            <Text style={styles.headerDate}>{formatHomeDate(today)}</Text>
-          </View>
-          <TouchableOpacity
-            style={styles.petPill}
-            onPress={() => router.push('/pet-select')}
-            activeOpacity={0.8}
-          >
-            <PetAvatar
-              species={selectedPet ? SPECIES_DB_TO_DISPLAY[selectedPet.species] : 'ねこ'}
-              iconUri={selectedPet?.icon_uri}
-              size={22}
-            />
-            <Text style={styles.petPillName}>{selectedPet?.name ?? '—'}</Text>
-            <Ionicons name="chevron-down" size={10} color={DS.colors.textHint} />
-          </TouchableOpacity>
+          <Text style={styles.headerDate}>{formatHomeDate(today)}</Text>
+          <Text style={styles.headerTitle}>今日の1枚</Text>
         </View>
 
         {isLoading ? (
@@ -258,21 +234,9 @@ const styles = StyleSheet.create({
 
   // ── ヘッダー ──
   header: {
-    flexDirection:     'row',
-    alignItems:        'center',
-    paddingHorizontal: 16,
-    paddingTop:        6,
-    paddingBottom:     14,
-  },
-  headerLeft: {
-    width:       36,
-    alignItems:  'flex-start',
-    justifyContent: 'center',
-  },
-  headerCenter: {
-    flex:       1,
-    alignItems: 'center',
-    gap:        2,
+    paddingHorizontal: 20,
+    paddingTop:        8,
+    paddingBottom:     4,
   },
   headerDate: {
     fontSize: 12,
@@ -280,16 +244,10 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontWeight:    'bold',
-    fontSize:      17,
+    fontSize:      24,
     color:         DS.home.text,
-    textAlign:     'center',
-    letterSpacing: 0,
-    paddingTop:    18,
-  },
-  headerRight: {
-    flex:       1,
-    alignItems: 'flex-end',
-    paddingTop: 2,
+    marginTop:     4,
+    letterSpacing: -0.3,
   },
   petPill: {
     flexDirection:   'row',

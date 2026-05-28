@@ -13,20 +13,17 @@ import { router, useNavigation } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { DS } from '@/theme';
 import { Card } from '@/components/Card';
-import { Chip } from '@/components/Chip';
 import { Photo } from '@/components/Photo';
 import { PetAvatar } from '@/components/PetAvatar';
 import { useMonthEntries } from '@/hooks/useEntries';
 import { useSelectedPet } from '@/hooks/usePets';
-import { useAppStore } from '@/store/appStore';
 import {
   getTodayJST,
   getMonthStartDay,
   getMonthTotalDays,
   formatMonthLabel,
-  formatDisplayDate,
 } from '@/utils/date';
-import { SPECIES_DB_TO_DISPLAY, ANNIVERSARY_TAG_DB_TO_DISPLAY } from '@/utils/species';
+import { SPECIES_DB_TO_DISPLAY } from '@/utils/species';
 import type { CalendarEntryInfo } from '@/types';
 
 const WEEKDAYS = ['日', '月', '火', '水', '木', '金', '土'];
@@ -74,7 +71,7 @@ export default function Calendar() {
   const dateStr = (day: number) =>
     `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
-  const photoCount = entries.length;
+  const isCurrentMonth = year === todayYear && month === todayMonth;
   const selectableYears = useMemo(
     () => Array.from({ length: 22 }, (_, index) => todayYear + 1 - index),
     [todayYear],
@@ -104,26 +101,42 @@ export default function Calendar() {
 
   useLayoutEffect(() => {
     navigation.setOptions({
-      headerLeft: () => (
-        <TouchableOpacity style={styles.monthPickerButton} onPress={openMonthPicker}>
-          <Text style={styles.monthHeading}>{formatMonthLabel(year, month)}</Text>
-          <Ionicons name="chevron-down" size={15} color={DS.colors.textMid} />
-        </TouchableOpacity>
-      ),
       headerRight: () => (
         <TouchableOpacity style={styles.petPill} onPress={() => router.push('/pet-select')}>
-          <PetAvatar species={displaySpecies} iconUri={selectedPet?.icon_uri} size={26} />
+          <PetAvatar species={displaySpecies} iconUri={selectedPet?.icon_uri} size={22} />
           <Text style={styles.petPillName}>{selectedPet?.name ?? 'うちの子'}</Text>
           <Ionicons name="chevron-down" size={10} color={DS.colors.textHint} />
         </TouchableOpacity>
       ),
     });
-  }, [navigation, year, month, displaySpecies, selectedPet?.icon_uri, selectedPet?.name]);
-
-  const selectedEntry = selectedDate ? entryMap.get(selectedDate) : null;
+  }, [navigation, displaySpecies, selectedPet?.icon_uri, selectedPet?.name]);
 
   return (
     <SafeAreaView style={styles.safe} edges={[]}>
+      {/* ── 日付行 ── */}
+      <View style={styles.dateRow}>
+        <TouchableOpacity style={styles.monthBtn} onPress={openMonthPicker} activeOpacity={0.7}>
+          <Text style={styles.monthLabel}>{formatMonthLabel(year, month)}</Text>
+          <Ionicons name="chevron-down" size={14} color={DS.colors.textMid} />
+        </TouchableOpacity>
+        <View style={styles.dateRowRight}>
+          {!isCurrentMonth && (
+            <TouchableOpacity
+              style={styles.todayBtn}
+              onPress={() => { setYear(todayYear); setMonth(todayMonth); setSelectedDate(null); }}
+            >
+              <Text style={styles.todayBtnText}>今日へ</Text>
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity
+            style={styles.gridViewBtn}
+            onPress={() => router.push('/photo-grid')}
+          >
+            <Ionicons name="grid-outline" size={20} color={DS.colors.textMid} />
+          </TouchableOpacity>
+        </View>
+      </View>
+
       <ScrollView contentContainerStyle={styles.scroll}>
         {/* Calendar grid */}
         <Card style={styles.gridCard} p={12}>
@@ -217,29 +230,6 @@ export default function Calendar() {
           <Ionicons name="chevron-forward" size={15} color={DS.colors.textHint} />
         </TouchableOpacity>
 
-        {/* Selected day preview */}
-        {selectedEntry && (
-          <Card p={14}>
-            <Text style={styles.previewDate}>{formatDisplayDate(selectedDate!)}</Text>
-            <TouchableOpacity
-              style={styles.previewInner}
-              onPress={() => router.push({ pathname: '/day-detail', params: { date: selectedDate! } })}
-            >
-              <Photo style={styles.previewPhoto} uri={selectedEntry.thumbnail_uri} />
-              <View style={styles.previewInfo}>
-                {selectedEntry.anniversary_tag_type && (
-                  <Chip
-                    label={ANNIVERSARY_TAG_DB_TO_DISPLAY[selectedEntry.anniversary_tag_type] ?? selectedEntry.anniversary_tag_type}
-                    selected={false}
-                    small
-                  />
-                )}
-              </View>
-              <Ionicons name="chevron-forward" size={16} color={DS.colors.textHint} />
-            </TouchableOpacity>
-          </Card>
-        )}
-
         <View style={{ height: 4 }} />
       </ScrollView>
 
@@ -305,27 +295,39 @@ const styles = StyleSheet.create({
   safe:   { flex: 1, backgroundColor: DS.colors.bg },
   scroll: { paddingHorizontal: 14, paddingBottom: 24, gap: 10 },
 
-  monthPickerButton: {
-    flexDirection: 'row',
-    alignItems:    'center',
-    gap:           6,
-    paddingVertical: 8,
-  },
-  monthHeading: { fontSize: 21, fontWeight: '700', color: DS.colors.text, letterSpacing: -0.4 },
-  petPill: {
+  dateRow: {
     flexDirection:     'row',
     alignItems:        'center',
-    gap:               6,
-    backgroundColor:   DS.colors.card,
+    justifyContent:    'space-between',
+    paddingHorizontal: 16,
+    paddingVertical:   10,
+  },
+  monthBtn: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  monthLabel: { fontSize: 20, fontWeight: '700', color: DS.colors.text, letterSpacing: -0.4 },
+  dateRowRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  todayBtn: {
+    backgroundColor:   DS.colors.accentLight,
     borderRadius:      DS.radius.pill,
+    paddingHorizontal: 12,
     paddingVertical:   6,
-    paddingLeft:       6,
-    paddingRight:      12,
-    borderWidth:       1,
-    borderColor:       DS.colors.border,
+  },
+  todayBtnText: { fontSize: 13, fontWeight: '600', color: DS.colors.accent },
+  gridViewBtn: { padding: 4 },
+
+  petPill: {
+    flexDirection:   'row',
+    alignItems:      'center',
+    gap:             5,
+    backgroundColor: DS.colors.card,
+    borderRadius:    DS.radius.pill,
+    paddingVertical: 5,
+    paddingLeft:     5,
+    paddingRight:    9,
+    borderWidth:     1,
+    borderColor:     DS.colors.border,
     ...DS.shadow.card,
   },
-  petPillName: { fontSize: 14, fontWeight: '600', color: DS.colors.text },
+  petPillName: { fontSize: 12, fontWeight: '600', color: DS.colors.text },
 
   gridCard: {},
   weekRow:  { flexDirection: 'row', columnGap: GRID_GAP, marginBottom: 4 },
@@ -376,11 +378,6 @@ const styles = StyleSheet.create({
     justifyContent:  'center',
   },
   anniLinkText: { flex: 1, fontSize: 14, fontWeight: '600', color: DS.colors.text },
-
-  previewDate:  { fontSize: 12, color: DS.colors.textHint, marginBottom: 10 },
-  previewInner: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
-  previewPhoto: { width: 72, height: 72, borderRadius: DS.radius.md, flexShrink: 0 },
-  previewInfo:  { flex: 1, gap: 6 },
 
   modalBackdrop: {
     flex:            1,

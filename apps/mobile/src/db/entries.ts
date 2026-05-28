@@ -208,6 +208,29 @@ export async function updateEntry(
   });
 }
 
+export async function getAllEntries(primaryPetId: string | null): Promise<CalendarEntryInfo[]> {
+  const db = await getDb();
+  let rows: Entry[];
+  if (!primaryPetId) {
+    rows = await db.getAllAsync<Entry>(
+      `SELECT id, date, thumbnail_uri, anniversary_tag_type, featured_status_cache
+       FROM entries ORDER BY date DESC`
+    );
+  } else {
+    rows = await db.getAllAsync<Entry>(
+      `SELECT id, date, thumbnail_uri, anniversary_tag_type, featured_status_cache
+       FROM entries WHERE primary_pet_id = ? ORDER BY date DESC`,
+      [primaryPetId]
+    );
+  }
+  return rows.map(r => ({
+    date:                 r.date,
+    thumbnail_uri:        r.thumbnail_uri,
+    anniversary_tag_type: r.anniversary_tag_type,
+    featured_status_cache: r.featured_status_cache,
+  }));
+}
+
 export async function deleteEntry(id: string): Promise<void> {
   const db = await getDb();
 

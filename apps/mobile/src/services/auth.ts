@@ -28,24 +28,14 @@ export async function signInWithApple(): Promise<void> {
   if (data.user?.id) loginRevenueCat(data.user.id).catch(() => {});
 }
 
-function extractNonceFromJwt(jwt: string): string | undefined {
-  try {
-    const payload = jwt.split('.')[1];
-    // base64url → base64 変換（- を +、_ を / に置換しパディング補完）
-    const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
-    const padded = base64.padEnd(base64.length + (4 - (base64.length % 4)) % 4, '=');
-    const decoded = JSON.parse(atob(padded)) as Record<string, unknown>;
-    return typeof decoded.nonce === 'string' ? decoded.nonce : undefined;
-  } catch {
-    return undefined;
-  }
-}
-
 export async function signInWithGoogle(): Promise<void> {
   const iosClientId = Constants.expoConfig?.extra?.googleIosClientId as string | undefined;
+  if (!iosClientId) {
+    throw new Error('Google iOS Client ID が設定されていません。EAS Secret GOOGLE_IOS_CLIENT_ID を確認してください。');
+  }
   GoogleSignin.configure({
     scopes: ['email', 'profile'],
-    ...(iosClientId ? { iosClientId } : {}),
+    iosClientId,
   });
   await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
   await GoogleSignin.signIn();
@@ -53,11 +43,9 @@ export async function signInWithGoogle(): Promise<void> {
   if (!tokens.idToken) {
     throw new Error('Google Sign In: idToken が取得できませんでした');
   }
-  const nonce = extractNonceFromJwt(tokens.idToken);
   const { data, error } = await supabase.auth.signInWithIdToken({
     provider: 'google',
     token: tokens.idToken,
-    ...(nonce ? { nonce } : {}),
   });
   if (error) throw error;
   if (data.user?.id) loginRevenueCat(data.user.id).catch(() => {});

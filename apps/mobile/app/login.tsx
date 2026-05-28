@@ -35,8 +35,16 @@ export default function Login() {
         await signInWithPassword(email.trim(), password);
         router.dismiss();
       } else {
-        await signUpWithEmail(email.trim(), password);
-        setSignedUp(true);
+        const { alreadyExists } = await signUpWithEmail(email.trim(), password);
+        if (alreadyExists) {
+          Alert.alert(
+            'このメールアドレスは登録済みです',
+            'ログインタブからログインしてください。',
+            [{ text: 'ログイン画面へ', onPress: () => setMode('signin') }],
+          );
+        } else {
+          setSignedUp(true);
+        }
       }
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : '';

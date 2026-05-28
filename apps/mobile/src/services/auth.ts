@@ -50,13 +50,15 @@ export async function signInWithPassword(email: string, password: string): Promi
   if (error) throw error;
 }
 
-export async function signUpWithEmail(email: string, password: string): Promise<void> {
-  const { error } = await supabase.auth.signUp({
+export async function signUpWithEmail(email: string, password: string): Promise<{ alreadyExists: boolean }> {
+  const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: { emailRedirectTo: 'mainichipet://auth/callback' },
   });
   if (error) throw error;
+  const alreadyExists = Array.isArray(data.user?.identities) && data.user.identities.length === 0;
+  return { alreadyExists };
 }
 
 export async function signOut(): Promise<void> {

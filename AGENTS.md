@@ -64,10 +64,10 @@
 
 ## 重要な前提
 
-- 開発環境: Windows
+- 開発環境: WSL
 - 配布先: App Store (iPhone のみ、Android 対応なし)
 - 想定ユーザー: 日本のユーザー (UI 文言は日本語、タイムゾーンは Asia/Tokyo 固定)
-- 課金: Apple In-App Purchase のみ (買い切り ¥1,500 / 月額 ¥480)
+- 課金: Apple In-App Purchase のみ (買い切り ¥1,500 / 月額 ¥400)
 
 ---
 

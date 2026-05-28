@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -10,12 +10,16 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { DS } from '@/theme';
 import { Photo } from '@/components/Photo';
 import { StreakBadge } from '@/components/StreakBadge';
+import { SaveToast } from '@/components/SaveToast';
+import { PawIcon } from '@/components/icons/PawIcon';
 import { useTodayEntry, useMemoryEntry } from '@/hooks/useEntries';
 import { useStreak } from '@/hooks/useStreak';
 import { useSelectedPet } from '@/hooks/usePets';
+import { useAppStore } from '@/store/appStore';
 import { formatDisplayDate, getTodayJST } from '@/utils/date';
 import { ANNIVERSARY_TAG_DB_TO_DISPLAY } from '@/utils/species';
 import type { EntryWithPets, Entry } from '@/types';
@@ -33,9 +37,21 @@ export default function Home() {
   const { data: streak } = useStreak();
   const selectedPet = useSelectedPet();
   const today = getTodayJST();
+  const { savedAt, setSavedAt } = useAppStore();
+  const [toastVisible, setToastVisible] = useState(false);
 
   const displayName = selectedPet?.name ?? 'うちの子';
   const streakCount = streak?.display_streak ?? 0;
+
+  useEffect(() => {
+    if (!savedAt) return;
+    setToastVisible(true);
+    const hideTimer = setTimeout(() => {
+      setToastVisible(false);
+      setSavedAt(null);
+    }, 2500);
+    return () => clearTimeout(hideTimer);
+  }, [savedAt]);
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -66,6 +82,7 @@ export default function Home() {
         )}
 
       </ScrollView>
+      <SaveToast visible={toastVisible} />
     </SafeAreaView>
   );
 }
@@ -159,20 +176,31 @@ function UnrecordedView({ petName, streak: _streak }: { petName: string; streak:
 
   return (
     <>
-      {/* 未記録カード */}
       <View style={styles.cardOuter}>
         <View style={[styles.cardInner, styles.emptyCard]}>
-          <View style={styles.cameraCircle}>
-            <Ionicons name="camera-outline" size={28} color={DS.home.accent} />
+          <LinearGradient
+            colors={['#FFF0E4', '#FFE2CA', '#FFCFAD']}
+            start={{ x: 0.1, y: 0 }}
+            end={{ x: 0.9, y: 1 }}
+            style={StyleSheet.absoluteFillObject}
+          />
+          <View style={styles.pawCircle}>
+            <PawIcon size={34} color={DS.home.accent} />
           </View>
-          <Text style={styles.emptyTitle}>今日はまだ記録がありません</Text>
-          <Text style={styles.emptySub}>{petName}の今日の渾身の1枚を残しましょう</Text>
+          <Text style={styles.emptyTitle}>{petName}の今日の1枚は？</Text>
+          <Text style={styles.emptySub}>毎日の記録が、かけがえない思い出になります</Text>
           <TouchableOpacity
             style={styles.cta}
             onPress={() => router.push('/photo-form')}
             activeOpacity={0.85}
           >
-            <Ionicons name="camera-outline" size={18} color="#fff" />
+            <LinearGradient
+              colors={['#F59060', DS.home.accent]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={StyleSheet.absoluteFillObject}
+            />
+            <PawIcon size={18} color="#fff" />
             <Text style={styles.ctaText}>今日の1枚を残す</Text>
           </TouchableOpacity>
         </View>
@@ -371,12 +399,13 @@ const styles = StyleSheet.create({
     gap:               12,
     paddingVertical:   36,
     paddingHorizontal: 24,
+    overflow:          'hidden',
   },
-  cameraCircle: {
-    width:           60,
-    height:          60,
-    borderRadius:    30,
-    backgroundColor: DS.home.pill,
+  pawCircle: {
+    width:           68,
+    height:          68,
+    borderRadius:    34,
+    backgroundColor: 'rgba(255,255,255,0.55)',
     alignItems:      'center',
     justifyContent:  'center',
   },
@@ -399,14 +428,14 @@ const styles = StyleSheet.create({
     alignItems:      'center',
     gap:             8,
     width:           '100%',
-    backgroundColor: DS.home.accent,
+    overflow:        'hidden',
     borderRadius:    DS.home.radius.pill,
     paddingVertical: 15,
     justifyContent:  'center',
     marginTop:       6,
-    shadowColor:     '#321905',
+    shadowColor:     '#C85020',
     shadowOffset:    { width: 0, height: 4 },
-    shadowOpacity:   0.20,
+    shadowOpacity:   0.22,
     shadowRadius:    12,
     elevation:       6,
   },

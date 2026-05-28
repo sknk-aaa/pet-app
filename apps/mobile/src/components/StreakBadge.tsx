@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { DS } from '@/theme';
+import { PawIcon } from './icons/PawIcon';
 
 type Props = {
   count: number;
@@ -11,7 +12,7 @@ export function StreakBadge({ count, note }: Props) {
   return (
     <View style={styles.row}>
       <View style={styles.pill}>
-        <Text style={styles.fire}>🔥</Text>
+        <PawIcon size={15} color={DS.home.accent} />
         <Text style={styles.label}>連続</Text>
         <Text style={styles.count}>{count}</Text>
         <Text style={styles.label}>日</Text>
@@ -30,7 +31,7 @@ const styles = StyleSheet.create({
   pill: {
     height:          32,
     borderRadius:    16,
-    backgroundColor: 'rgba(255, 245, 235, 0.55)',
+    backgroundColor: 'rgba(255, 245, 235, 0.8)',
     borderWidth:     1,
     borderColor:     'rgba(240, 220, 200, 0.4)',
     flexDirection:   'row',
@@ -39,7 +40,6 @@ const styles = StyleSheet.create({
     paddingRight:    20,
     gap:             4,
   },
-  fire:  { fontSize: 15, lineHeight: 18 },
   label: {
     fontFamily: DS.font.regular,
     fontSize:   13,

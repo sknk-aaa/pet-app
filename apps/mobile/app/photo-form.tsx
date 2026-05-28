@@ -179,6 +179,7 @@ export default function PhotoForm() {
       queryClient.invalidateQueries({ queryKey: ['entry', 'memory'] });
       queryClient.invalidateQueries({ queryKey: ['entries', 'month'] });
       queryClient.invalidateQueries({ queryKey: ['streak'] });
+      useAppStore.getState().setSavedAt(Date.now());
       if (isFirstEntry) {
         router.replace('/(tabs)');
       } else {

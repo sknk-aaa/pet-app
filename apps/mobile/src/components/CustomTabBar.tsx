@@ -1,15 +1,17 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import {
   View,
   TouchableOpacity,
   Text,
   StyleSheet,
   Platform,
+  Animated,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { DS } from '@/theme';
+import { PawIcon } from './icons/PawIcon';
 
 const TAB_HEIGHT = 64;
 
@@ -21,14 +23,26 @@ type TabConfig = {
 };
 
 const TABS: TabConfig[] = [
-  { name: 'calendar',  label: 'カレンダー',  icon: 'calendar-outline', iconActive: 'calendar'   },
-  { name: 'index',     label: 'ホーム',       icon: 'paw-outline',      iconActive: 'paw'        },
-  { name: 'today-pet', label: '今日のペット', icon: 'apps-outline',     iconActive: 'apps'       },
+  { name: 'calendar',  label: 'カレンダー',  icon: 'calendar-outline', iconActive: 'calendar' },
+  { name: 'index',     label: 'ホーム',       icon: 'paw-outline',      iconActive: 'paw'      },
+  { name: 'today-pet', label: '今日のペット', icon: 'apps-outline',     iconActive: 'apps'     },
 ];
 
 export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
   const insets    = useSafeAreaInsets();
   const bottomPad = Math.max(insets.bottom, 8);
+  const scales    = useRef(TABS.map(() => new Animated.Value(1))).current;
+
+  const bounce = (idx: number, isHome: boolean) => {
+    const scale = scales[idx];
+    scale.setValue(isHome ? 0.80 : 0.88);
+    Animated.spring(scale, {
+      toValue:         1,
+      tension:         isHome ? 220 : 280,
+      friction:        isHome ? 5   : 7,
+      useNativeDriver: true,
+    }).start();
+  };
 
   return (
     <View style={[styles.container, { paddingBottom: bottomPad }]}>
@@ -38,6 +52,7 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
         const tab      = TABS[idx];
 
         const onPress = () => {
+          bounce(idx, isHome);
           const event = navigation.emit({
             type:              'tabPress',
             target:            route.key,
@@ -48,22 +63,17 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
           }
         };
 
-        // ── ホームタブ（中央・大きな円） ──
         if (isHome) {
           return (
             <TouchableOpacity
               key={route.key}
               onPress={onPress}
-              activeOpacity={0.8}
+              activeOpacity={1}
               style={styles.tab}
             >
-              <View style={styles.homeCircle}>
-                <Ionicons
-                  name={tab.iconActive}
-                  size={28}
-                  color={DS.home.accent}
-                />
-              </View>
+              <Animated.View style={[styles.homeCircle, { transform: [{ scale: scales[idx] }] }]}>
+                <PawIcon size={28} color={DS.home.accent} />
+              </Animated.View>
               <Text style={[styles.label, styles.labelHomeActive]}>
                 {tab.label}
               </Text>
@@ -71,19 +81,20 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
           );
         }
 
-        // ── 両サイドタブ ──
         return (
           <TouchableOpacity
             key={route.key}
             onPress={onPress}
-            activeOpacity={0.7}
+            activeOpacity={1}
             style={[styles.tab, styles.tabSide]}
           >
-            <Ionicons
-              name={isActive ? tab.iconActive : tab.icon}
-              size={24}
-              color={isActive ? DS.home.text : DS.home.text}
-            />
+            <Animated.View style={{ transform: [{ scale: scales[idx] }] }}>
+              <Ionicons
+                name={isActive ? tab.iconActive : tab.icon}
+                size={24}
+                color={DS.home.text}
+              />
+            </Animated.View>
             <Text style={[styles.label, styles.labelSide]}>
               {tab.label}
             </Text>
@@ -106,21 +117,19 @@ const styles = StyleSheet.create({
     ...Platform.select({ android: { elevation: 4 } }),
   },
   tab: {
-    flex:       1,
-    alignItems: 'center',
-    gap:        4,
+    flex:          1,
+    alignItems:    'center',
+    gap:           4,
     paddingBottom: 4,
   },
   tabSide: {
     paddingTop: 8,
   },
-
-  // 中央のサーモンピーチ大円
   homeCircle: {
     width:           60,
     height:          60,
     borderRadius:    30,
-    backgroundColor: DS.home.activeTab,   // #F5C4A0
+    backgroundColor: DS.home.activeTab,
     alignItems:      'center',
     justifyContent:  'center',
     marginBottom:    2,
@@ -130,7 +139,6 @@ const styles = StyleSheet.create({
     shadowRadius:    6,
     elevation:       3,
   },
-
   label: {
     fontSize:  10,
     textAlign: 'center',

@@ -8,13 +8,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   if (!user) redirect('/login')
 
-  const { data: profile } = await supabase
-    .from('users')
-    .select('is_admin')
-    .eq('id', user.id)
-    .single()
-
-  if (!profile?.is_admin) redirect('/login?error=unauthorized')
+  if (!user.app_metadata?.is_admin) redirect('/login?error=unauthorized')
 
   return (
     <div className="flex h-screen overflow-hidden">

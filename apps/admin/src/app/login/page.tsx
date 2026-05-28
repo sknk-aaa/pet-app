@@ -1,17 +1,20 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { Suspense, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const supabase = createClient()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(
+    searchParams.get('error') === 'unauthorized' ? '管理者権限がありません' : null
+  )
   const [loading, setLoading] = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
@@ -22,17 +25,6 @@ export default function LoginPage() {
     const { error: signInErr } = await supabase.auth.signInWithPassword({ email, password })
     if (signInErr) {
       setError('メールアドレスまたはパスワードが正しくありません')
-      setLoading(false)
-      return
-    }
-
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) { setError('ログインに失敗しました'); setLoading(false); return }
-
-    const { data: profile } = await supabase.from('users').select('is_admin').eq('id', user.id).single()
-    if (!profile?.is_admin) {
-      await supabase.auth.signOut()
-      setError('管理者権限がありません')
       setLoading(false)
       return
     }
@@ -76,5 +68,13 @@ export default function LoginPage() {
         </form>
       </div>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
   )
 }

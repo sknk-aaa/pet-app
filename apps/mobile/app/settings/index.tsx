@@ -268,7 +268,7 @@ export default function Settings() {
         <Card style={styles.sectionCard} p={0}>
           <SettingRow
             label="不具合・要望を報告"
-            onPress={() => Linking.openURL('https://tally.so/r/WOKNyL')}
+            onPress={() => Linking.openURL('https://tally.so/r/LZkZYz')}
           />
           <SettingRow
             label="レビューして応援する"

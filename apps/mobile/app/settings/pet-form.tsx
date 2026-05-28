@@ -192,7 +192,7 @@ export default function PetForm() {
 
         {!isNew && (
           <TouchableOpacity style={styles.deleteBtn} onPress={handleDelete}>
-            <Text style={styles.deleteText}>このペットを削除する</Text>
+            <Text style={styles.deleteText}>このペット登録を解除する</Text>
           </TouchableOpacity>
         )}
       </ScrollView>

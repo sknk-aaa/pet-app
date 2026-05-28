@@ -87,6 +87,7 @@ export default function TodayPet() {
                 <View style={styles.reactions}>
                   {REACTIONS.map(rx => {
                     const isActive = activeReactions.has(rx.key);
+                    const count = pet[`${rx.key}_count`] ?? 0;
                     return (
                       <TouchableOpacity
                         key={rx.key}
@@ -98,6 +99,11 @@ export default function TodayPet() {
                         <Text style={[styles.reactionLabel, isActive && styles.reactionLabelActive]}>
                           {rx.label}
                         </Text>
+                        {count > 0 && (
+                          <Text style={[styles.reactionCount, isActive && styles.reactionCountActive]}>
+                            {count}
+                          </Text>
+                        )}
                       </TouchableOpacity>
                     );
                   })}
@@ -186,10 +192,12 @@ const styles = StyleSheet.create({
     borderWidth:       1.5,
     borderColor:       DS.colors.border,
   },
-  reactionBtnActive:   { backgroundColor: DS.colors.accentPill, borderColor: DS.colors.accent },
-  reactionIcon:        { fontSize: 13 },
-  reactionLabel:       { fontSize: 13, color: DS.colors.textMid },
-  reactionLabelActive: { color: DS.colors.accent, fontWeight: '700' },
+  reactionBtnActive:    { backgroundColor: DS.colors.accentPill, borderColor: DS.colors.accent },
+  reactionIcon:         { fontSize: 13 },
+  reactionLabel:        { fontSize: 13, color: DS.colors.textMid },
+  reactionLabelActive:  { color: DS.colors.accent, fontWeight: '700' },
+  reactionCount:        { fontSize: 12, fontWeight: '600', color: DS.colors.textMid },
+  reactionCountActive:  { color: DS.colors.accent },
 
   reactionCountRow:  { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   reactionCountText: { fontSize: 14, fontWeight: '600', color: DS.colors.accent },

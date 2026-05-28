@@ -115,7 +115,7 @@ function RecordedView({ entry, streak }: { entry: EntryWithPets; streak: number 
         </View>
 
         {/* ── ストリークバッジ（写真右上） ── */}
-        {streak >= 2 && (
+        {streak >= 1 && (
           <View style={styles.streakOverlay}>
             <StreakBadge count={streak} />
           </View>

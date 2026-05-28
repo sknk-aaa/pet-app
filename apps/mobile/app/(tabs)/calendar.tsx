@@ -28,7 +28,7 @@ import { SPECIES_DB_TO_DISPLAY } from '@/utils/species';
 import type { CalendarEntryInfo } from '@/types';
 
 const WEEKDAYS = ['日', '月', '火', '水', '木', '金', '土'];
-const CELL_HEIGHT = 52;
+const CELL_HEIGHT = 42;
 const GRID_GAP = 0;
 const GRID_LINE = 'rgba(210, 190, 172, 0.45)';
 const SCREEN_HORIZONTAL_PADDING = 14;
@@ -169,6 +169,7 @@ export default function Calendar() {
                   { width: cellWidth },
                   i === 0 && styles.weekdaySun,
                   i === 6 && styles.weekdaySat,
+                  i === 6 && styles.noBorderRight,
                 ]}
               >
                 {d}
@@ -179,8 +180,8 @@ export default function Calendar() {
           {/* Grid */}
           <View style={styles.grid}>
             {cells.map((day, idx) => {
-              if (!day) return <View key={idx} style={[styles.cell, { width: cellWidth }]} />;
-              const col      = idx % 7;
+              const col = idx % 7;
+              if (!day) return <View key={idx} style={[styles.cell, { width: cellWidth }, col === 6 && styles.noBorderRight]} />;
               const ds       = dateStr(day);
               const entry    = entryMap.get(ds);
               const hasPic   = !!entry;
@@ -193,7 +194,7 @@ export default function Calendar() {
               return (
                 <TouchableOpacity
                   key={idx}
-                  style={[styles.cell, { width: cellWidth }]}
+                  style={[styles.cell, { width: cellWidth }, col === 6 && styles.noBorderRight]}
                   onPress={() => {
                     setSelectedDate(ds);
                     if (hasPic) router.push({ pathname: '/day-detail', params: { date: ds } });
@@ -341,16 +342,15 @@ const styles = StyleSheet.create({
     gap:               10,
   },
   statsPill: {
-    flex:              1,
     flexDirection:     'row',
     alignItems:        'center',
-    justifyContent:    'center',
     backgroundColor:   DS.colors.peach,
     borderRadius:      DS.radius.pill,
-    paddingVertical:   9,
-    paddingHorizontal: 16,
+    paddingVertical:   8,
+    paddingHorizontal: 14,
     gap:               5,
-    ...DS.shadow.card,
+    borderWidth:       1,
+    borderColor:       DS.colors.border,
   },
   statsLabel:   { fontSize: 13, color: DS.colors.textMid },
   statsAccent:  { fontSize: 17, fontWeight: '700', color: DS.colors.accent },
@@ -384,7 +384,7 @@ const styles = StyleSheet.create({
     fontWeight:       '600',
     color:            DS.colors.textMid,
     textAlign:        'center',
-    paddingVertical:  6,
+    paddingVertical:  10,
     borderRightWidth: StyleSheet.hairlineWidth,
     borderColor:      GRID_LINE,
   },
@@ -403,6 +403,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderColor:       GRID_LINE,
   },
+  noBorderRight:  { borderRightWidth: 0 },
   dayNum:         { fontSize: 10, lineHeight: 14 },
   dayNumToday:    { fontWeight: '700' },
   dayNumSelected: { color: DS.colors.white, fontWeight: '700' },

@@ -50,8 +50,9 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="calendar"
         options={{
-          title:       'カレンダー',
-          headerLeft:  () => <SettingsHeaderButton />,
+          title:            'カレンダー',
+          headerTitle:      'カレンダー',
+          headerTitleStyle: styles.calendarTitle,
         }}
       />
       <Tabs.Screen
@@ -80,7 +81,8 @@ const styles = StyleSheet.create({
   },
   headerLeft:  { paddingLeft: 16 },
   headerRight: { paddingRight: 14 },
-  headerButton: { padding: 6 },
+  headerButton:    { padding: 6 },
+  calendarTitle:   { fontSize: 20, fontWeight: '700', color: DS.colors.text },
   petPill: {
     flexDirection:   'row',
     alignItems:      'center',

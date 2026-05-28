@@ -66,6 +66,10 @@ enable_confirmations = false
 secure_password_change = false
 max_frequency = "1s"
 
+[auth.email.template.confirmation]
+subject = "まいにちペット - メールアドレスの確認"
+content_path = "./supabase/templates/confirmation.html"
+
 [auth.sms]
 enable_signup = false
 

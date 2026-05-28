@@ -20,6 +20,7 @@ import {
   IAP_PRODUCTS,
 } from '@/services/iap';
 import { useAuthStore } from '@/store/authStore';
+import { SparklesIcon } from '@/components/icons/SparklesIcon';
 import { DS } from '@/theme';
 import type { Product, SubscriptionProduct } from 'expo-iap';
 
@@ -85,8 +86,8 @@ export default function Pro() {
       <ScrollView contentContainerStyle={styles.scroll}>
         {/* ヒーロー */}
         <View style={styles.hero}>
-          <Text style={styles.heroEmoji}>✨</Text>
-          <Text style={styles.heroTitle}>Pet Diary Pro</Text>
+          <SparklesIcon size={64} color={DS.colors.accent} />
+          <Text style={styles.heroTitle}>まいにちペット Pro</Text>
           <Text style={styles.heroSub}>もっと自由に、もっと長く、うちの子を残そう</Text>
         </View>
 
@@ -189,7 +190,6 @@ const styles = StyleSheet.create({
     gap:         8,
     paddingTop:  16,
   },
-  heroEmoji: { fontSize: 56 },
   heroTitle: {
     fontSize:   28,
     fontWeight: '800',

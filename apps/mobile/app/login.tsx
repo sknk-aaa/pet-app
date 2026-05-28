@@ -13,6 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { signInWithPassword, signUpWithEmail, signInWithApple, signInWithGoogle } from '@/services/auth';
+import { MailSentIcon } from '@/components/icons/MailSentIcon';
 import { DS } from '@/theme';
 
 type Mode = 'signin' | 'signup';
@@ -96,7 +97,7 @@ export default function Login() {
       >
         {signedUp ? (
           <View style={styles.sentView}>
-            <Text style={styles.sentEmoji}>📬</Text>
+            <MailSentIcon size={80} color={DS.colors.accent} />
             <Text style={styles.sentTitle}>確認メールを送信しました</Text>
             <Text style={styles.sentSub}>
               {email} に届いたリンクをタップして登録を完了してください
@@ -167,12 +168,16 @@ export default function Login() {
             {Platform.OS === 'ios' && (
               <TouchableOpacity style={styles.socialBtn} onPress={handleAppleLogin} disabled={loading}>
                 <Ionicons name="logo-apple" size={20} color={DS.colors.text} />
-                <Text style={styles.socialBtnText}>Appleでログイン</Text>
+                <Text style={styles.socialBtnText}>
+                  {mode === 'signup' ? 'Appleで新規登録' : 'Appleでログイン'}
+                </Text>
               </TouchableOpacity>
             )}
 
             <TouchableOpacity style={styles.socialBtn} onPress={handleGoogleLogin} disabled={loading}>
-              <Text style={styles.socialBtnText}>Googleでログイン</Text>
+              <Text style={styles.socialBtnText}>
+                {mode === 'signup' ? 'Googleで新規登録' : 'Googleでログイン'}
+              </Text>
             </TouchableOpacity>
           </>
         )}
@@ -239,7 +244,6 @@ const styles = StyleSheet.create({
   socialBtnText: { fontSize: 16, fontWeight: '600', color: DS.colors.text },
 
   sentView: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16, paddingHorizontal: 24 },
-  sentEmoji: { fontSize: 56 },
   sentTitle: { fontSize: 22, fontWeight: '700', color: DS.colors.text, textAlign: 'center' },
   sentSub:   { fontSize: 14, color: DS.colors.textMid, textAlign: 'center', lineHeight: 22 },
   backBtn:   { marginTop: 8 },

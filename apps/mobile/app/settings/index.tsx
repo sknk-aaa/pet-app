@@ -19,6 +19,7 @@ import { useSelectedPet } from '@/hooks/usePets';
 import { useAppStore } from '@/store/appStore';
 import { useAuthStore } from '@/store/authStore';
 import { signOut } from '@/services/auth';
+import { CrownIcon } from '@/components/icons/CrownIcon';
 import { setSetting } from '@/db/settings';
 import { requestPermission, scheduleOrUpdateDailyReminder } from '@/services/notifications';
 import { SPECIES_DB_TO_DISPLAY } from '@/utils/species';
@@ -120,12 +121,6 @@ export default function Settings() {
               ios_backgroundColor="#D8CEC4"
             />
           </View>
-          <View style={styles.sectionDivider} />
-          <SettingRow
-            label="写真の保存について"
-            onPress={() => router.push('/settings/privacy')}
-            divider={false}
-          />
         </Card>
         <Text style={styles.sectionHelper}>通常の記録写真はこの端末内に保存されます</Text>
 
@@ -136,10 +131,6 @@ export default function Settings() {
             label="自分の掲載履歴"
             rightElement={isLoggedIn ? undefined : <LockRow label="ログインが必要" />}
             onPress={isLoggedIn ? () => router.push('/settings/featured-history') : () => router.push('/login')}
-          />
-          <SettingRow
-            label="掲載と通報について"
-            onPress={() => router.push('/settings/privacy')}
             divider={false}
           />
         </Card>
@@ -147,9 +138,9 @@ export default function Settings() {
         {/* Pro card */}
         <View style={styles.proCard}>
           <View style={styles.proLeft}>
-            <Text style={styles.proEmoji}>👑</Text>
+            <CrownIcon size={30} color={DS.colors.accent} />
             <View style={styles.proInfo}>
-              <Text style={styles.proTitle}>Proにアップグレード</Text>
+              <Text style={styles.proTitle}>まいにちペット Pro</Text>
               <Text style={styles.proSub}>複数ペット・月まとめ・比較表示を楽しめます</Text>
             </View>
           </View>
@@ -160,6 +151,12 @@ export default function Settings() {
 
         {/* アカウント */}
         <Text style={styles.sectionLabel}>アカウント</Text>
+        {isLoggedIn && (
+          <View style={styles.accountInfo}>
+            <Ionicons name="person-circle-outline" size={16} color={DS.colors.textMid} />
+            <Text style={styles.accountEmail}>{useAuthStore.getState().session?.user?.email}</Text>
+          </View>
+        )}
         <Card style={styles.sectionCard} p={0}>
           {isLoggedIn ? (
             <SettingRow
@@ -172,7 +169,9 @@ export default function Settings() {
                     style: 'destructive',
                     onPress: async () => {
                       await signOut();
-                      router.replace('/(tabs)');
+                      Alert.alert('ログアウトしました', '', [
+                        { text: 'OK', onPress: () => router.replace('/(tabs)') },
+                      ]);
                     },
                   },
                 ]);
@@ -180,7 +179,7 @@ export default function Settings() {
             />
           ) : (
             <SettingRow
-              label="ログイン"
+              label="ログイン / 新規登録"
               onPress={() => router.push('/login')}
             />
           )}
@@ -290,8 +289,16 @@ const styles = StyleSheet.create({
     ...DS.shadow.card,
   },
   proLeft:  { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
-  proEmoji: { fontSize: 28, lineHeight: 32 },
   proInfo:  { flex: 1, gap: 3 },
+  accountInfo: {
+    flexDirection: 'row',
+    alignItems:    'center',
+    gap:           6,
+    paddingHorizontal: 4,
+    paddingBottom: 6,
+    marginTop:     -4,
+  },
+  accountEmail: { fontSize: 13, color: DS.colors.textMid },
   proTitle: { fontSize: 15, fontWeight: '700', color: DS.colors.text },
   proSub:   { fontSize: 11, color: DS.colors.textMid },
   proBtn: {

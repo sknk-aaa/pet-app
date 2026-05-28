@@ -186,7 +186,7 @@ export default function PhotoForm() {
       queryClient.invalidateQueries({ queryKey: ['streak'] });
       useAppStore.getState().setSavedAt(Date.now());
       if (isFirstEntry) {
-        router.replace('/(tabs)');
+        router.replace('/login-prompt');
       } else {
         router.back();
       }

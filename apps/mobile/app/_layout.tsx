@@ -86,6 +86,7 @@ function AppContent() {
         <Stack.Screen name="index" />
         <Stack.Screen name="onboarding" />
         <Stack.Screen name="pet-setup" />
+        <Stack.Screen name="login-prompt" />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="photo-form"    options={{ presentation: 'modal' }} />
         <Stack.Screen name="login"         options={{ presentation: 'modal' }} />

@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { supabase } from '@/services/supabase';
+import { loginRevenueCat } from '@/services/iap';
 import { DS } from '@/theme';
 
 export default function AuthCallback() {
@@ -12,11 +13,12 @@ export default function AuthCallback() {
     if (token_hash && type) {
       supabase.auth
         .verifyOtp({ token_hash, type: type as 'email' })
-        .then(({ error }) => {
+        .then(({ data, error }) => {
           if (error) {
             console.error('[AuthCallback]', error);
             router.replace('/login');
           } else {
+            if (data.user?.id) loginRevenueCat(data.user.id).catch(() => {});
             router.replace('/(tabs)');
           }
         });

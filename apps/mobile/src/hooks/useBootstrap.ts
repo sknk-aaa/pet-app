@@ -7,7 +7,7 @@ import { getSetting, setSetting, getSettings } from '@/db/settings';
 import { generateUUID } from '@/utils/uuid';
 import { checkFileExists } from '@/services/photo';
 import { flushPendingUploads } from '@/services/uploadQueue';
-import { verifyProState } from '@/services/iap';
+import { configureRevenueCat, verifyProState } from '@/services/iap';
 import { requestPermission, registerPushToken } from '@/services/notifications';
 import { updatePet } from '@/db/pets';
 import { useAuthStore } from '@/store/authStore';
@@ -32,6 +32,9 @@ export function useBootstrap(): { isReady: boolean; needsOnboarding: boolean } {
       const needsOnboard = pets.length === 0 || onboardingCompleted !== 'true';
 
       await Promise.all([initStreakState(), initProState()]);
+
+      const userId = useAuthStore.getState().session?.user?.id;
+      configureRevenueCat(userId);
 
       let deviceId = await getSetting('device_id');
       if (!deviceId) {

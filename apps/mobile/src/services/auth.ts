@@ -6,6 +6,7 @@ import {
 import Constants from 'expo-constants';
 import { supabase } from '@/services/supabase';
 import { clearPushToken } from '@/services/notifications';
+import { loginRevenueCat, logoutRevenueCat } from '@/services/iap';
 import { useAuthStore } from '@/store/authStore';
 import type { Session } from '@supabase/supabase-js';
 
@@ -19,11 +20,12 @@ export async function signInWithApple(): Promise<void> {
   if (!credential.identityToken) {
     throw new Error('Apple Sign In: identityToken が取得できませんでした');
   }
-  const { error } = await supabase.auth.signInWithIdToken({
+  const { data, error } = await supabase.auth.signInWithIdToken({
     provider: 'apple',
     token: credential.identityToken,
   });
   if (error) throw error;
+  if (data.user?.id) loginRevenueCat(data.user.id).catch(() => {});
 }
 
 export async function signInWithGoogle(): Promise<void> {
@@ -38,16 +40,18 @@ export async function signInWithGoogle(): Promise<void> {
   if (!tokens.idToken) {
     throw new Error('Google Sign In: idToken が取得できませんでした');
   }
-  const { error } = await supabase.auth.signInWithIdToken({
+  const { data, error } = await supabase.auth.signInWithIdToken({
     provider: 'google',
     token: tokens.idToken,
   });
   if (error) throw error;
+  if (data.user?.id) loginRevenueCat(data.user.id).catch(() => {});
 }
 
 export async function signInWithPassword(email: string, password: string): Promise<void> {
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) throw error;
+  if (data.user?.id) loginRevenueCat(data.user.id).catch(() => {});
 }
 
 export async function signUpWithEmail(email: string, password: string): Promise<{ alreadyExists: boolean }> {
@@ -64,9 +68,12 @@ export async function signUpWithEmail(email: string, password: string): Promise<
 export async function signOut(): Promise<void> {
   const { user } = useAuthStore.getState();
   if (user?.id) {
-    await clearPushToken(user.id).catch(() => {}); // 失敗しても続行
+    await clearPushToken(user.id).catch(() => {});
   }
-  await supabase.auth.signOut();
+  await Promise.all([
+    supabase.auth.signOut(),
+    logoutRevenueCat().catch(() => {}),
+  ]);
   useAuthStore.getState().setSession(null);
   useAuthStore.getState().setUser(null);
 }

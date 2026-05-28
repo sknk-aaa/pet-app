@@ -40,6 +40,13 @@ export default function Settings() {
   const { settings, updateSettings } = useAppStore();
   const session        = useAuthStore(state => state.session);
   const isLoggedIn     = !!session;
+  const [deletingAccount, setDeletingAccount] = React.useState(false);
+
+  React.useEffect(() => {
+    if (deletingAccount && !session) {
+      router.replace('/onboarding');
+    }
+  }, [session, deletingAccount]);
   const displaySpecies = selectedPet ? SPECIES_DB_TO_DISPLAY[selectedPet.species] : 'ねこ';
   const provider       = (session?.user?.app_metadata?.provider as string | undefined) ?? 'email';
   const email          = session?.user?.email ?? '';
@@ -69,12 +76,14 @@ export default function Settings() {
                   style: 'destructive',
                   onPress: async () => {
                     try {
+                      setDeletingAccount(true);
                       const { error } = await supabase.functions.invoke('delete-my-account');
                       if (error) throw error;
                       await signOut();
-                      router.replace('/onboarding');
-                    } catch {
-                      Alert.alert('エラー', 'アカウントの削除に失敗しました。しばらくしてから再試行してください。');
+                    } catch (e) {
+                      setDeletingAccount(false);
+                      const msg = e instanceof Error ? e.message : String(e);
+                      Alert.alert('削除エラー', msg);
                     }
                   },
                 },

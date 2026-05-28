@@ -28,6 +28,17 @@ export async function signInWithApple(): Promise<void> {
   if (data.user?.id) loginRevenueCat(data.user.id).catch(() => {});
 }
 
+function decodeJwtPayload(jwt: string): Record<string, unknown> | null {
+  try {
+    const payload = jwt.split('.')[1];
+    const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+    const padded = base64.padEnd(base64.length + (4 - (base64.length % 4)) % 4, '=');
+    return JSON.parse(atob(padded)) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
+
 export async function signInWithGoogle(): Promise<void> {
   const iosClientId = Constants.expoConfig?.extra?.googleIosClientId as string | undefined;
   if (!iosClientId) {
@@ -43,9 +54,12 @@ export async function signInWithGoogle(): Promise<void> {
   if (!tokens.idToken) {
     throw new Error('Google Sign In: idToken が取得できませんでした');
   }
+  const payload = decodeJwtPayload(tokens.idToken);
+  const nonce = typeof payload?.nonce === 'string' ? payload.nonce : undefined;
   const { data, error } = await supabase.auth.signInWithIdToken({
     provider: 'google',
     token: tokens.idToken,
+    ...(nonce ? { nonce } : {}),
   });
   if (error) throw error;
   if (data.user?.id) loginRevenueCat(data.user.id).catch(() => {});

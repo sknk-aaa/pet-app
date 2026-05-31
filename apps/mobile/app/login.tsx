@@ -122,6 +122,28 @@ export default function Login() {
         ) : (
           <>
             {/* モード切り替え */}
+            <View style={{
+              backgroundColor: DS.colors.accentLight,
+              borderRadius: DS.radius.md,
+              padding: 14,
+              marginBottom: 16,
+              gap: 8,
+            }}>
+              <Text style={{ fontSize: 13, fontWeight: '700', color: DS.colors.text }}>
+                ログインでできること
+              </Text>
+              {[
+                'データをバックアップ（機種変更しても記録が残る）',
+                '「今日のペット」に写真を応募できる',
+                '掲載された写真にリアクションできる',
+              ].map((t, i) => (
+                <View key={i} style={{ flexDirection: 'row', gap: 6, alignItems: 'flex-start' }}>
+                  <Ionicons name="checkmark-circle" size={16} color={DS.colors.accent} style={{ marginTop: 1 }} />
+                  <Text style={{ flex: 1, fontSize: 13, color: DS.colors.textMid, lineHeight: 19 }}>{t}</Text>
+                </View>
+              ))}
+            </View>
+
             <View style={styles.modeToggle}>
               <TouchableOpacity
                 style={[styles.modeBtn, mode === 'signin' && styles.modeBtnActive]}

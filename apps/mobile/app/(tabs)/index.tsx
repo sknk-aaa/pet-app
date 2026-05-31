@@ -206,10 +206,10 @@ function MemoryCard({ entry }: { entry: Entry }) {
             <Text style={styles.memHeadTitle}>思い出の1枚</Text>
           </View>
           <View style={styles.memBadge}>
-            <Text style={styles.memBadgeText}>去年の今日</Text>
+            <Text style={styles.memBadgeText}>おもいで</Text>
           </View>
         </View>
-        <Photo radius={0} style={styles.memPhoto} uri={entry.thumbnail_uri} />
+        <Photo radius={0} style={styles.memPhoto} uri={entry.thumbnail_uri || entry.image_uri} />
         <View style={styles.memFoot}>
           <Text style={styles.memTitle}>{entry.title}</Text>
           <Text style={styles.memDate}>{formatDisplayDate(entry.date)}</Text>

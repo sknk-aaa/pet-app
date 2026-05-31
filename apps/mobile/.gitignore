@@ -5,3 +5,15 @@
 expo-env.d.ts
 # @end expo-cli
 .expo/
+
+# Native projects（CI が expo prebuild で毎回生成する。コミットしない）
+/ios
+/android
+
+# fastlane / CI build outputs
+/build
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/test_output
+*.p8
+AuthKey_*.p8

@@ -1,5 +1,5 @@
 {
-  "installCommand": "pnpm install --frozen-lockfile --ignore-workspace",
-  "buildCommand": "pnpm build",
+  "installCommand": "pnpm install --frozen-lockfile --ignore-workspace --config.dangerouslyAllowAllBuilds=true",
+  "buildCommand": "pnpm install --frozen-lockfile --ignore-workspace --config.dangerouslyAllowAllBuilds=true && pnpm exec next build",
   "framework": "nextjs"
 }

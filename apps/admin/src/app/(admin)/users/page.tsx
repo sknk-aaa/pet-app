@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient as createClient } from '@/lib/supabase/admin'
 import { Badge } from '@/components/ui/badge'
 import { formatDate } from '@/lib/utils'
 import { UserActions } from './user-actions'

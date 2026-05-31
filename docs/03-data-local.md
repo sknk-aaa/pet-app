@@ -12,7 +12,7 @@
 | 写真ファイル | FileSystem (`expo-file-system`) アプリ専用領域 | 写真本体、サムネイル、ペットアイコン |
 | 軽量フラグ | AsyncStorage (`@react-native-async-storage/async-storage`) | オンボーディング完了フラグ、最後に見たデータの id など、SQLite を立ち上げる前にアクセスしたい値 |
 | ログイン状態 | Supabase Auth の標準ストレージ | アクセストークン、リフレッシュトークン |
-| 課金状態 | SQLite + Apple StoreKit のレシート検証 | Pro 状態、購入種別、検証日時 |
+| 課金状態 | RevenueCat(customerInfo)を正とし SQLite を補助キャッシュに使用 | Pro 状態 |
 
 写真ファイルは `FileSystem.documentDirectory` 配下に保存。アプリアンインストール時に消える領域。
 
@@ -48,7 +48,8 @@ pets
 ```
 entries
   id                       TEXT PRIMARY KEY      -- UUID v4
-  date                     TEXT NOT NULL UNIQUE  -- 'YYYY-MM-DD' (Asia/Tokyo) - 同一日付に複数レコードは禁止
+  date                     TEXT NOT NULL         -- 'YYYY-MM-DD' (Asia/Tokyo)
+  primary_pet_id           TEXT REFERENCES pets(id)  -- このエントリーの主役ペット
   title                    TEXT NOT NULL         -- 最大 30 文字
   memo                     TEXT                  -- 最大 200 文字、サーバーには絶対送らない
   image_uri                TEXT NOT NULL         -- 原画像の FileSystem パス
@@ -63,7 +64,8 @@ entries
 ```
 
 ルール:
-- `date` にユニーク制約 → 1 日 1 レコード強制
+- `UNIQUE(date, primary_pet_id)` → 「1 日 1 ペット 1 レコード」。同じ日でもペットごとに別の記録を残せる(マイグレーション 002 で `date` 単独 UNIQUE から変更)
+- 表示対象のペットは `selected_pet_id` で切り替える
 - `memo` はサーバーに絶対送らない(設計原則 10)
 - `featured_status_cache` は表示用キャッシュ。実体はサーバー
 
@@ -146,9 +148,9 @@ pro_state
 ```
 
 ルール:
-- 起動時に `purchased = 1` なら StoreKit でレシート再検証
-- 月額プランの場合、`expires_at` を超過していたら Pro 機能を無効化
-- 検証失敗(オフライン等)時は前回の状態を維持(grace period 7 日まで信用)
+- v1.0 では購入判定の正は **RevenueCat の customerInfo**(entitlement `pro`)。この `pro_state` テーブルは補助キャッシュ
+- 起動時に `getCustomerInfo()` で判定し `authStore.isPro` に反映
+- 検証失敗(オフライン等)時は前回の状態を維持
 
 ### pending_uploads
 
@@ -173,15 +175,13 @@ pending_uploads
 
 ### マイグレーション
 
-スキーマ変更時は `expo-sqlite` のマイグレーション機構を使う。`schema_version` テーブルで管理:
+スキーマ変更は `apps/mobile/src/db/migrations/` の番号付きマイグレーションで管理し、`client.ts` の migrations 配列に登録する。起動時に現在バージョンを確認して差分を適用する。
 
 ```
-schema_version
-  version  INTEGER PRIMARY KEY
-  applied_at TEXT
+version 1: 初期スキーマ
+version 2: entries に primary_pet_id を追加し UNIQUE(date, primary_pet_id) に変更
+           (002_primary_pet.ts。entry_pets から先頭ペットをバックフィル)
 ```
-
-v1.0 リリース時の初期バージョンは 1。
 
 ---
 

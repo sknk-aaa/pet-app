@@ -18,7 +18,7 @@
 
 - フレームワーク: Next.js (App Router)
 - UI コンポーネント: Tailwind CSS + shadcn/ui
-- データアクセス: Supabase JS Client(anon key 使用、ログインユーザーの is_admin を RLS で判定)
+- データアクセス: service role key を使う `createAdminClient`(`src/lib/supabase/admin.ts`)。サーバーコンポーネント/サーバーアクション内でのみ使用し RLS をバイパス
 - ホスティング: Vercel
 - 認証: Supabase Auth(モバイルアプリと同じユーザーテーブル)
 
@@ -29,13 +29,12 @@
 ## アクセス制御
 
 - 管理画面は Supabase Auth でログインが必須
-- `users.is_admin = true` のユーザーのみがアクセス可能
-- ログイン後、is_admin 判定で「アクセス権限がありません」を表示する場合あり
-- 初期管理者は SQL で手動付与:
-  ```sql
-  UPDATE users SET is_admin = true WHERE id = '<管理者ユーザーの uuid>';
+- 管理者判定は **`app_metadata.is_admin = true`**(JWT に含まれる)で行う。`(admin)/layout.tsx` がサーバーサイドで確認し、false なら `/login?error=unauthorized` へリダイレクト
+- 管理者権限は admin API で付与:
   ```
-- service_role キーは使わない(認証されたユーザーセッションを通じてのみアクセス)
+  PUT /auth/v1/admin/users/<id>  body: {"app_metadata":{"is_admin":true}}
+  ```
+- データ取得は service role key の `createAdminClient` を使う(RLS バイパス)。anon key には service role を露出しない
 
 ---
 

@@ -68,8 +68,8 @@
 ### オフライン検出
 
 - `@react-native-community/netinfo` で接続状態を監視
-- 接続断時に画面上部に細いバナーで「オフライン中です」と表示(任意)
-- 接続復帰時に pending_uploads を自動フラッシュ
+- 接続復帰時に pending_uploads を自動フラッシュ(`flushPendingUploads`)
+- オフラインバナー表示は任意機能であり v1.0 未実装
 
 ---
 

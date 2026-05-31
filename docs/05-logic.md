@@ -351,30 +351,32 @@ ON DELETE SET NULL により featured_pets.candidate_id は NULL になる。
 
 ## 10. Pro 状態の検証
 
+課金は **RevenueCat(react-native-purchases)** で実装する(`expo-iap` / `react-native-iap` は使わない)。
+製品 ID: `com.mainichipet.app.pro_lifetime`(買い切り ¥1,500)/ `com.mainichipet.app.pro_monthly`(月額 ¥400)。Entitlement は `pro`。価格は RevenueCat の Offering から取得して表示する。
+
 ### 起動時
 
-1. SQLite の `pro_state` を読む
-2. `purchased = 1` なら StoreKit でレシート再検証
-   - ライブラリ: `expo-iap` または `react-native-iap`
-   - サーバーに送らずローカル検証で十分(v1.0)
-3. 月額プランかつ `expires_at` を超過していたら `purchased = 0` に戻す
-4. オフライン時:
-   - `last_verified_at` から 7 日以内なら前回状態を信用
-   - 7 日超過なら一時的に Pro 機能を無効化、警告メッセージ表示
+1. `configureRevenueCat()` を呼ぶ(ログイン済みなら user_id を渡す)
+2. `Purchases.getCustomerInfo()` の `entitlements.active['pro']` の有無で Pro 判定
+3. 結果を `authStore.isPro` に保持
+4. オフライン等で取得失敗時は前回の状態を維持
 
 ### 購入時
 
-1. Apple In-App Purchase の購入フロー実行
-2. 成功 → トランザクションをファイナライズ
-3. SQLite の `pro_state` を更新(plan, product_id, original_transaction_id, purchased_at, expires_at)
-4. UI を Pro モードに切り替え
+1. `Purchases.purchasePackage(pkg)` で購入フロー実行
+2. 返却された customerInfo の entitlements から isPro を更新
+3. UI を Pro モードに切り替え
 
 ### 復元購入
 
 1. ユーザーが「購入を復元する」をタップ
-2. StoreKit に問い合わせて過去の購入を取得
-3. 有効な購入があれば `pro_state` を更新
+2. `Purchases.restorePurchases()` を実行
+3. customerInfo に有効な entitlement があれば isPro = true
 4. なければ「復元できる購入が見つかりませんでした」を表示
+
+### ログイン連携
+
+ログイン時は `Purchases.logIn(user_id)`、ログアウト時は `logOut()` を呼び、購入を Supabase ユーザーに紐づける。
 
 ### プラン切り替え
 

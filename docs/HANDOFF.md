@@ -32,7 +32,7 @@ pet-app/
 │   ├── migrations/      # DB スキーマ
 │   └── functions/       # Edge Functions (6本)
 ├── docs/                # 仕様書 (01〜09) + GitHub Pages (index.html, privacy/)
-└── RUNBOOK.md           # インフラ・証明書の長期運用手順
+└── docs/OPERATIONS.md   # インフラ・証明書の長期運用手順
 ```
 
 モノレポ: pnpm workspaces
@@ -154,4 +154,4 @@ curl -X PUT https://upshogdxxzwyauivmfxt.supabase.co/auth/v1/admin/users/<USER_I
 | DB スキーマ | `supabase/migrations/` |
 | Edge Functions | `supabase/functions/` |
 | 管理画面 Supabase クライアント | `apps/admin/src/lib/supabase/` |
-| 運用手順 | `RUNBOOK.md` |
+| 運用手順 | `docs/OPERATIONS.md` |

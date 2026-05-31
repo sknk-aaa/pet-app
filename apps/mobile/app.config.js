@@ -50,10 +50,11 @@ module.exports = ({ config }) => ({
         { iosUrlScheme: googleIosUrlScheme(process.env.GOOGLE_IOS_CLIENT_ID) },
       ],
     ] : []),
+    './plugins/withFmtCpp17',
   ],
   ios: {
     bundleIdentifier: 'com.mainichipet.app',
-    supportsTablet: true,
+    supportsTablet: false,
     usesAppleSignIn: true,
     infoPlist: {
       NSCameraUsageDescription: 'ペットの写真を撮影します',

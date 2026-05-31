@@ -109,24 +109,10 @@ export async function getMemoryEntry(
   primaryPetId: string | null
 ): Promise<Entry | null> {
   const db = await getDb();
-  const [, month, day] = todayDate.split('-');
-  const pattern = `%-${month}-${day}`;
-
-  const petCondition = primaryPetId ? ` AND primary_pet_id = ?` : '';
-  const baseParams = primaryPetId
-    ? [todayDate, pattern, primaryPetId]
-    : [todayDate, pattern];
-
-  const same = await db.getFirstAsync<Entry>(
-    `SELECT * FROM entries WHERE date != ? AND date LIKE ?${petCondition} ORDER BY RANDOM() LIMIT 1`,
-    baseParams
-  );
-  if (same) return same;
-
-  const randomParams = primaryPetId ? [todayDate, primaryPetId] : [todayDate];
+  const params = primaryPetId ? [todayDate, primaryPetId] : [todayDate];
   return db.getFirstAsync<Entry>(
     `SELECT * FROM entries WHERE date != ?${primaryPetId ? ' AND primary_pet_id = ?' : ''} ORDER BY RANDOM() LIMIT 1`,
-    randomParams
+    params
   );
 }
 

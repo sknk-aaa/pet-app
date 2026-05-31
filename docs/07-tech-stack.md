@@ -21,31 +21,30 @@
 │   │   │   ├── utils/           (日付処理、フォーマッタ、定数)
 │   │   │   └── types/
 │   │   ├── assets/
-│   │   ├── app.config.ts
+│   │   ├── app.config.js
 │   │   ├── eas.json
 │   │   └── package.json
 │   └── admin/                   Next.js 管理画面
-│       ├── app/                 App Router
-│       ├── components/
-│       ├── lib/                 (Supabase クライアントなど)
+│       ├── src/app/             App Router
+│       ├── src/components/
+│       ├── src/lib/             (Supabase クライアントなど)
 │       └── package.json
 ├── supabase/
 │   ├── migrations/              SQL マイグレーション
-│   ├── functions/               Edge Functions
+│   ├── functions/               Edge Functions（6本）
 │   │   ├── publish-featured/
 │   │   ├── select-candidate/
 │   │   ├── cleanup-candidates/
 │   │   ├── send-featured-push/
+│   │   ├── withdraw-candidate/
 │   │   ├── delete-my-account/
 │   │   └── _shared/
 │   ├── seed.sql                 開発用シードデータ
 │   └── config.toml
-├── packages/                    (共通コードがあれば)
-│   └── shared/                  型定義、定数の共有
-├── docs/                        本設計書
-├── AGENTS.md
-├── package.json                 (npm workspaces or pnpm)
-└── README.md
+├── docs/                        設計仕様(01〜09)・OPERATIONS・HANDOFF・GitHub Pages
+├── CLAUDE.md                    AI向け入口（概要・固有厳守事項・doc索引）
+├── package.json                 (pnpm workspaces)
+└── README.md                    人間向け入口
 ```
 
 パッケージマネージャは `pnpm` を推奨。

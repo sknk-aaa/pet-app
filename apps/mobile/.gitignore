@@ -6,6 +6,10 @@ expo-env.d.ts
 # @end expo-cli
 .expo/
 
+# 環境変数（秘密情報。CI は GitHub Secrets から注入する）
+.env
+.env*.local
+
 # Native projects（CI が expo prebuild で毎回生成する。コミットしない）
 /ios
 /android

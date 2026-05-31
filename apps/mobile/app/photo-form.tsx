@@ -433,8 +433,9 @@ export default function PhotoForm() {
           <View style={styles.toggleRow}>
             <View style={styles.toggleInfo}>
               <Text style={styles.toggleTitle}>今日のペットに参加</Text>
-              <Text style={styles.toggleSub}>ONにすると、確認後に掲載される可能性があります</Text>
-              <Text style={styles.toggleSub}>メモは公開されません</Text>
+              <Text style={styles.toggleSub}>
+                オンにすると、この写真が「今日のペット」の候補になります。審査を通った写真が、毎日1枚だけアプリ内に掲載されます。公開されるのは写真のみで、メモは公開されません。
+              </Text>
             </View>
             {!featuredSubmitted && featuredStatus !== 'withdrawn' && (
               <Toggle

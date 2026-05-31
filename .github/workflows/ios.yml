@@ -71,3 +71,12 @@ jobs:
       - name: Build & upload to TestFlight
         working-directory: apps/mobile
         run: bundle exec fastlane ios beta
+      - name: Dump gym build log on failure
+        if: failure()
+        run: |
+          echo "===== gym raw xcodebuild logs ====="
+          for f in "$HOME/Library/Logs/gym/"*.log; do
+            echo "----- $f -----"
+            # スクリプトフェーズの失敗理由を中心に末尾を出す
+            tail -300 "$f" || true
+          done

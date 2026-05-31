@@ -1,16 +1,29 @@
-const { withDangerousMod } = require('@expo/config-plugins');
 const fs = require('fs');
 const path = require('path');
+
+// @expo/config-plugins を直接 require すると、expo-constants の
+// "Generate app.config" ビルドスクリプトが app.config.js を再評価する際、
+// pnpm の厳格な node_modules 配置のためモジュールを解決できず
+// "Cannot find module '@expo/config-plugins'" でビルドが落ちる。
+// expo の依存ツリー経由で解決することで CI(pnpm)でも確実に読み込む。
+function loadWithDangerousMod() {
+  const paths = [__dirname, process.cwd()];
+  try {
+    paths.push(path.dirname(require.resolve('expo/package.json', { paths })));
+  } catch {}
+  try {
+    paths.push(path.dirname(require.resolve('@expo/config/package.json', { paths })));
+  } catch {}
+  const resolved = require.resolve('@expo/config-plugins', { paths });
+  return require(resolved).withDangerousMod;
+}
 
 // Xcode 26 (Apple clang 21) は consteval をより厳格に検査するため、
 // React Native が依存する fmt の FMT_STRING(format-inl.h) が
 // "call to consteval function ... is not a constant expression" でビルド失敗する。
-// fmt ターゲットを C++17 でコンパイルし、かつ FMT_USE_CONSTEVAL=0 を定義すると
-// consteval 経路が無効化され、fmt は実行時/constexpr の書式チェックにフォールバックする。
-//
-// 重要: react_native_post_install が C++ 標準を上書きするため、パッチは
-// その呼び出しの「後」に注入する必要がある（前に入れると無効化される）。
-// expo prebuild が Podfile を毎回再生成するため Config Plugin で注入する。
+// fmt ターゲットを C++17 でコンパイルし FMT_USE_CONSTEVAL=0 を定義すると、
+// consteval 経路が無効化され実行時/constexpr の書式チェックにフォールバックする。
+// react_native_post_install が C++ 標準を上書きするため、その呼び出しの後に注入する。
 const MARKER = '# >>> withFmtCpp17 (do not edit)';
 const PATCH = `
 ${MARKER}
@@ -29,6 +42,7 @@ ${MARKER}
 `;
 
 module.exports = function withFmtCpp17(config) {
+  const withDangerousMod = loadWithDangerousMod();
   return withDangerousMod(config, [
     'ios',
     (cfg) => {
@@ -39,14 +53,12 @@ module.exports = function withFmtCpp17(config) {
         return cfg;
       }
 
-      // react_native_post_install( ... ) の閉じ括弧の直後に注入する。
-      // 非貪欲マッチで複数行の引数をまたいで最初の "  )"（行頭の閉じ括弧）まで拾う。
       const re = /(react_native_post_install\([\s\S]*?\n\s*\)\n)/;
       if (re.test(contents)) {
         contents = contents.replace(re, `$1${PATCH}`);
       } else {
         throw new Error(
-          'withFmtCpp17: react_native_post_install(...) が Podfile に見つかりませんでした。Podfile の構造変更を確認してください。'
+          'withFmtCpp17: react_native_post_install(...) が Podfile に見つかりませんでした。'
         );
       }
 

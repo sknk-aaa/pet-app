@@ -1,10 +1,13 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { corsHeaders, handleCors } from '../_shared/cors.ts'
 import { createServiceClient } from '../_shared/supabase.ts'
-import { todayJST } from '../_shared/jst.ts'
+import { yesterdayJST } from '../_shared/jst.ts'
 
 // Cron: 毎日 00:10 JST (15:10 UTC)
-// entry_date が昨日以前の featured_candidates を削除:
+// entry_date が「昨日より前」の featured_candidates を削除:
+//   当日サイクル（今日投稿→今日23:00抽選→翌7:00掲載）のため、
+//   「昨日」分はまだ翌7:00の掲載待ちの可能性があり消してはいけない。
+//   削除対象は entry_date < 昨日（2日以上前の未掲載候補のみ）。
 //   1. 対象レコードの cloud_image_url / thumbnail_url を収集
 //   2. featured-photos バケットから画像を削除
 //   3. featured_candidates レコードを削除
@@ -14,12 +17,12 @@ serve(async (req) => {
   if (corsResponse) return corsResponse
 
   const supabase = createServiceClient()
-  const today = todayJST()
+  const yesterday = yesterdayJST()
 
   const { data: stale, error } = await supabase
     .from('featured_candidates')
     .select('id, cloud_image_url, thumbnail_url')
-    .lt('entry_date', today)
+    .lt('entry_date', yesterday)
 
   if (error) {
     return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: corsHeaders })

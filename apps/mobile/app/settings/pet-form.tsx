@@ -15,7 +15,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { getPetById, createPet, updatePet, deletePet } from '@/db/pets';
 import { setSetting } from '@/db/settings';
-import { pickPhoto, processIcon } from '@/services/photo';
+import { pickPhoto, processIcon, resolveLocalUri } from '@/services/photo';
 import { useAppStore } from '@/store/appStore';
 import {
   GENDER_DB_TO_DISPLAY,
@@ -44,7 +44,7 @@ export default function PetForm() {
       setName(pet.name);
       setGender(pet.gender ? GENDER_DB_TO_DISPLAY[pet.gender] ?? null : null);
       setBirthday(pet.birthday ?? '');
-      setIconUri(pet.icon_uri);
+      setIconUri(resolveLocalUri(pet.icon_uri));
     });
   }, [petId]);
 

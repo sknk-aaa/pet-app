@@ -7,6 +7,21 @@ const PHOTOS_DIR = `${FileSystem.documentDirectory}photos/`;
 const PET_ICONS_DIR = `${FileSystem.documentDirectory}pet_icons/`;
 const TMP_DIR = `${FileSystem.documentDirectory}tmp/`;
 
+// iOS のアプリコンテナ UUID はアップデート等で変わるため、DB に保存した
+// 絶対パス（古い documentDirectory を含む）は翌日リンク切れになる。
+// 表示時にファイル名以降を抽出し、現在の documentDirectory で組み直して救済する。
+export function resolveLocalUri(uri: string | null | undefined): string | null {
+  if (!uri) return null;
+  // 既に有効な現行パス、または外部 URL はそのまま
+  if (uri.startsWith('http')) return uri;
+  const docDir = FileSystem.documentDirectory ?? '';
+  if (uri.startsWith(docDir) && docDir) return uri;
+  // 旧 documentDirectory を含む絶対パス → photos/ または pet_icons/ 以降を取り出す
+  const m = uri.match(/(photos|pet_icons|tmp)\/[^/]+$/);
+  if (m) return `${docDir}${m[0]}`;
+  return uri;
+}
+
 async function ensureDir(dir: string): Promise<void> {
   const info = await FileSystem.getInfoAsync(dir);
   if (!info.exists) {

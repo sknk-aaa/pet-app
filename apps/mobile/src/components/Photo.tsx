@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Image, StyleSheet, StyleProp, ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { resolveLocalUri } from '@/services/photo';
 
 type Props = {
   style?: StyleProp<ViewStyle>;
@@ -19,7 +20,8 @@ const WARM_GRADIENT: [string, string, string, string] = [
   '#E8D098',
 ];
 
-export function Photo({ style, aspectRatio, radius = 16, uri, resizeMode = 'cover', autoAspect = false, minAspectRatio }: Props) {
+export function Photo({ style, aspectRatio, radius = 16, uri: rawUri, resizeMode = 'cover', autoAspect = false, minAspectRatio }: Props) {
+  const uri = resolveLocalUri(rawUri);
   const [computedAspect, setComputedAspect] = useState<number | undefined>(undefined);
 
   useEffect(() => {

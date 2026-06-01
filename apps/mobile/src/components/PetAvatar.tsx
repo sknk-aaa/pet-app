@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, Image, StyleSheet } from 'react-native';
+import { resolveLocalUri } from '@/services/photo';
 import { DS } from '@/theme';
 
 type Props = {
@@ -18,7 +19,8 @@ const SPECIES_EMOJI: Record<string, string> = {
   その他:     '🐾',
 };
 
-export function PetAvatar({ size = 44, species = 'ねこ', iconUri, bg }: Props) {
+export function PetAvatar({ size = 44, species = 'ねこ', iconUri: rawIconUri, bg }: Props) {
+  const iconUri = resolveLocalUri(rawIconUri);
   const emoji = SPECIES_EMOJI[species] ?? '🐾';
   const fontSize = size * 0.48;
 
